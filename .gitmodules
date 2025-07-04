@@ -1,0 +1,15 @@
+[submodule "MainApp"]
+	path = MainApp
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_MainApp
+[submodule "ModuleInterface"]
+	path = ModuleInterface
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleInterface
+[submodule "ModuleUtils"]
+	path = ModuleUtils
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleUtils
+[submodule "Modules/ModuleView"]
+	path = Modules/ModuleView
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleView
+[submodule "Modules/ModuleMillingKalotte"]
+	path = Modules/ModuleMillingKalotte
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleMillingKalotte
