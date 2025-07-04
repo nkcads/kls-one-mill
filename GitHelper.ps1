@@ -1,10 +1,11 @@
 param (
-    [string]$BranchName = "feature/my-branch",        # Branch name to switch/create
-    [string]$CommitMessage = "Consistent commit",      # Commit message
-    [switch]$DoPull,                                   # Optional: perform git pull
-    [switch]$DoSwitch,                                 # Optional: switch/create branch
-    [switch]$DoCommit,                                 # Optional: commit staged changes
-    [switch]$DoPush                                    # Optional: push changes to remote
+    [string]$BranchName = "feature/my-branch",
+    [string]$CommitMessage = "Consistent commit",
+    [switch]$DoInit,         # New: Initialize submodules and checkout all
+    [switch]$DoPull,
+    [switch]$DoSwitch,
+    [switch]$DoCommit,
+    [switch]$DoPush
 )
 
 function Process-Repo {
@@ -16,6 +17,11 @@ function Process-Repo {
 
     Write-Host "`n📁 Processing: $RepoPath"
     Set-Location $RepoPath
+
+    if ($DoInit) {
+        Write-Host "🔗 Initializing submodules..."
+        git submodule update --init --recursive
+    }
 
     if ($DoPull) {
         Write-Host "🔄 Pulling latest changes..."
@@ -43,7 +49,6 @@ function Process-Repo {
         git push --set-upstream origin $BranchName
     }
 
-    # Process nested submodules
     $submodules = git config --file .gitmodules --get-regexp path | ForEach-Object { ($_ -split ' ')[1] }
 
     foreach ($submodule in $submodules) {
@@ -56,8 +61,8 @@ function Process-Repo {
     Set-Location -Path $PSScriptRoot
 }
 
-# Initialize submodules recursively (safe to run every time)
-git submodule update --init --recursive
+if ($DoInit) {
+    git submodule update --init --recursive
+}
 
-# Start from the current repository
 Process-Repo -RepoPath (Get-Location).Path -BranchName $BranchName -CommitMessage $CommitMessage
