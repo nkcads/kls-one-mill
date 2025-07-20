@@ -1,3 +1,4 @@
 
 add_subdirectory(ModuleView)
+add_subdirectory(ModuleOverlayCritter)
 add_subdirectory(ModuleMillingKalotte)
