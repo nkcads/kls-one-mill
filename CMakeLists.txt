@@ -51,6 +51,7 @@ message(STATUS "VCPKG_TARGET_TRIPLET = ${VCPKG_TARGET_TRIPLET}")
 
 find_package(VTK REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(Clipper2 CONFIG REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets)
 
 
