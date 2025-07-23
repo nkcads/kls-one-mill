@@ -1,0 +1,1 @@
+vcpkg install clipper2:x64-windows-static spdlog:x64-windows-static
