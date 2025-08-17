@@ -18,4 +18,7 @@
 	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleOverlayCritter
 [submodule "Modules/ModulePostProcessor"]
 	path = Modules/ModulePostProcessor
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/_git/om_ModulePostProcessor
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModulePostProcessor
+[submodule "BackendUtils"]
+	path = BackendUtils
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_BackendUtils
