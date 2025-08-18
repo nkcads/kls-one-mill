@@ -52,6 +52,7 @@ message(STATUS "VCPKG_TARGET_TRIPLET = ${VCPKG_TARGET_TRIPLET}")
 find_package(VTK REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(Clipper2 CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets)
 
 
@@ -65,6 +66,7 @@ set(GLOBAL_PLUGIN_DIR ${OUTPUT_BASE_DIR}/plugins)
 set(GLOBAL_ARCHIVE_DIR ${CMAKE_BINARY_DIR}/lib)
 
 add_subdirectory(ModuleInterface)
+add_subdirectory(BackendUtils)
 add_subdirectory(ModuleUtils)
 add_subdirectory(MainApp)
 
