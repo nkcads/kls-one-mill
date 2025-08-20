@@ -22,3 +22,6 @@
 [submodule "BackendUtils"]
 	path = BackendUtils
 	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_BackendUtils
+[submodule "GeneralUtils/OpenXLSX"]
+	path = GeneralUtils/OpenXLSX
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_OpenXLSX

@@ -67,6 +67,7 @@ set(GLOBAL_ARCHIVE_DIR ${CMAKE_BINARY_DIR}/lib)
 
 add_subdirectory(ModuleInterface)
 add_subdirectory(BackendUtils)
+add_subdirectory(GeneralUtils)
 add_subdirectory(ModuleUtils)
 add_subdirectory(MainApp)
 
