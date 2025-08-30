@@ -13,6 +13,12 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MT")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 
+if(MSVC AND DEFINED CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "" FORCE)
+endif()
+
+set(IGL_WITH_VULKAN OFF CACHE BOOL "" FORCE)
+
 # Set VTK_DIR from env if available
 set(VTK_DIR_DEFAULT "VTK_DIR_NOTFOUND")
 if(DEFINED ENV{VTK_DIR})
@@ -79,6 +85,79 @@ add_subdirectory(Modules)
 
 # ModuleWorks setup
 
+# === Fast deploy knobs (override at configure time) ===
+set(DEPLOY_DIR "D:/deployData/KLSOneMill" )
+set(DEPLOY_EXE "D:/deployData/KLSOneMill/MainApp.exe" )
 
+# Find windeployqt once
+find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt windeployqt.exe HINTS "$ENV{QTDIR}/bin")
+if(NOT WINDEPLOYQT_EXECUTABLE)
+  message(FATAL_ERROR "windeployqt not found. Set QTDIR or WINDEPLOYQT_EXECUTABLE.")
+endif()
 
+# Small cmake script that does the work (generated once)
+set(_deploy_script "${CMAKE_BINARY_DIR}/cmake/deploy_qt_vtk.cmake")
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/cmake")
+file(WRITE "${_deploy_script}" [=[
+# --- deploy_qt_vtk.cmake ---
+# Inputs via -D: OUTDIR, OVERRIDE_EXE, APP_EXE, ALL_DLLS, WINDEPLOY, CFGFLAG
+if(NOT DEFINED OUTDIR OR OUTDIR STREQUAL "")
+  message(FATAL_ERROR "OUTDIR not set")
+endif()
 
+# Choose EXE: override path wins if provided
+set(_exe "${APP_EXE}")
+if(DEFINED OVERRIDE_EXE AND NOT OVERRIDE_EXE STREQUAL "")
+  set(_exe "${OVERRIDE_EXE}")
+endif()
+if(NOT EXISTS "${_exe}")
+  message(FATAL_ERROR "APP EXE not found: ${_exe}")
+endif()
+
+file(MAKE_DIRECTORY "${DEPLOY_DIR}")
+
+# 1) Qt deploy
+execute_process(
+  COMMAND "${WINDEPLOY}" ${CFGFLAG}
+          --no-translations --no-quick-import
+          --no-system-d3d-compiler --no-compiler-runtime
+          --dir "${OUTDIR}" "${_exe}"
+  RESULT_VARIABLE _qt_rc
+  ERROR_VARIABLE  _qt_err
+)
+if(NOT _qt_rc EQUAL 0)
+  message(FATAL_ERROR "windeployqt failed: ${_qt_err}")
+endif()
+
+# 2) VTK-only DLL copy (no version pattern)
+set(_dlls ${ALL_DLLS})
+list(REMOVE_DUPLICATES _dlls)
+foreach(d IN LISTS _dlls)
+  if(d MATCHES [[(^|/|\\)vtk[^/\\]*\.dll$]] OR d MATCHES [[(^|/|\\)vtksys[^/\\]*\.dll$]])
+    file(COPY "${d}" DESTINATION "${OUTDIR}")
+  endif()
+endforeach()
+
+message(STATUS "Deploy done -> ${OUTDIR}")
+]=])
+
+# Make the 'deploy' target fast to run
+# If DEPLOY_EXE is not given, we depend on building the app first.
+set(_deploy_deps)
+if(NOT DEPLOY_EXE)
+  list(APPEND _deploy_deps ${PROJECT_NAME})
+endif()
+
+add_custom_target(deploy
+  DEPENDS ${_deploy_deps}
+  COMMAND ${CMAKE_COMMAND}
+          -DOUTDIR=${DEPLOY_DIR}
+          -DOVERRIDE_EXE=${DEPLOY_EXE}
+         # -DAPP_EXE=$<TARGET_FILE:${PROJECT_NAME}>
+          -DALL_DLLS=$<TARGET_RUNTIME_DLLS:MainApp>
+          -DWINDEPLOY=${WINDEPLOYQT_EXECUTABLE}
+          -DCFGFLAG=--release
+          -P "${_deploy_script}"
+  VERBATIM
+  COMMENT "Deploying Qt & VTK (VTK-only DLLs)"
+)
