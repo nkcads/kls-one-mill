@@ -25,3 +25,6 @@
 [submodule "GeneralUtils/OpenXLSX"]
 	path = GeneralUtils/OpenXLSX
 	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_OpenXLSX
+[submodule "Modules/ModuleStatistics"]
+	path = Modules/ModuleStatistics
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleStatistics
