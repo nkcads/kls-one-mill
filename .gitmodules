@@ -31,3 +31,6 @@
 [submodule "Modules/ModuleReporter"]
 	path = Modules/ModuleReporter
 	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleReporter
+[submodule "Modules/ModuleFixture"]
+	path = Modules/ModuleFixture
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleFixture
