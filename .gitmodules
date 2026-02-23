@@ -34,3 +34,6 @@
 [submodule "Modules/ModuleFixture"]
 	path = Modules/ModuleFixture
 	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleFixture
+[submodule "GeneralUtils/MeshUtils"]
+	path = GeneralUtils/MeshUtils
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_MeshUtils
