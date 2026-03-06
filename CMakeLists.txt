@@ -63,7 +63,7 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(Clipper2 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets)
-
+find_package(Boost REQUIRED COMPONENTS system)
 
 
 # Define your global output structure
