@@ -41,3 +41,6 @@
 [submodule "Modules/ModuleFileTransfer"]
 	path = Modules/ModuleFileTransfer
 	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleFileTransfer
+[submodule "Modules/ModuleFittingAnalysis"]
+	path = Modules/ModuleFittingAnalysis
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleFittingAnalysis
