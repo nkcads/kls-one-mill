@@ -88,3 +88,7 @@ CMakeSettings.json
 
 project/CMakeUserPresets.json
 project/CMakeLists.txt.user
+
+# Office temp/lock files
+~$*
+~*.tmp
