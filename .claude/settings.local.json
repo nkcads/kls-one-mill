@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep *)",
+      "PowerShell(Get-Command *)",
+      "Bash(grep -E \"\\\\.\\(h|cpp\\)$\")",
+      "Bash(git submodule *)"
+    ]
+  }
+}
