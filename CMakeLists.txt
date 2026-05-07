@@ -164,3 +164,61 @@ add_custom_target(deploy
   VERBATIM
   COMMENT "Deploying Qt & VTK (VTK-only DLLs)"
 )
+
+# ============================================================
+# Install targets  (install_full  /  install_plugins)
+# ============================================================
+# Configure via cmake -D or cmake-gui:
+#   INSTALL_DIR               — destination root directory
+#   INSTALL_MOD_<NAME>        — ON/OFF per module
+#   INSTALL_MOD_MILLING_DEPS  — include ModuleWorks fw DLLs for MillingKalotte
+#   INSTALL_MOD_PP_DEPS       — include ModuleWorks fw + PyPy for PostProcessor
+
+set(INSTALL_DIR "D:/deployData/KLSOneMill" CACHE PATH "Install destination directory")
+
+option(INSTALL_MOD_VIEW          "Install ModuleView"            ON)
+option(INSTALL_MOD_OVERLAY       "Install ModuleOverlayCritter"  ON)
+option(INSTALL_MOD_MILLING       "Install ModuleMillingKalotte"  ON)
+option(INSTALL_MOD_PP            "Install ModulePostProcessor"   ON)
+option(INSTALL_MOD_STATISTICS    "Install ModuleStatistics"      ON)
+option(INSTALL_MOD_REPORTER      "Install ModuleReporter"        ON)
+option(INSTALL_MOD_FIXTURE       "Install ModuleFixture"         ON)
+option(INSTALL_MOD_FILETRANSFER  "Install ModuleFileTransfer"    ON)
+option(INSTALL_MOD_FITTING       "Install ModuleFittingAnalysis" ON)
+
+option(INSTALL_MOD_MILLING_DEPS  "Install ModuleMillingKalotte MW framework DLLs" ON)
+option(INSTALL_MOD_PP_DEPS       "Install ModulePostProcessor MW framework + PyPy" ON)
+
+configure_file(
+  "${CMAKE_SOURCE_DIR}/cmake/install_app.cmake.in"
+  "${CMAKE_BINARY_DIR}/cmake/install_app.cmake"
+  @ONLY
+)
+
+set(_install_script "${CMAKE_BINARY_DIR}/cmake/install_app.cmake")
+
+add_custom_target(install_full
+  DEPENDS MainApp
+  COMMAND ${CMAKE_COMMAND}
+          -DINSTALL_MODE=full
+          -DAPP_EXE=$<TARGET_FILE:MainApp>
+          "-DALL_DLLS=$<TARGET_RUNTIME_DLLS:MainApp>"
+          -DBUILD_DIR=$<TARGET_FILE_DIR:MainApp>
+          -DCONFIG=$<CONFIG>
+          -P "${_install_script}"
+  VERBATIM
+  COMMENT "Full install -> ${INSTALL_DIR}"
+)
+
+add_custom_target(install_plugins
+  DEPENDS MainApp
+  COMMAND ${CMAKE_COMMAND}
+          -DINSTALL_MODE=plugins
+          -DAPP_EXE=$<TARGET_FILE:MainApp>
+          "-DALL_DLLS=$<TARGET_RUNTIME_DLLS:MainApp>"
+          -DBUILD_DIR=$<TARGET_FILE_DIR:MainApp>
+          -DCONFIG=$<CONFIG>
+          -P "${_install_script}"
+  VERBATIM
+  COMMENT "Plugins-only install -> ${INSTALL_DIR}"
+)
