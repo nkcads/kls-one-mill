@@ -161,6 +161,9 @@ add_custom_target(deploy
           -DWINDEPLOY=${WINDEPLOYQT_EXECUTABLE}
           -DCFGFLAG=--release
           -P "${_deploy_script}"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+          "${CMAKE_SOURCE_DIR}/releaseNotes"
+          "${DEPLOY_DIR}/releaseNotes"
   VERBATIM
   COMMENT "Deploying Qt & VTK (VTK-only DLLs)"
 )

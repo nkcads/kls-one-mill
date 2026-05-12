@@ -210,6 +210,13 @@ endif()
 # ---- Version ----
 update_version_json()
 
+# ---- Release Notes ----
+set(_rn_src "@CMAKE_SOURCE_DIR@/releaseNotes")
+if(EXISTS "${_rn_src}")
+  file(COPY "${_rn_src}" DESTINATION "${_INSTALL_DIR}")
+  message(STATUS "[+] releaseNotes/")
+endif()
+
 # ---- Modules ----
 file(MAKE_DIRECTORY "${_INST_MODULES}")
 message(STATUS "Modules:")
