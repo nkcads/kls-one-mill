@@ -31,7 +31,9 @@
       "Bash(Find-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleStatistics\\\\ModuleStatisticsFrontend\\\\src\" -Name \"*.h\")",
       "Bash(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\" -Recurse -File)",
       "Bash(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\\\\MillingBackend\" -Recurse -File -Include \"*.h\", \"*.cpp\")",
-      "Bash(Select-Object -First 50)"
+      "Bash(Select-Object -First 50)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModulePostProcessor\\\\PostProcessorBackend\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName })",
+      "Bash(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\\\\MillingBackend\\\\MillingGeneration\\\\MillingJobData\" -Recurse)"
     ]
   }
 }
