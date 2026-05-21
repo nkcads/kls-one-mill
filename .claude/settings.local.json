@@ -33,7 +33,16 @@
       "Bash(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\\\\MillingBackend\" -Recurse -File -Include \"*.h\", \"*.cpp\")",
       "Bash(Select-Object -First 50)",
       "PowerShell(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModulePostProcessor\\\\PostProcessorBackend\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName })",
-      "Bash(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\\\\MillingBackend\\\\MillingGeneration\\\\MillingJobData\" -Recurse)"
+      "Bash(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\\\\MillingBackend\\\\MillingGeneration\\\\MillingJobData\" -Recurse)",
+      "PowerShell(az devops configure *)",
+      "PowerShell(az devops user show *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleFittingAnalysis\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Select-String -Path \"D:\\\\devData\\\\KLS\\\\KLSOneMill\\\\____US\\\\PeekCrash\\\\Plate Curves.igs\" -Pattern \"^     1[012][0-9]\")",
+      "Bash(Measure-Object)",
+      "Bash(Select-Object -ExpandProperty Count)",
+      "Bash(cd \"D:\\\\\\\\git\\\\\\\\CADS\\\\\\\\KLSOneMill\")"
     ]
   }
 }
