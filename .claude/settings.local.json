@@ -45,7 +45,16 @@
       "Bash(cd \"D:\\\\\\\\git\\\\\\\\CADS\\\\\\\\KLSOneMill\")",
       "Bash(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\" -Recurse -Directory)",
       "Bash(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\\\\MillingKalotteWidget\\\\src\\\\ModuleLogic\" -File)",
-      "Bash(Select-Object Name, FullName)"
+      "Bash(Select-Object Name, FullName)",
+      "Bash(findstr /r /s \"horizontalLayout_7\\\\|rightInfo\" --include=\"*.cpp\" --include=\"*.h\" .)",
+      "Bash(grep -E \"\\\\.\\(h|hpp\\)$\")",
+      "Bash(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\" -Recurse -File -Filter \"*.cpp\")",
+      "Bash(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\" -Recurse -Filter \"*.ui\")",
+      "Bash(dir *)",
+      "Bash(where /r \"D:\\\\git\\\\CADS\\\\KLSOneMill\" ppframework)",
+      "Bash(where /r \"D:\\\\deployData\" ppframework)",
+      "Bash(Get-ChildItem -Path \"D:\\\\deployData\" -Recurse -Filter \"configuration.py\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -First 5 FullName)"
     ]
   }
 }
