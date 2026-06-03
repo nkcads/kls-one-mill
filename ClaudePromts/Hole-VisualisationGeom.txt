@@ -1,0 +1,26 @@
+MachineData (shared_ptr) we need std::vector<string> for a new class(new file) MachineHolderData (should be relative, after reading absoulte, bevore writing relative)
+
+currently in the new class is a std::string for the stl path (should be saved relative
+
+MillingEnvironmentConfig should
+
+in the:
+void ContextMenuSessionHandler::BuildHoleToolbarStruct()
+
+the line auto conf = ConfigHandler::GetInstance()->GetHoleDisplayData();
+
+should be filled with the new MachineHolderData and used for this
+
+in: D:\git\CADS\KLSOneMill\Modules\ModuleMillingKalotte\MillingBackend\config
+
+in holderGeometry, there should be a new config file per stl from the subfolder displayMeshes
+
+int the void ConfigHandler::GenerateDefaultConfiguration(std::string outputDirectory)
+should be a static function of the new class called to init all the default data 
+there should the json-files of the MachineHolder Data saved
+
+in void MachineDataConfiguration::GenerateDefaultMachines(std::string directoryPath)
+we need a new function static AddDefaultMachineHolderData -> that should be called for each new created machine and all holder-json files added there
+
+in the MachineData we need a 
+

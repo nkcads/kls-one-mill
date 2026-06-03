@@ -1,0 +1,5 @@
+Heidenhain_3x_5x.py
+Q211, Q210, Q256 are not returned if they are zero -> they should returned if they are zero, like the Q202
+
+
+TreeContext-Menu - Show/Hide should not available for the Operations

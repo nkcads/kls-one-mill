@@ -1,0 +1,32 @@
+MillingPathLengthData::AddHoleTime
+
+FactoryStandard::matchId
+FactoryStandardEntry::optionalMappingId
+
+
+TimeCalculationInputData needs optional list for FactoryStandard Times.(saved in the MachineData) 
+The list should contain a new Struct( matchId or optionalMappingId, and a value in seconds)
+add for each machineConfig in the GenerateDefaultMachines 2 examples
+
+
+void MillingGenerator::GenerateMillingOperations(std::shared_ptr<UserPathGenerationInput> strategy)
+BuildMillingJobData should grab from the millingenvironment config the value, if there is one. otherwise from the factoryStandard/or entry should the default time grabbed. FactoryStandard should get a defaultMillingTime flag too (default -1) all constructors should the flag added (-1), bevore the std::string categorieName = "" (the FactoryStandardEntrys init there should get -1)
+in the build MillingJob data -> if a value is lower or 0 -> it should be ignored
+
+FactoryStandardEntry constructors (and child classes) should get it after  MillingCurveMode cMode = MillingCurveMode::Default
+
+in the functions from the FactoryStandardMachineSet, the constructor calls should called with the value 30;
+    void InitChironTitanSample();
+    void InitHermleTitanSample();
+    void InitHermlePeekSample();
+    void InitChironPeekSample();
+    void InitIpsForearmSample();
+    void InitIpsForearmSampleDE();
+    void InitIpsDistractionSample();
+    void InitIpsHandSample();
+    void InitIpsNonLocking();
+	
+the    this->vOptionalEntries.push_back(std::make_shared<FactoryStandardEntrySubProgramCopy>(0, "OPENMILL_D9.H", "EM_D4x21", 6000, 220, MillingEntryType::OpenMilling, FactoryStandardMillingType::Zylinder,75, true, "OpenMill (D9)", 101, MillingCurveMode::MinLength)); should be init with the value: 900
+
+MillingTimeCalculator tc(timeInput, mSessionData->operationData); should use this.
+MillingPathData -> MillingPathLengthData should add the seconds. if the seconds are set, the length should be ignored

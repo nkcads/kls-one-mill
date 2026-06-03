@@ -1,0 +1,40 @@
+MillingEntryDynamicValue
+will need a HaveValue function (should be only used if the user sets a value -> and we need there a default value -> that the user have the possibility to reset it to default
+
+MillingStrategieEntry there we need a additional struct for optional Information
+the MillingStrategie Entry can be in the future optional and needs a further flag, if it's activated per default or not.
+
+
+Additional we need to create a copy/compare function for the MillingStrategieTemplate and we have to save it in the ManufactoringInstructionData, that we can restore the session after save/Load with the optional and dynamic stuff
+
+if the user changes the ComboBox for the strategie, the manufactoringInstruction data should be checked (if there is a current strategie, the new should be set there, if the user already changed the optional/dynamic stuff, a message should apear bevore overwriting)
+
+GenerateMillingOperations have to be changed, that the current stored strategie in the instructionData should be used for building the job/generating the strategie
+
+UI:
+Input Settings:
+There should be a seperator after the Detected BaseShape
+
+The Comboboxes for MillingStrategie/HoleStrategy,GeomElementStrategie should have and Additional Entry for NoExport (should this come from the backend -> or is it a ui-only feature, should be at the top of the list) per default the MillingStrategie should be selected a valid entry, the HoleStrategy (here we have to be carefull with the filter) should be per default selected with no Export (i think for session-saveing reasons it's better to create a new FactoryStandard/MillingStrategieGeometryTemplate/MillingStrategieTemplate with the no export function (maybe we should expand this structors with an orderId for sorting the vector and a noExportFlag)
+this should replace the export Holes checkBox and the export StrategieEntries checkbox
+
+The BoneSurface PositiveSide should be placed under the Detected BaseShape combobox
+
+I think a advanced Widget would be the best future proved solution (like the InputSettingsWidget.cpp)
+
+For the content of the Advanced Widget i'm not sure.
+I think a tree would be the best solution (maybe we replace the Existing TreeViewWidget -> is is currently not good programmed and the code-style is not matching to the other code) i think the old tree should be gone
+
+The Tree will need a new data-structs and more classes (place it in D:\git\CADS\KLSOneMill\Modules\ModuleMillingKalotte\MillingKalotteWidget\src\ModuleLogic\TreeData)
+
+it should be able to represent the current session 
+A Main knot with milling Setup (Subs: MillingMachine/Fixture) 
+A Main knot with Geometry, Subs: there should be the Implant and the geometric elements (like holes, iges,csys)
+A Main knot with RawPart
+A Main knot with strategie -> sub nots with the entries (In the column next to the entry there should be the Optional Checkbox (if is optional) for the new optional stuff)
+The sub Nots of the entries should be the dynamic Values in the column next to them, there should be the input options(spinbox/checkbox...)
+A Main knot with generated operations (like the current operations for displaying toolpath.....)
+
+In the sessionHandler should be one function, for building/filling/refreshing the treedata -> depending on the current Session (if no strategie is selected the knot/type will not appear)
+
+

@@ -54,7 +54,15 @@
       "Bash(where /r \"D:\\\\git\\\\CADS\\\\KLSOneMill\" ppframework)",
       "Bash(where /r \"D:\\\\deployData\" ppframework)",
       "Bash(Get-ChildItem -Path \"D:\\\\deployData\" -Recurse -Filter \"configuration.py\" -ErrorAction SilentlyContinue)",
-      "Bash(Select-Object -First 5 FullName)"
+      "Bash(Select-Object -First 5 FullName)",
+      "Bash(Select-Object -First 100)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleFittingAnalysis\" -Recurse -Name | Where-Object { $_ -match '\\(ImplantPrep|FittingSession|FittingAnalyse|Widget\\)' } | Sort-Object)",
+      "Bash(Select-Object -First 30 FullName)",
+      "Bash(xargs ls -la)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleFittingAnalysis\\\\FittingAnalysisBackend\\\\src\\\\\" -Recurse -File | Select-Object @{Name=\"Path\";Expression={$_.FullName.Substring\\(\"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleFittingAnalysis\\\\FittingAnalysisBackend\\\\src\\\\\".Length\\)}} | Sort-Object Path)",
+      "Read(//d/devData/KLS/KLSOneMill/ConfigTest/WFlowConfig_v4/modulesBert/ModuleMillingKalotte/config/tools/Chiron/**)",
+      "Bash(python -c ' *)",
+      "Bash(Select-Object FullName, Length)"
     ]
   }
 }
