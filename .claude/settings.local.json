@@ -62,7 +62,17 @@
       "PowerShell(Get-ChildItem -Path \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleFittingAnalysis\\\\FittingAnalysisBackend\\\\src\\\\\" -Recurse -File | Select-Object @{Name=\"Path\";Expression={$_.FullName.Substring\\(\"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleFittingAnalysis\\\\FittingAnalysisBackend\\\\src\\\\\".Length\\)}} | Sort-Object Path)",
       "Read(//d/devData/KLS/KLSOneMill/ConfigTest/WFlowConfig_v4/modulesBert/ModuleMillingKalotte/config/tools/Chiron/**)",
       "Bash(python -c ' *)",
-      "Bash(Select-Object FullName, Length)"
+      "Bash(Select-Object FullName, Length)",
+      "Bash(python -c \"import ppframework; import os; print\\(os.path.dirname\\(ppframework.__file__\\)\\)\")",
+      "Bash(grep -r \"move\\\\\\\\.arc\" --include=\"*.py\" Modules/ModulePostProcessor/PostProcessorBackend/)",
+      "Bash(grep -rn \"arc_center.*\\\\\\\\.x\\\\|arc_center.*\\\\\\\\.y\\\\|arc_center.*\\\\\\\\.z\" \"D:\\\\BuildDirectory\\\\KLSOneMill\\\\bin\\\\Release\\\\modulesBert\\\\ModulePostProcessor\\\\config\")",
+      "Bash(cd \"D:\\\\\\\\git\\\\\\\\CADS\\\\\\\\KLSOneMill\\\\\\\\Modules\\\\\\\\ModuleMillingKalotte\")",
+      "Bash(grep -oP '\\(?<=EndOfProgramBlock\\).{0,800}' \"D:/TZPerg/Kroatien/Documentation _ ModuleWorks.html\")",
+      "Bash(grep -n \"new_line\\\\|NewLine\\\\|suffix\\\\|\\\\\\\\\\\\\\\\n\" \"D:/git/CADS/KLSOneMill/Modules/ModulePostProcessor/PostProcessorBackend/config/machines/Chiron_3X_5X/Fanuc_3X_5X.py\")",
+      "Bash(grep -n \"new_line\\\\|suffix\\\\|\\\\\\\\\\\\\\\\n\" \"D:/git/CADS/KLSOneMill/Modules/ModulePostProcessor/PostProcessorBackend/config/machines/Heidenhain_3X_5X/Heidenhain_3X_5X.py\")",
+      "Bash(claude update *)",
+      "Bash(claude changelog *)",
+      "Bash(claude *)"
     ]
   }
 }
