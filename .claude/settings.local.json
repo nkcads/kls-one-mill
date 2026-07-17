@@ -75,7 +75,10 @@
       "Bash(claude *)",
       "Bash(python -c \"import sys; sys.path.insert\\(0, 'D:/git/CADS/KLSOneMill/Modules/ModulePostProcessor/PostProcessorBackend'\\); import ppframework.core.data_model.move as m; import inspect; print\\([a for a in dir\\(m.Move\\) if not a.startswith\\('__'\\)]\\)\")",
       "Bash(findstr /i \"pp\\\\|plane\")",
-      "PowerShell(Get-ChildItem \"D:\\\\DevTools\\\\ModuleWorks\\\\mw-sdk-VS-x64-unicode-2025.12\\\\PPFramework\\\\PPFramework\\\\pypy3.10-v7.3.16-win64\\\\Lib\\\\site-packages\" -Directory | Where-Object { $_.Name -match 'pp|plane|mw' } | Select-Object Name)"
+      "PowerShell(Get-ChildItem \"D:\\\\DevTools\\\\ModuleWorks\\\\mw-sdk-VS-x64-unicode-2025.12\\\\PPFramework\\\\PPFramework\\\\pypy3.10-v7.3.16-win64\\\\Lib\\\\site-packages\" -Directory | Where-Object { $_.Name -match 'pp|plane|mw' } | Select-Object Name)",
+      "Skill(artifact-design)",
+      "Artifact",
+      "Bash(awk '{print $NF}')"
     ]
   }
 }

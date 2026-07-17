@@ -1,0 +1,15 @@
+SELECT
+    ApplicationName,
+    Language,
+    COUNT(DISTINCT `User`) AS UserCount
+FROM Events
+WHERE `DateTime` >= MAKEDATE(YEAR(CURDATE()), 1)
+                    + INTERVAL QUARTER(CURDATE()) - 2 QUARTER
+  AND `DateTime` <  MAKEDATE(YEAR(CURDATE()), 1)
+                    + INTERVAL QUARTER(CURDATE()) - 1 QUARTER
+GROUP BY
+    ApplicationName,
+    Language
+ORDER BY
+    ApplicationName,
+    Language;
