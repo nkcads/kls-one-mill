@@ -44,3 +44,9 @@
 [submodule "Modules/ModuleFittingAnalysis"]
 	path = Modules/ModuleFittingAnalysis
 	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleFittingAnalysis
+[submodule "Updater"]
+	path = Updater
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_Updater
+[submodule "Modules/ModuleUpdater"]
+	path = Modules/ModuleUpdater
+	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleUpdater
