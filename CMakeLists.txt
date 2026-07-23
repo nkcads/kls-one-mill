@@ -79,6 +79,7 @@ add_subdirectory(BackendUtils)
 add_subdirectory(GeneralUtils)
 add_subdirectory(ModuleUtils)
 add_subdirectory(MainApp)
+add_subdirectory(Updater)
 
 set(MODULE_OUTPUT_FOLDER "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/modulesBert")
 
@@ -188,6 +189,7 @@ option(INSTALL_MOD_REPORTER      "Install ModuleReporter"        ON)
 option(INSTALL_MOD_FIXTURE       "Install ModuleFixture"         ON)
 option(INSTALL_MOD_FILETRANSFER  "Install ModuleFileTransfer"    ON)
 option(INSTALL_MOD_FITTING       "Install ModuleFittingAnalysis" ON)
+option(INSTALL_MOD_UPDATER       "Install ModuleUpdater"         ON)
 
 option(INSTALL_MOD_MILLING_DEPS  "Install ModuleMillingKalotte MW framework DLLs" ON)
 option(INSTALL_MOD_PP_DEPS       "Install ModulePostProcessor MW framework + PyPy" ON)
@@ -201,10 +203,11 @@ configure_file(
 set(_install_script "${CMAKE_BINARY_DIR}/cmake/install_app.cmake")
 
 add_custom_target(install_full
-  DEPENDS MainApp
+  DEPENDS MainApp Updater
   COMMAND ${CMAKE_COMMAND}
           -DINSTALL_MODE=full
           -DAPP_EXE=$<TARGET_FILE:MainApp>
+          -DUPDATER_EXE=$<TARGET_FILE:Updater>
           "-DALL_DLLS=$<TARGET_RUNTIME_DLLS:MainApp>"
           -DBUILD_DIR=$<TARGET_FILE_DIR:MainApp>
           -DCONFIG=$<CONFIG>
@@ -214,10 +217,11 @@ add_custom_target(install_full
 )
 
 add_custom_target(install_plugins
-  DEPENDS MainApp
+  DEPENDS MainApp Updater
   COMMAND ${CMAKE_COMMAND}
           -DINSTALL_MODE=plugins
           -DAPP_EXE=$<TARGET_FILE:MainApp>
+          -DUPDATER_EXE=$<TARGET_FILE:Updater>
           "-DALL_DLLS=$<TARGET_RUNTIME_DLLS:MainApp>"
           -DBUILD_DIR=$<TARGET_FILE_DIR:MainApp>
           -DCONFIG=$<CONFIG>

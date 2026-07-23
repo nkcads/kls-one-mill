@@ -78,7 +78,15 @@
       "PowerShell(Get-ChildItem \"D:\\\\DevTools\\\\ModuleWorks\\\\mw-sdk-VS-x64-unicode-2025.12\\\\PPFramework\\\\PPFramework\\\\pypy3.10-v7.3.16-win64\\\\Lib\\\\site-packages\" -Directory | Where-Object { $_.Name -match 'pp|plane|mw' } | Select-Object Name)",
       "Skill(artifact-design)",
       "Artifact",
-      "Bash(awk '{print $NF}')"
+      "Bash(awk '{print $NF}')",
+      "Bash(grep -v -E '\\\\.git\\($|/\\)')",
+      "PowerShell(Write-Output \"VCPKG_ROOT=$env:VCPKG_ROOT\"; Write-Output \"VTK_DIR=$env:VTK_DIR\"; Write-Output \"QTDIR=$env:QTDIR\"; if \\($env:VCPKG_ROOT\\) { Test-Path \"$env:VCPKG_ROOT\\\\installed\" })",
+      "Bash(Format-List)",
+      "Bash(awk '{ if \\(length\\($0\\)>=73 && substr\\($0,73,1\\)==\"D\"\\) { s=substr\\($0,73,8\\); d1=substr\\($0,1,72\\); printf \"%s :\", s; for\\(i=1;i<=72;i+=8\\) printf \" [%s]\", substr\\(d1,i,8\\); print \"\"; } }' sampleTestCurve.igs)",
+      "Bash(xargs -I{} grep -l \"SurfaceMilling\\\\|SetUpperEdgeCurve\\\\|SetLowerEdgeCurve\" {})",
+      "Bash(xxd)",
+      "Bash(sort -k6,7)",
+      "Bash(grep -v \"\\\\.hpp$\")"
     ]
   }
 }
