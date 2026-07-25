@@ -86,7 +86,12 @@
       "Bash(xargs -I{} grep -l \"SurfaceMilling\\\\|SetUpperEdgeCurve\\\\|SetLowerEdgeCurve\" {})",
       "Bash(xxd)",
       "Bash(sort -k6,7)",
-      "Bash(grep -v \"\\\\.hpp$\")"
+      "Bash(grep -v \"\\\\.hpp$\")",
+      "Bash(xargs -I{} basename {})",
+      "Bash(grep *)",
+      "Bash(where.exe cmake *)",
+      "Read(//d//**)",
+      "Bash(xargs -I{} echo {})"
     ]
   }
 }
