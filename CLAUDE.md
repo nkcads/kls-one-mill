@@ -15,6 +15,8 @@ cmake --build build --target deploy  # runs windeployqt, copies to D:/deployData
 
 Dependencies are declared in `vcpkgPackages.txt` (clipper2, spdlog) plus Qt6, VTK 9.4, nlohmann_json, libzippp, pugixml, cpr, Boost resolved via vcpkg.
 
+**Compiling and testing is done manually by the user.** Do not run `cmake`/build commands, invoke a compiler directly (`cl.exe`, `g++`, etc.), or search the filesystem for a compiler in order to verify C++ changes. Review edits by reading the code instead; leave build verification to the user.
+
 ## Repository Structure
 
 Every top-level directory is a **separate Git submodule**. Use `GitHelper.ps1` for recursive operations (init, pull, branch, commit, push) across all submodules.

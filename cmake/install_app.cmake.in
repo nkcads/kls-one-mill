@@ -12,6 +12,7 @@ cmake_minimum_required(VERSION 3.16)
 # ---- Options baked at configure time ----
 set(_INSTALL_DIR       "@INSTALL_DIR@")
 set(_WINDEPLOYQT       "@WINDEPLOYQT_EXECUTABLE@")
+set(_APP_NAME          "@INSTALL_APP_NAME@")
 
 set(_EN_VIEW          @INSTALL_MOD_VIEW@)
 set(_EN_OVERLAY       @INSTALL_MOD_OVERLAY@)
@@ -119,6 +120,13 @@ function(update_version_json)
     "(\"version\"[ \t]*:[ \t]*\")([^\"]*)(\")"
     "\\1${_new_ver}\\3"
     _new_json "${_json}")
+
+  if(NOT "${_APP_NAME}" STREQUAL "")
+    string(REGEX REPLACE
+      "(\"applicationName\"[ \t]*:[ \t]*\")([^\"]*)(\")"
+      "\\1${_APP_NAME}\\3"
+      _new_json "${_new_json}")
+  endif()
 
   file(WRITE "${_cfg_path}" "${_new_json}")
   message(STATUS "[+] config/mainAppConfig.json  (${_ver} → ${_new_ver})")

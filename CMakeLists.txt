@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 project(KLSOneMill)
 
+# Group generated projects into Visual Studio solution folders (see the
+# "VS solution folders" assignment block at the bottom of this file).
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMakePredefinedTargets")
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
@@ -62,7 +67,7 @@ find_package(VTK REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(Clipper2 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets Network)
 find_package(Boost REQUIRED COMPONENTS system)
 
 
@@ -194,6 +199,8 @@ option(INSTALL_MOD_UPDATER       "Install ModuleUpdater"         ON)
 option(INSTALL_MOD_MILLING_DEPS  "Install ModuleMillingKalotte MW framework DLLs" ON)
 option(INSTALL_MOD_PP_DEPS       "Install ModulePostProcessor MW framework + PyPy" ON)
 
+set(INSTALL_APP_NAME "" CACHE STRING "Override applicationName written to mainAppConfig.json (empty = leave unchanged)")
+
 configure_file(
   "${CMAKE_SOURCE_DIR}/cmake/install_app.cmake.in"
   "${CMAKE_BINARY_DIR}/cmake/install_app.cmake"
@@ -229,3 +236,91 @@ add_custom_target(install_plugins
   VERBATIM
   COMMENT "Plugins-only install -> ${INSTALL_DIR}"
 )
+
+# ============================================================
+# Standalone "KLSOneAnalyse" install target (install_fitting)
+# ============================================================
+# Deploys MainApp into its own install directory (separate from INSTALL_DIR)
+# with only ModuleView, ModuleStatistics and ModuleFittingAnalysis enabled,
+# and applicationName forced to "KLSOneAnalyse" in mainAppConfig.json.
+
+set(INSTALL_DIR_FITTING "D:/deployData/KLSOneAnalyse" CACHE PATH "Install destination for the standalone Fitting Analysis (KLSOneAnalyse) deployment")
+
+# Override the shared options() variables just for this second configure_file()
+# generation — the install_full / install_plugins script above was already
+# configured with the original values, so this does not affect it.
+set(INSTALL_DIR            "${INSTALL_DIR_FITTING}")
+set(INSTALL_APP_NAME       "KLSOneAnalyse")
+set(INSTALL_MOD_VIEW          ON)
+set(INSTALL_MOD_OVERLAY       OFF)
+set(INSTALL_MOD_MILLING       OFF)
+set(INSTALL_MOD_PP            OFF)
+set(INSTALL_MOD_STATISTICS    ON)
+set(INSTALL_MOD_REPORTER      OFF)
+set(INSTALL_MOD_FIXTURE       OFF)
+set(INSTALL_MOD_FILETRANSFER  OFF)
+set(INSTALL_MOD_FITTING       ON)
+set(INSTALL_MOD_UPDATER       OFF)
+set(INSTALL_MOD_MILLING_DEPS  OFF)
+set(INSTALL_MOD_PP_DEPS       OFF)
+
+configure_file(
+  "${CMAKE_SOURCE_DIR}/cmake/install_app.cmake.in"
+  "${CMAKE_BINARY_DIR}/cmake/install_app_fitting.cmake"
+  @ONLY
+)
+
+set(_install_script_fitting "${CMAKE_BINARY_DIR}/cmake/install_app_fitting.cmake")
+
+add_custom_target(install_fitting
+  DEPENDS MainApp
+  COMMAND ${CMAKE_COMMAND}
+          -DINSTALL_MODE=full
+          -DAPP_EXE=$<TARGET_FILE:MainApp>
+          "-DALL_DLLS=$<TARGET_RUNTIME_DLLS:MainApp>"
+          -DBUILD_DIR=$<TARGET_FILE_DIR:MainApp>
+          -DCONFIG=$<CONFIG>
+          -P "${_install_script_fitting}"
+  VERBATIM
+  COMMENT "KLSOneAnalyse (Fitting Analysis) standalone install -> ${INSTALL_DIR_FITTING}"
+)
+
+# ============================================================
+# Visual Studio solution folders
+# ============================================================
+# Groups the generated projects in the VS Solution Explorer. Silently skips
+# any target that doesn't exist in the current configuration (e.g. a module
+# not added via add_subdirectory).
+function(assign_solution_folder _folder)
+  foreach(_target IN LISTS ARGN)
+    if(TARGET ${_target})
+      set_target_properties(${_target} PROPERTIES FOLDER "${_folder}")
+    endif()
+  endforeach()
+endfunction()
+
+# MainApp + shared/general libraries
+assign_solution_folder("MainApp"
+  MainApp
+  Updater
+  ModuleInterface
+  BackendUtils
+  ModuleUtils
+  MeshLogic
+  OpenXLSX
+)
+
+# One folder per module, backend + frontend grouped together
+assign_solution_folder("Modules/ModuleView"           ModuleView)
+assign_solution_folder("Modules/ModuleOverlayCritter" ModuleOverlayCritter)
+assign_solution_folder("Modules/ModuleMillingKalotte" ModuleMillingKalotte MillingBackend MillingInterface)
+assign_solution_folder("Modules/ModulePostProcessor"  ModulePostProcessor PostProcessorBackend)
+assign_solution_folder("Modules/ModuleStatistics"     ModuleStatistics StatisticsBackend)
+assign_solution_folder("Modules/ModuleReporter"       ModuleReporter ReporterBackend)
+assign_solution_folder("Modules/ModuleFixture"        ModuleFixture FixtureBackend)
+assign_solution_folder("Modules/ModuleFileTransfer"   ModuleFileTransfer FileTransferBackend FileTransferClient)
+assign_solution_folder("Modules/ModuleFittingAnalysis" ModuleFittingAnalysis FittingAnalysisBackend)
+assign_solution_folder("Modules/ModuleUpdater"        ModuleUpdater UpdaterBackend)
+
+# Install / deploy custom targets
+assign_solution_folder("Install" deploy install_full install_plugins install_fitting)

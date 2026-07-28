@@ -91,7 +91,11 @@
       "Bash(grep *)",
       "Bash(where.exe cmake *)",
       "Read(//d//**)",
-      "Bash(xargs -I{} echo {})"
+      "Bash(xargs -I{} echo {})",
+      "Bash(where g++)",
+      "Bash(where cl *)",
+      "Bash(awk 'NR>=1')",
+      "Bash(awk 'NR<=1260 && /MillingGenerator::/{print NR\": \"$0}' Modules/ModuleMillingKalotte/MillingBackend/MillingGeneration/MillingGenerator/MillingGenerator.cpp)"
     ]
   }
 }
