@@ -1,0 +1,131 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "onemill-local-toolchain",
+      "hidden": true,
+      "description": "This machine's toolchain locations. QTDIR must be an environment entry, not a cache variable, because CMakeLists.txt reads it as $ENV{QTDIR} to find windeployqt. Qt itself is located via Qt6_DIR, so no PATH juggling is needed. VCPKG_ROOT as a cache variable also makes the configure immune to VsDevCmd.bat overwriting the environment variable with Visual Studio's bundled vcpkg.",
+      "environment": {
+        "QTDIR": "D:/DevTools/Qt/6.10.2/msvc2022_64"
+      },
+      "cacheVariables": {
+        "Qt6_DIR": "D:/DevTools/Qt/6.10.2/msvc2022_64/lib/cmake/Qt6",
+        "VCPKG_ROOT": "D:/DevTools/vcpkg",
+        "VTK_DIR": "D:/DevTools/vtk/install/lib/cmake/vtk-9.5",
+        "MODULEWORKS_DIR": "C:/DATA/install/ModuleWorksSdk"
+      }
+    },
+    {
+      "name": "onemill-config-win-msvc-x64-debug",
+      "inherits": [
+        "onemill-local-toolchain",
+        "onemill-base-win-msvc-x64-debug"
+      ],
+      "displayName": "Configure | Win | MSVC | x64 | Debug",
+      "binaryDir": "D:/BuildDirectory/KLSOneMill/win-msvc-x64-debug",
+      "cacheVariables": {
+        "INSTALL_DIR": "D:/deployData/KLSOneMill/win-msvc-x64-debug",
+        "INSTALL_DIR_FITTING": "D:/deployData/KLSOneAnalyse/win-msvc-x64-debug"
+      }
+    },
+    {
+      "name": "onemill-config-win-msvc-x64-release",
+      "inherits": [
+        "onemill-local-toolchain",
+        "onemill-base-win-msvc-x64-release"
+      ],
+      "displayName": "Configure | Win | MSVC | x64 | Release",
+      "binaryDir": "D:/BuildDirectory/KLSOneMill/win-msvc-x64-release",
+      "cacheVariables": {
+        "INSTALL_DIR": "D:/deployData/KLSOneMill/win-msvc-x64-release",
+        "INSTALL_DIR_FITTING": "D:/deployData/KLSOneAnalyse/win-msvc-x64-release"
+      }
+    },
+    {
+      "name": "onemill-config-win-msvc-x64-relwithdebinfo",
+      "inherits": [
+        "onemill-local-toolchain",
+        "onemill-base-win-msvc-x64-relwithdebinfo"
+      ],
+      "displayName": "Configure | Win | MSVC | x64 | RelWithDebInfo",
+      "description": "Default configuration. Build tree and toolchain live on D: to keep them off the system disk. Every path in this file is machine-specific - copy to CMakeUserPresets.json and adjust.",
+      "binaryDir": "D:/BuildDirectory/KLSOneMill/win-msvc-x64-relwithdebinfo",
+      "cacheVariables": {
+        "INSTALL_DIR": "D:/deployData/KLSOneMill/win-msvc-x64-relwithdebinfo",
+        "INSTALL_DIR_FITTING": "D:/deployData/KLSOneAnalyse/win-msvc-x64-relwithdebinfo"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "onemill-build-win-msvc-x64-debug",
+      "inherits": "onemill-build-base",
+      "configurePreset": "onemill-config-win-msvc-x64-debug",
+      "displayName": "Build | Win | MSVC | x64 | Debug"
+    },
+    {
+      "name": "onemill-build-win-msvc-x64-release",
+      "inherits": "onemill-build-base",
+      "configurePreset": "onemill-config-win-msvc-x64-release",
+      "displayName": "Build | Win | MSVC | x64 | Release"
+    },
+    {
+      "name": "onemill-build-win-msvc-x64-relwithdebinfo",
+      "inherits": "onemill-build-base",
+      "configurePreset": "onemill-config-win-msvc-x64-relwithdebinfo",
+      "displayName": "Build | Win | MSVC | x64 | RelWithDebInfo"
+    },
+    {
+      "name": "onemill-install-target-win-msvc-x64-debug",
+      "inherits": "onemill-install-target-base",
+      "configurePreset": "onemill-config-win-msvc-x64-debug",
+      "displayName": "Install (target only) | Win | MSVC | x64 | Debug"
+    },
+    {
+      "name": "onemill-install-target-win-msvc-x64-release",
+      "inherits": "onemill-install-target-base",
+      "configurePreset": "onemill-config-win-msvc-x64-release",
+      "displayName": "Install (target only) | Win | MSVC | x64 | Release"
+    },
+    {
+      "name": "onemill-install-target-win-msvc-x64-relwithdebinfo",
+      "inherits": "onemill-install-target-base",
+      "configurePreset": "onemill-config-win-msvc-x64-relwithdebinfo",
+      "displayName": "Install (target only) | Win | MSVC | x64 | RelWithDebInfo"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "onemill-install-win-msvc-x64-debug",
+      "displayName": "Install | Win | MSVC | x64 | Debug",
+      "steps": [
+        { "type": "configure", "name": "onemill-config-win-msvc-x64-debug" },
+        { "type": "build", "name": "onemill-build-win-msvc-x64-debug" },
+        { "type": "build", "name": "onemill-install-target-win-msvc-x64-debug" }
+      ]
+    },
+    {
+      "name": "onemill-install-win-msvc-x64-release",
+      "displayName": "Install | Win | MSVC | x64 | Release",
+      "steps": [
+        { "type": "configure", "name": "onemill-config-win-msvc-x64-release" },
+        { "type": "build", "name": "onemill-build-win-msvc-x64-release" },
+        { "type": "build", "name": "onemill-install-target-win-msvc-x64-release" }
+      ]
+    },
+    {
+      "name": "onemill-install-win-msvc-x64-relwithdebinfo",
+      "displayName": "Install | Win | MSVC | x64 | RelWithDebInfo",
+      "steps": [
+        { "type": "configure", "name": "onemill-config-win-msvc-x64-relwithdebinfo" },
+        { "type": "build", "name": "onemill-build-win-msvc-x64-relwithdebinfo" },
+        { "type": "build", "name": "onemill-install-target-win-msvc-x64-relwithdebinfo" }
+      ]
+    }
+  ]
+}

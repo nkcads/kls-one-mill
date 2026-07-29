@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"cmake.useVsDeveloperEnvironment": "always",
+		"terminal.integrated.profiles.windows": {
+			"VS Dev PowerShell (x64)": {
+				"path": "powershell.exe",
+				"args": [
+					"-NoExit",
+					"-ExecutionPolicy",
+					"Bypass",
+					"-File",
+					"${workspaceFolder}/.vscode/dev-shell.ps1"
+				]
+			}
+		},
+		"terminal.integrated.defaultProfile.windows": "VS Dev PowerShell (x64)"
+	}
+}

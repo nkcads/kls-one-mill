@@ -1,0 +1,71 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "onemill-base-win-msvc-x64",
+      "hidden": true,
+      "description": "Build policy shared by every OneMill configuration. Intentionally hidden: OneMill cannot configure without machine-specific paths (QTDIR, Qt6_DIR, VCPKG_ROOT, VTK_DIR, MODULEWORKS_DIR), so the selectable presets live in CMakeUserPresets.json. Copy CMakeUserPresets.json.example to CMakeUserPresets.json and adjust the paths - otherwise your IDE's preset list will be empty. VCPKG_TARGET_TRIPLET must be set here as a cache variable: CMakeLists.txt sets it only AFTER including the vcpkg toolchain, so by then vcpkg has already resolved the default dynamic x64-windows prefix and find_package(cpr) and friends fail. cmake-gui users do not hit this because the triplet is already in their cache.",
+      "generator": "Ninja",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "onemill-base-win-msvc-x64-debug",
+      "hidden": true,
+      "inherits": "onemill-base-win-msvc-x64",
+      "binaryDir": "${sourceDir}/out/build/win-msvc-x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "onemill-base-win-msvc-x64-release",
+      "hidden": true,
+      "inherits": "onemill-base-win-msvc-x64",
+      "binaryDir": "${sourceDir}/out/build/win-msvc-x64-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "onemill-base-win-msvc-x64-relwithdebinfo",
+      "hidden": true,
+      "inherits": "onemill-base-win-msvc-x64",
+      "binaryDir": "${sourceDir}/out/build/win-msvc-x64-relwithdebinfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "onemill-build-base",
+      "hidden": true,
+      "description": "Builds the default target 'all' on purpose. MainApp does not depend on the ten plugin DLLs under bin/<config>/modulesBert (it links only ModuleInterface and ModuleUtils), and the per-module add_custom_target(... ALL) copy targets for config/, releaseNotes/ and the ModuleWorks deps/ folders are unreachable from it, so pinning a target list would silently produce an app with no modules and no config data."
+    },
+    {
+      "name": "onemill-install-target-base",
+      "hidden": true,
+      "targets": [
+        "install_full"
+      ],
+      "description": "Runs only the 'install_full' custom target and assumes the app is already built - use the matching Install workflow preset for the full job. install_full stages MainApp, Updater, every enabled module and the Qt/VTK runtime into INSTALL_DIR, picking --debug or --release to match the configuration. The sibling targets 'install_plugins' (modules only) and 'install_fitting' (standalone KLSOneAnalyse deployment into INSTALL_DIR_FITTING) are not wired to presets; run them with cmake --build <dir> --target <name>. Note that the install script passes --no-compiler-runtime, so the staged folder still needs the VC redistributable present on the target machine."
+    }
+  ]
+}

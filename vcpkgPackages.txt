@@ -1,1 +1,77 @@
-vcpkg install clipper2:x64-windows-static spdlog:x64-windows-static
+# KLSOneMill — vcpkg dependency pin
+#
+# vcpkg is used in CLASSIC mode here (there is no vcpkg.json manifest in this repo), which means
+# the *vcpkg checkout commit* is the version lock: at a given commit, ports/<name>/vcpkg.json
+# states exactly one version per port. Check out the commit below and you get the versions below.
+#
+#   repo    https://github.com/microsoft/vcpkg
+#   commit  b81cab76a175645e047601da8f982ad86bff1cc3      (master, 2026-07-28)
+#   triplet x64-windows-static                            (static libs + static CRT, matches /MT)
+#
+# Setup:
+#   git clone https://github.com/microsoft/vcpkg <VCPKG_ROOT>
+#   git -C <VCPKG_ROOT> checkout b81cab76a175645e047601da8f982ad86bff1cc3
+#   <VCPKG_ROOT>\bootstrap-vcpkg.bat
+#   ...then run the install lines below. They may also be combined into a single call, which
+#   is faster (one dependency plan instead of thirteen):
+#     vcpkg install --triplet x64-windows-static cpr libzippp pugixml spdlog clipper2 \
+#                   nlohmann-json opencv flann libigl eigen3 boost-asio boost-geometry boost-system
+#
+# Set VCPKG_ROOT to that directory; CMakeLists.txt reads it and derives the toolchain file.
+#
+# IMPORTANT — also pass the triplet on the CMake command line:
+#   cmake ... -DVCPKG_TARGET_TRIPLET=x64-windows-static
+# CMakeLists.txt sets VCPKG_TARGET_TRIPLET only *after* including the vcpkg toolchain, so by
+# then vcpkg has already resolved the default dynamic x64-windows prefix and find_package(cpr)
+# fails with "Could not find a package configuration file provided by cpr". cmake-gui users do
+# not notice because the triplet is already stored in their cache. CMakePresets.json sets it.
+#
+# ---------------------------------------------------------------------------------------------
+# Versions produced by the commit above — verified 2026-07-29 on CADS-8352
+# (VS 18 Professional, MSVC 14.51.36231, CMake 4.2.4), building version/Beta220:
+#
+#   boost-asio       1.91.0        <boost/asio.hpp>      — FileTransferBackend, FileTransferClient
+#   boost-geometry   1.91.0        <boost/geometry.hpp>  — MillingBackend (4 files), MillingKalotteWidget
+#   boost-system     1.91.0        find_package(Boost REQUIRED COMPONENTS system)
+#   clipper2         2.0.1
+#   cpr              1.14.2
+#   eigen3           5.0.1         <Eigen/...> in 94 files across MeshUtils, ModuleUtils,
+#                                  PostProcessorBackend, FittingAnalysisBackend, MillingBackend
+#   flann            2022-10-28
+#   libigl           2.6.0#2
+#   libzippp         7.1-1.10.1
+#   nlohmann-json    3.12.0#2
+#   opencv           4.12.0        (metaport; pulls opencv4 4.12.0#7 with features
+#                                   calib3d, core, directml, dnn, dshow, fs, gapi, highgui,
+#                                   intrinsics, jpeg, msmf, png, quirc, thread, tiff, webp, win32ui)
+#   pugixml          1.16
+#   spdlog           1.17.0#1      (features core, fmt, tz-offset)
+#
+# The rest of the installed set is transitive (protobuf, curl, zlib, tiff, the remaining boost
+# modules, ...) and is likewise pinned by the commit.
+#
+# Why eigen3 and the boost modules are listed explicitly even though libigl and boost-geometry
+# would drag most of them in anyway: the port list must be derived from what the code #includes,
+# not only from what CMake find_package()s. boost-asio is the cautionary example — nothing in the
+# tree find_package()s it (FileTransferBackend asks for Boost COMPONENTS system), yet
+# FileTransferServer.h includes <boost/asio.hpp> and the build fails with
+# "Cannot open include file: 'boost/asio.hpp'" if the port is absent.
+# (<boost/filesystem/path.hpp> also appears in the tree, but only under
+# GeneralUtils/OpenXLSX/Examples/external/nowide, which is not built — so no boost-filesystem.)
+#
+# To move the pin: check out a newer vcpkg commit, re-install, re-verify, and update this file.
+# ---------------------------------------------------------------------------------------------
+
+vcpkg install boost-asio:x64-windows-static
+vcpkg install boost-geometry:x64-windows-static
+vcpkg install boost-system:x64-windows-static
+vcpkg install clipper2:x64-windows-static
+vcpkg install cpr:x64-windows-static
+vcpkg install eigen3:x64-windows-static
+vcpkg install flann:x64-windows-static
+vcpkg install libigl:x64-windows-static
+vcpkg install libzippp:x64-windows-static
+vcpkg install nlohmann-json:x64-windows-static
+vcpkg install opencv:x64-windows-static
+vcpkg install pugixml:x64-windows-static
+vcpkg install spdlog:x64-windows-static
