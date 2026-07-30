@@ -14,8 +14,8 @@ elsewhere — see [Where to look next](#where-to-look-next).
 | Structure | superproject + 26 git submodules; use `GitHelper.ps1` for recursive operations |
 | Deliverable | `MainApp.exe` + `Updater.exe` + 10 plugin DLLs under `modulesBert/` |
 | Generator | Ninja, MSVC x64, C++20, static runtime (`x64-windows-static`) |
-| Build tree | `D:/BuildDirectory/KLSOneMill4/win-msvc-x64-<config>` |
-| Install tree | `D:/deployData/KLSOneMill4/win-msvc-x64-<config>` |
+| Build tree | `D:/BuildDirectory/KLSOneMill/win-msvc-x64-<config>` (set by your `CMakeUserPresets.json`) |
+| Install tree | `D:/deployData/KLSOneMill/win-msvc-x64-<config>` (likewise) |
 | Build targets | `all`, `install_full`, `install_plugins`, `install_fitting`, `deploy` |
 | Configurations | `relwithdebinfo` (default), `release`, `debug` (**builds but cannot run** — see ledger open item 5) |
 
@@ -44,8 +44,8 @@ Machine-level, none of it fetched by the build:
 ## Cold start
 
 ```bash
-git clone --recurse-submodules <url> KLSOneMill4
-cd KLSOneMill4
+git clone --recurse-submodules <url> KLSOneMill
+cd KLSOneMill
 cp CMakeUserPresets.json.example CMakeUserPresets.json   # then edit the machine paths
 cmake --workflow --preset onemill-install-win-msvc-x64-relwithdebinfo
 ```

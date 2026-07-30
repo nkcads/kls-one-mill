@@ -382,7 +382,13 @@ foreach(_t IN LISTS _onemill_targets)
 endforeach()
 
 if(_onemill_install_deps)
-  add_dependencies(install_full ${_onemill_install_deps})
+  # All three install targets had the same shallow DEPENDS and therefore the
+  # same failure mode: run one on its own and it stages whatever is in bin/.
+  # install_fitting installs only three modules but still depends on all of
+  # them - it shares one build tree, so a partial build is a stale build.
+  add_dependencies(install_full    ${_onemill_install_deps})
+  add_dependencies(install_plugins ${_onemill_install_deps})
+  add_dependencies(install_fitting ${_onemill_install_deps})
   list(LENGTH _onemill_install_deps _onemill_dep_count)
-  message(STATUS "install_full depends on ${_onemill_dep_count} build targets")
+  message(STATUS "install targets depend on ${_onemill_dep_count} build targets")
 endif()
