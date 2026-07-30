@@ -55,6 +55,11 @@ debug/release runtime mix in the staged tree, and no `*d.dll` leaks into the Rel
 see the CRT section below. Both working configurations were started from the `.vscode/launch.json`
 "installed folder" entries, i.e. against the staged install tree, not the build tree.
 
+> **The merged tree was re-verified and re-launched.** After the 2026-07-30 merge of Robert's VHF
+> work all three configurations were rebuilt (build, install, staging, imports all green) and
+> RelWithDebInfo and Release were both launched successfully from the installed-folder entries.
+> Debug still asserts at startup on the pre-existing CRT problem, open item 5.
+
 ### Debug does not run: static CRT vs. the plugin architecture
 
 Launching the installed Debug build dies immediately in a CRT dialog:
@@ -155,6 +160,40 @@ superproject pins. Say so explicitly in the PR descriptions.
 `vcpkgPackages.txt`. Anyone reproducing this environment has to run it by hand:
 `vcpkg install boost-asio:x64-windows-static`.
 
+### Merge 2026-07-30: Robert's "VHF HoleMilling Showcase / PP Bugfix"
+
+Robert pushed one commit per repository (`6c04455` in the superproject, 2026-07-29) touching 16
+gitlinks. Merged into this branch — **merged, not rebased**, because the branch was already pushed.
+Resolved bottom-up: each submodule merged first, then its gitlink pointed at the resulting merge
+commit. Superproject merge commit `2cad38c`.
+
+| repo | merge commit | his commit |
+| --- | --- | --- |
+| `FileTransferBackend` | `1ccd2da` | `c9f2280` |
+| `FittingAnalysisBackend` | `17d198c` | `06ec88d` |
+| `FixtureBackend` | `fee099a` | `75fad5b` |
+| `StatisticsBackend` | `9ac7a4e` | `3317c82` |
+| `PostProcessorBackend` | `93f6e04` | `b229347` |
+| `MainApp` | `4a48d1c` | `367748b` |
+| `ModuleUtils` | `593fce2` | `1017174` |
+| `Modules/ModuleFileTransfer` | `3a86a19` | `037be5c` |
+| `Modules/ModuleFittingAnalysis` | `7a1caba` | `17dac99` |
+| `Modules/ModuleFixture` | `b3ebe44` | `585210d` |
+| `Modules/ModuleStatistics` | `b035d1b` | `8f415bd` |
+| `Modules/ModulePostProcessor` | `58d1336` | `f9e9f13` |
+| superproject | `2cad38c` | `6c04455` |
+
+Only two files overlapped textually and both auto-merged: he added `source_group(TREE ...)` to
+`ModuleUtils/CMakeLists.txt` and `PostProcessorBackend/CMakeLists.txt`, we added the Eigen3 lines.
+Both changes are present in both files. His eight other gitlink bumps (`BackendUtils`,
+`GeneralUtils/MeshUtils`, `ModuleMillingKalotte`, `ModuleOverlayCritter`, `ModuleReporter`,
+`ModuleUpdater`, `ModuleView`, `Updater`) never overlapped this branch and merged clean.
+
+**Re-verified after the merge**: all three configurations configure, build and install with 171
+top-level DLLs, 10 module DLLs, 57 ModuleWorks DLLs + `mwSupport.lic`, and **zero unresolved
+imports**. His new `MillingProgramValidatorVHF.cpp` compiles in all three and his VHF machine config
+(`vhf_post.py`, `vhf5axR_v2.xml`) is staged in all three. The merge cost the build nothing.
+
 ### Decision 2026-07-30: pushed, but no pull requests yet
 
 After a team discussion the branch is **not** being proposed for merge for now — `version/Beta220`
@@ -213,6 +252,30 @@ Neither target branch carries any policy today.
      it changes Release and RelWithDebInfo too. This is the real fix if Debug must work.
    - **Stop passing heap-owning objects across module boundaries.** Correct, and a large refactor
      of `ModuleInterface`. Not a build-environment task.
+6. **Feature visibility depends on hardcoded computer names — worth retiring.** Whether a developer
+   sees the VHF machine, or gets debug geometry dumps, is decided by their `COMPUTERNAME` appearing
+   in one of two unrelated source-level whitelists (details in Gotchas). Consequences: a correct
+   build looks broken next to a colleague's, new machines silently lack features, and every new PC
+   needs a commit in shared code. Both flags already have Config-window checkboxes, so the
+   whitelists only decide the *initial* state. Reading that initial state from
+   `mainAppConfig.json` instead would remove the need for anyone's name to be in the source.
+   **Deliberately not changed on this branch** — it is app behaviour in shared code, not build
+   environment.
+7. **The version in the title bar is disconnected from the build.** It reports `1.0.3` from a
+   runtime config file while the repository is at `2.1.0` and `releaseNotes/v22_0.md` implies 22.0
+   (details in Gotchas). Nobody can identify a build from it. Either wire it to the real project
+   version or drop it from the title bar.
+8. **The stray `Modules/ModuleTemplate` gitlink keeps coming back — fix it at the source.**
+   Fix 1 removed it; Robert's `6c04455` re-added it a day later, and the 2026-07-30 merge dropped it
+   again. It is not a template repository: its before and after SHAs are **byte-identical to
+   `Modules/ModuleFixture`**, so the gitlink points at `om_ModuleFixture`. Someone created
+   `Modules/ModuleTemplate` by copying the `ModuleFixture` directory *including its `.git`*, so
+   `git commit -a` keeps picking the nested repository up as a gitlink. Because it has no
+   `.gitmodules` entry, its mere presence makes `git submodule update --init --recursive` abort with
+   `fatal: No url found for submodule path` and clone **nothing at all** — this is the single change
+   that most reliably breaks a clean checkout for everybody. Removing it from the superproject is
+   only a symptom fix; whoever has that directory locally has to delete it, or add it to
+   `.gitignore`, otherwise it returns on the next `git commit -a`.
 
 ## IDE integration
 
@@ -249,6 +312,34 @@ Qt and VTK on `PATH` because the build tree has no DLLs next to the exe.
 - **`install_full` is not fully self-contained** — it passes `--no-compiler-runtime`, so the target
   machine needs the VC redistributable.
 - **The app registers the `.klso` file association to whichever build ran last.**
+- **No VHF machine in the dropdowns? Tick "Test Mode" in the Config window.** `VHF-R5.json` is the
+  only machine with `"isTest": true`, and `MachineDataConfiguration.cpp` (lines 297 and 315) filters
+  test-only machines out of the region and material combo boxes whenever the app is in
+  `MillingApplicationMode::Common`, which is the default. The checkbox
+  (`ConfigWindow::onCheckBoxTestMode` → `ToolManager::setApplicationMode`) is always available and
+  never hidden. `ConfigWindow::InitSettings()` pre-ticks it **only on `COMPUTERNAME == "CADS11"`**,
+  so a developer on that machine has it on permanently and never discovers the switch — which is
+  exactly why a build can look "wrong" next to theirs when it is identical.
+- **Two unrelated machine-name whitelists, and both have a checkbox that does the same job.**
+  `ConfigWindow::InitSettings()` pre-ticks Test Mode on `CADS11`. Separately
+  `ConfigHandler.h`'s `AppConfig` ctor sets `isTestComputer` on `CADS-5384`, `CADS11` and
+  `CADS-5479`; that one feeds `IsDebugComputer()`, used in ~16 places in `ContourBuilder`,
+  `ContourBuilderUV`, `LinkGenerator*`, `GeometricCurveExpander` and `RawPartEdgePlaneGenerator` to
+  dump debug geometry during milling generation. **It has nothing to do with the machine list.**
+  Adding a computer there is a bad trade: the dump target `D:/devData/KLS/KLSOneMill/debugData` is
+  hardcoded and the `CheckOrCreateDirectory` call that would create it is commented out, and
+  `IsDebugComputer()` returns `false` outright when `RELEASE_VERSION` is defined
+  (`MainApp/CMakeLists.txt` sets it for Release). Use the Config window's **Debug Mode** checkbox
+  instead — `SetDebugMode()` sets the same flag at runtime *and* prompts for a directory that
+  actually exists.
+- **The version in the title bar is not the build's version.** It comes from
+  `config/mainAppConfig.json` in the *install* folder, next to runtime state like
+  `fileAssociationRegistered`. The string exists nowhere in the source tree, `install_full` does not
+  stage it (no build tree contains the file), and the three install trees on this machine disagree —
+  RelWithDebInfo `1.0.3`, Release and Debug `1.0.2` — despite being built from identical source
+  minutes apart. MainApp simply round-trips whatever it finds (`j.value("version", "1.0.0")`). So
+  the title bar says `1.0.3` while the repository is at `2.1.0`. Never use it to identify a build;
+  use the build date, which `BuildTitleBarContent()` appends from `__DATE__`.
 - **Heavy builds go through `.vscode/dev-run.cmd`** (VS x64 env + parallelism capped at cores−2 +
   below-normal priority). `dumpbin` is only on `PATH` inside that environment — a dependency check
   run outside it silently reports everything as OK.
@@ -276,4 +367,5 @@ Qt and VTK on `PATH` because the build tree has no DLLs next to the exe.
 | 2026-07-29 | **Release launches and runs** from the installed folder — 2 of 3 configurations fully verified end to end |
 | 2026-07-29 | Branch `SetupBuildEnvOnBeta220` created and committed across **13 repositories** (not 11 — 5 wrapper repos exist only to carry a gitlink bump upward). All 26 gitlinks in sync afterwards, every working tree clean |
 | 2026-07-30 | Team decision: **no pull requests for now**, `version/Beta220` stays as it is. All 13 branches pushed to their remotes for backup and visibility. Recorded the ADO policy survey and the merge-commit-only constraint above, since nothing in Azure DevOps enforces it |
+| 2026-07-30 | **Merged Robert's `6c04455`** ("VHF HoleMilling Showcase / PP Bugfix") into the branch, bottom-up, 13 merge commits, superproject `2cad38c`. 8 gitlink conflicts + 1 modify/delete, no textual conflicts survived. All three configurations re-built and re-verified green. `Modules/ModuleTemplate` deletion kept — recurrence recorded as open item 8. Merge commits kept **local** pending a launch check |
 | 2026-07-29 | **Debug turns out not to run**: `__acrt_first_block == header` at startup. Root cause is pre-existing — static CRT in `MainApp` + 10 plugins = 12 CRT heaps, and the debug heap catches the first cross-boundary free that Release silently tolerates. Not caused by the 7 fixes, not narrowly fixable; recorded as open item 5 with three options. Debug's "0 unresolved imports" also downgraded to a this-box-only claim, since the debug CRT is non-redistributable |
