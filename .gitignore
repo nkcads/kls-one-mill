@@ -98,6 +98,7 @@ build/
 !.vscode/dev-shell.ps1
 !.vscode/extensions.json
 !.vscode/launch.json.example
+!.vscode/OneMill-Repo-Landscape.md
 !.vscode/OneMill-Setup-Ledger.md
 CMakeSettings.json
 
