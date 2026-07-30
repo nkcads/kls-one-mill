@@ -125,6 +125,65 @@ to Beta220. The MillingKalotte `SessionHandler.cpp` patch from the `main` attemp
 **deliberately not applied**: `RevolveItem.h`/`LabelItem.h` exist on Beta220 and are actively used
 (`RevolveItem` at line 1009, `LabelItem` at 1371/1384), so that patch would delete working features.
 
+## The branch: `SetupBuildEnvOnBeta220`
+
+13 repositories, committed locally 2026-07-29, **not pushed** (no upstream on any of them).
+Committed deepest-first so no gitlink ever referenced a commit that did not exist yet.
+
+| | repo | commit | parent | content |
+| --- | --- | --- | --- | --- |
+| L2 | `FileTransferBackend` | `7e35773` | `63fba41` | `config/.gitkeep` |
+| L2 | `FittingAnalysisBackend` | `a85b4f1` | `d1a8ab2` | `config/.gitkeep` |
+| L2 | `FixtureBackend` | `f638a61` | `12b71eb` | `config/.gitkeep` |
+| L2 | `StatisticsBackend` | `5f001bd` | `b7c4c21` | `config/.gitkeep` |
+| L2 | `PostProcessorBackend` | `fcb462e` | `2f8fc05` | fixes 4 + 7 |
+| L1 | `MainApp` | `4c8789d` | `ca920f9` | fix 6 |
+| L1 | `ModuleUtils` | `9652fe4` | `b178231` | fix 3 |
+| L1 | `Modules/ModuleFileTransfer` | `c699339` | `ff2caea` | gitlink only |
+| L1 | `Modules/ModuleFittingAnalysis` | `ad08a46` | `2d35966` | gitlink only |
+| L1 | `Modules/ModuleFixture` | `fe58c67` | `4625984` | gitlink only |
+| L1 | `Modules/ModuleStatistics` | `c2fc263` | `229c326` | gitlink only |
+| L1 | `Modules/ModulePostProcessor` | `c640962` | `be55836` | gitlink only |
+| L0 | superproject | `e9a4d86` | `141c8b7` | fix 1, presets, pin, `.vscode`, 7 gitlink bumps |
+
+**The branch name describes the reason, not the parent.** Only 5 of the 13 repos have a
+`version/Beta220` at all (superproject, `MainApp`, `ModuleUtils`, `ModulePostProcessor`,
+`PostProcessorBackend`); the other 8 are cut from their `version/20Beta` tip, which is what the
+superproject pins. Say so explicitly in the PR descriptions.
+
+**Fix 5 (`boost-asio`) is in no commit.** It is a vcpkg install action, recorded only as a line in
+`vcpkgPackages.txt`. Anyone reproducing this environment has to run it by hand:
+`vcpkg install boost-asio:x64-windows-static`.
+
+### Decision 2026-07-30: pushed, but no pull requests yet
+
+After a team discussion the branch is **not** being proposed for merge for now — `version/Beta220`
+stays as it is. The 13 branches are pushed to their remotes so the work is backed up and visible,
+but **no PRs are open** and none should be opened without revisiting the two points below.
+
+**When PRs do get opened: merge commits only, never squash or rebase.** The parent repositories'
+gitlinks point at exact commit SHAs on the child branches. A squash or rebase merge rewrites those
+SHAs, so the parent's gitlink would reference a commit unreachable from the target branch and
+`git submodule update --init --recursive` would break for everyone — the exact failure this branch
+exists to fix (see fix 1). Either complete every PR with a real merge commit, or re-point and
+re-push every gitlink after each child merge.
+
+**Nothing in Azure DevOps enforces that.** The whole `KLS OneMill` project has 9 policy
+configurations, all of them "Minimum number of reviewers" (1 approver), all scoped to
+`refs/heads/main` only, on: `KLS OneMill`, `om_MainApp`, `om_ModuleUtils`, `om_ModuleView`,
+`om_ModuleInterface`, `om_ModuleOverlayCritter`, `om_ModuleMillingKalotte`, `om_MillingBackend`,
+`om_PostProcessorBackend`. There is **no "Require a merge strategy" policy anywhere in the
+project**, so squash is not blocked — whoever completes a PR picks the strategy in the completion
+dialog, and Azure DevOps remembers each user's last choice. Other projects here are squash-only, so
+the habit is a real risk. If these PRs are ever opened, consider adding a temporary
+"Require a merge strategy → merge commit only" policy to the target branches first.
+
+Also note the PR targets would **not** be the default branch: `origin/HEAD` is `main` on all 30
+repos, and `main` is dead (see the top of this file). Targets are `version/Beta220` for the
+superproject, `om_MainApp`, `om_ModuleUtils`, `om_ModulePostProcessor` and
+`om_PostProcessorBackend`, and `version/20Beta` for the other 8, which have no `version/Beta220`.
+Neither target branch carries any policy today.
+
 ## Open — needs the dev lead
 
 1. **The PostProcessor Python interpreter is missing.** `install_full` warns
@@ -215,4 +274,6 @@ Qt and VTK on `PATH` because the build tree has no DLLs next to the exe.
 | 2026-07-29 | Clone created at `version/Beta220`; 26 submodules verified at pinned SHAs. Baseline built untouched, then 7 fixes applied one failure at a time. RelWithDebInfo builds, installs and **runs** with all 10 modules. Presets, `.gitattributes`, `.gitignore`, `.vscode` IDE files and the `vcpkgPackages.txt` pin added. `D:` cleanup reclaimed 41 GB (68.9 GB free); `D:` VHDX confirmed to survive a reboot |
 | 2026-07-29 | **Debug and Release build and install cleanly too** — both workflow presets exit 0, 10 modules, 171 DLLs, 0 unresolved imports each. The 7 fixes are therefore config-independent. Corrected the ModuleWorks `deps/` count in this ledger: **57 DLLs + `mwSupport.lic`, not 67** — the old number was never right (both configs were checked and are identical, so nothing regressed). Added the `%TEMP%`-cleanup/`C1069` gotcha after losing one Debug run to it |
 | 2026-07-29 | **Release launches and runs** from the installed folder — 2 of 3 configurations fully verified end to end |
+| 2026-07-29 | Branch `SetupBuildEnvOnBeta220` created and committed across **13 repositories** (not 11 — 5 wrapper repos exist only to carry a gitlink bump upward). All 26 gitlinks in sync afterwards, every working tree clean |
+| 2026-07-30 | Team decision: **no pull requests for now**, `version/Beta220` stays as it is. All 13 branches pushed to their remotes for backup and visibility. Recorded the ADO policy survey and the merge-commit-only constraint above, since nothing in Azure DevOps enforces it |
 | 2026-07-29 | **Debug turns out not to run**: `__acrt_first_block == header` at startup. Root cause is pre-existing — static CRT in `MainApp` + 10 plugins = 12 CRT heaps, and the debug heap catches the first cross-boundary free that Release silently tolerates. Not caused by the 7 fixes, not narrowly fixable; recorded as open item 5 with three options. Debug's "0 unresolved imports" also downgraded to a this-box-only claim, since the debug CRT is non-redistributable |
