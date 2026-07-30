@@ -100,6 +100,11 @@ build/
 !.vscode/launch.json.example
 !.vscode/OneMill-Repo-Landscape.md
 !.vscode/OneMill-Setup-Ledger.md
+!.vscode/OneMill-Fleet-Conformance.md
+# tasks.json is shared, unlike launch.json: it carries no machine-specific paths
+# (only ${workspaceFolder} and preset names) and it is the supported way to build
+# from the IDE, since the CMake sidebar cannot run the install correctly.
+!.vscode/tasks.json
 CMakeSettings.json
 
 # Machine-specific: holds this PC's Qt/vcpkg/VTK/ModuleWorks paths and build directories.

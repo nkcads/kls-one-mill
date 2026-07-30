@@ -1,0 +1,22 @@
+# Fleet-wide editor defaults, honored natively by VS Code, Visual Studio, CLion and Qt Creator.
+# Covers everything clang-format does NOT (CMake, JSON, QML, PowerShell, YAML, Markdown).
+# C/C++ *layout* stays owned by each product's .clang-format; this only sets the universal
+# attributes (charset / EOL / final newline / trailing whitespace) plus a matching 4-space indent.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{bat,cmd}]
+end_of_line = crlf
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

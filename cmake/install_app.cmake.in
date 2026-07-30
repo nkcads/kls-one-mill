@@ -36,7 +36,13 @@ function(copy_module_dll MOD_NAME)
     file(COPY "${_src}" DESTINATION "${_INST_MODULES}")
     message(STATUS "  + ${MOD_NAME}.dll")
   else()
-    message(WARNING "  ! ${MOD_NAME}.dll not found: ${_src}")
+    # Fail fast: a module enabled for install but absent from the build output
+    # would otherwise ship as a silently incomplete package (exit code 0).
+    message(FATAL_ERROR
+      "Install aborted: ${MOD_NAME}.dll is missing.\n"
+      "  expected: ${_src}\n"
+      "  The module is enabled for install but was not built. Build the 'all' "
+      "target first - MainApp does not depend on the plugin DLLs.")
   endif()
 endfunction()
 
@@ -74,7 +80,21 @@ function(copy_module_subdir MOD_NAME SUBDIR)
     file(COPY "${_src}" DESTINATION "${_dst}")
     message(STATUS "  + ${MOD_NAME}/${SUBDIR}")
   else()
-    message(WARNING "  ! ${MOD_NAME}/${SUBDIR} not found")
+    # Fail fast with a remediation specific to the payload that is missing.
+    # This subdir was explicitly requested (INSTALL_MOD_*_DEPS), so its absence
+    # means the package cannot work - the PostProcessor interpreter gap shipped
+    # unnoticed for weeks precisely because this was only a warning.
+    if(SUBDIR STREQUAL "interpreter")
+      set(_hint "The PyPy interpreter was never staged. Run deploy_ppf.exe once in\n      <MODULEWORKS_DIR>/PPFramework/PPFramework, then rebuild:\n        deploy_ppf.exe --no-Config.GUI --Config.OFFLINE --Config.PYPY_TO_INSTALL PyPy310 --Config.DEFAULT_INSTALL_DIR .")
+    elseif(SUBDIR STREQUAL "deps")
+      set(_hint "The ModuleWorks runtime DLLs were not staged. Check MODULEWORKS_DIR and build the 'all' target.")
+    else()
+      set(_hint "Build the 'all' target before installing.")
+    endif()
+    message(FATAL_ERROR
+      "Install aborted: ${MOD_NAME}/${SUBDIR} is missing.\n"
+      "  expected: ${_src}\n"
+      "  ${_hint}")
   endif()
 endfunction()
 
@@ -167,7 +187,10 @@ if(INSTALL_MODE STREQUAL "full")
     file(COPY "${UPDATER_EXE}" DESTINATION "${_INSTALL_DIR}")
     message(STATUS "[+] Updater.exe")
   else()
-    message(WARNING "  ! Updater.exe not found: ${UPDATER_EXE}")
+    message(FATAL_ERROR
+      "Install aborted: Updater.exe is missing.\n"
+      "  expected: ${UPDATER_EXE}\n"
+      "  Build the 'all' target before installing.")
   endif()
 
   # 2) windeployqt

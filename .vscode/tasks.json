@@ -1,0 +1,76 @@
+{
+  "version": "2.0.0",
+  "//": [
+    "Tasks run as type:process through .vscode/dev-run.cmd, which enters the VS x64 Developer",
+    "environment (cl/ninja) and then runs the given cmake command verbatim. This works regardless",
+    "of how VS Code was launched. (Interactive terminals get the same env via the VS Dev PowerShell",
+    "profile -> .vscode/dev-shell.ps1 in KLSOneMill.code-workspace.)",
+    "",
+    "Use these instead of the CMake sidebar's Build/Install buttons. CMake Tools substitutes its own",
+    "selected target into every build step of a workflow preset, so 'Workflow -> Install' silently",
+    "builds only the status-bar target and installs nothing. See .vscode/OneMill-Setup-Ledger.md.",
+    "",
+    "NEVER add a bare '--parallel' to these commands. CMake only consults CMAKE_BUILD_PARALLEL_LEVEL",
+    "(set to cores-2 by dev-run.cmd) when --parallel is absent; a bare --parallel makes Ninja",
+    "oversubscribe at cores+2 and freeze the machine.",
+    "",
+    "The presets referenced here live in CMakeUserPresets.json, which is gitignored. Copy",
+    "CMakeUserPresets.json.example and adjust the machine paths first, or these tasks will not resolve."
+  ],
+  "tasks": [
+    {
+      "label": "Build | Win | MSVC | x64 | RelWithDebInfo",
+      "detail": "Builds the 'all' target. This is the default developer configuration.",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--build", "--preset", "onemill-build-win-msvc-x64-relwithdebinfo"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Install | Win | MSVC | x64 | RelWithDebInfo",
+      "detail": "Runs install_full, which builds every prerequisite itself before staging.",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--build", "--preset", "onemill-install-target-win-msvc-x64-relwithdebinfo"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Build | Win | MSVC | x64 | Release",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--build", "--preset", "onemill-build-win-msvc-x64-release"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Install | Win | MSVC | x64 | Release",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--build", "--preset", "onemill-install-target-win-msvc-x64-release"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Build | Win | MSVC | x64 | Debug",
+      "detail": "Builds and installs cleanly, but the result cannot run - see open item 5 in the setup ledger (static CRT vs. the plugin architecture). Debug the RelWithDebInfo build instead.",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--build", "--preset", "onemill-build-win-msvc-x64-debug"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Install | Win | MSVC | x64 | Debug",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--build", "--preset", "onemill-install-target-win-msvc-x64-debug"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
