@@ -47,6 +47,16 @@ Per config, `install_full` stages `MainApp.exe`, `Updater.exe`, all 10 modules, 
 the ModuleWorks SDK ships release-only binaries, so Debug links release ModuleWorks DLLs. That is
 inherent to the SDK and is also how the shipping config has always been built.
 
+Those two `deps/` folders are also the **only** correct home for `mwSupport.lic` — ModuleWorks
+resolves the license from the calling DLL's own folder, never from the `MainApp.exe` folder. The
+shipping `KLSOneMillFullVersion_210_Beta4` deployment does exactly the same. Every copy in the tree
+originates from `$MODULEWORKS_DIR/quickstart/mwSupport.lic`, hardcoded in
+`ModuleWorksSetup.cmake` (MillingBackend + PostProcessorBackend, plus a stale third copy in
+MillingBackend's `ModuleDeploy.cmake`). That CMake gate only tests `EXISTS`, **not** validity — an
+invalid or placeholder license passes configure silently and blows up much later inside a toolpath
+generation. Keep a real license in the quickstart folder; `*.lic` is not in `.gitignore`, so never
+park one inside a working tree.
+
 Debug correctly stages the `d`-suffixed Qt and VTK binaries (`Qt6Cored.dll`,
 `vtkCommonCore-9.5d.dll`, …) — both kits ship debug alongside release, so there is no
 debug/release runtime mix in the staged tree, and no `*d.dll` leaks into the Release install.
@@ -110,7 +120,7 @@ the function is actually called. They are not ours and not a problem.
 Disk after all three: build trees 5.4 / 2.2 / 5.0 GB, install trees 2.1 / 1.6 / 1.6 GB,
 `D:` at 52 GB free.
 
-## The seven fixes this branch needs
+## The eight fixes this branch needs
 
 Each was found by building the untouched baseline and letting it fail — none were ported on
 assumption. All are clean-checkout blockers on `version/Beta220` as it stands today.
@@ -124,6 +134,7 @@ assumption. All are clean-checkout blockers on `version/Beta220` as it stands to
 | 5 | vcpkg | toolchain | `vcpkg install boost-asio:x64-windows-static` | `FileTransferServer.h(3): Cannot open include file: 'boost/asio.hpp'` |
 | 6 | `MainApp` | build (Ninja only) | list `app.manifest` in `add_executable()` instead of passing it via `target_link_options("/MANIFEST:EMBED" "/MANIFESTINPUT:...")` | `mt.exe : command line error c10100a7: No manifest inputs were specified` |
 | 7 | `PostProcessorBackend` | runtime | add `ALL` to the ModuleWorks DLL copy target in `CMakeHelp/ModuleWorksSetup.cmake` | `modulesBert/ModulePostProcessor/deps` was never created, so the module could not load. MillingBackend's copy of the same file already has `ALL` |
+| 8 | `ModulePostProcessorWidget` | runtime + machine | run `deploy_ppf.exe` once to create `PYPY_SOURCE`; give `CopyPostProcessorData` an `EXISTS` guard, `ALL`, a stamp file and a full-tree copy | `install_full` warned `! ModulePostProcessor/interpreter not found`. Interpreter verified: `import ppframework` succeeds, root tree identical to the shipped `KLSOneMillFullVersion_210_Beta4` install |
 
 Only #1, #2 (for StatisticsBackend) and #7 also existed on `main`. #3 recurs; #4, #5, #6 are new
 to Beta220. The MillingKalotte `SessionHandler.cpp` patch from the `main` attempt was
@@ -225,12 +236,16 @@ Neither target branch carries any policy today.
 
 ## Open — needs the dev lead
 
-1. **The PostProcessor Python interpreter is missing.** `install_full` warns
-   `! ModulePostProcessor/interpreter not found`. Two causes at once: `CopyPostProcessorData` in
-   `ModulePostProcessorWidget/CMakeLists.txt` is **also** missing `ALL`, *and* its source
-   `${MODULEWORKS_DIR}/PPFramework/PPFramework/pypy3.10-v7.3.16-win64` does not exist in our SDK
-   copy (that folder holds only `deploy_ppf.exe`). **`ALL` was deliberately not added** — with the
-   source absent it would turn a silent gap into a hard build failure. Where does PyPy come from?
+1. ~~**The PostProcessor Python interpreter is missing.**~~ **Resolved 2026-07-30 — see fix #8.**
+   PyPy comes from `deploy_ppf.exe`, which sits in that same SDK folder and is not a leftover: it is
+   a 64 MB PyInstaller deployer whose embedded payload is `data\pypy3.10-v7.3.16-win64.zip` plus
+   `ppframework-2.17.0.dev3-pp310-none-any.whl`, msgpack, semver, typing_extensions and pip. Run it
+   once per machine, fully offline, and `PYPY_SOURCE` resolves. **pypy.org is a dead end** — the
+   stock interpreter would satisfy the CMake glob and then fail at post time with
+   `ModuleNotFoundError: ppframework`, because that wheel is licensed ModuleWorks code, is not on
+   PyPI, and its `pp310` ABI tag pins it to PyPy 3.10 exactly (hence the hardcoded `v7.3.16` path).
+   A git submodule was considered and rejected: submodules need a git remote, PyPy ships release
+   zips, and the upstream repo is *source* that would have to be built.
 2. **Is Ninja an acceptable generator?** Fix #6 exists only because `startCmake.bat` launches
    `cmake-gui`, which defaults to the Visual Studio generator, where MSBuild handles manifests
    natively. If VS-generator-only is the rule, the presets should switch and #6 be reverted.
@@ -368,4 +383,6 @@ Qt and VTK on `PATH` because the build tree has no DLLs next to the exe.
 | 2026-07-29 | Branch `SetupBuildEnvOnBeta220` created and committed across **13 repositories** (not 11 — 5 wrapper repos exist only to carry a gitlink bump upward). All 26 gitlinks in sync afterwards, every working tree clean |
 | 2026-07-30 | Team decision: **no pull requests for now**, `version/Beta220` stays as it is. All 13 branches pushed to their remotes for backup and visibility. Recorded the ADO policy survey and the merge-commit-only constraint above, since nothing in Azure DevOps enforces it |
 | 2026-07-30 | **Merged Robert's `6c04455`** ("VHF HoleMilling Showcase / PP Bugfix") into the branch, bottom-up, 13 merge commits, superproject `2cad38c`. 8 gitlink conflicts + 1 modify/delete, no textual conflicts survived. All three configurations re-built and re-verified green. `Modules/ModuleTemplate` deletion kept — recurrence recorded as open item 8. Merge commits kept **local** pending a launch check |
+| 2026-07-30 | **The ModuleWorks license was my own 16-byte placeholder** ("DUMMY by SCHACHI"), which is why toolpath generation died with "License file marker is missing!" (KOM-8). Placement was never wrong — the shipping `KLSOneMillFullVersion_210_Beta4` deployment keeps `mwSupport.lic` in the same two `modulesBert/<Module>/deps/` folders our build produces, and nothing next to `MainApp.exe`. Took the real 6096-byte license (CADS GmbH, BuildVersion 2025.12.1.3, no hardware key, perpetual) out of that deployment into `$MODULEWORKS_DIR/quickstart/` plus all 12 live `deps/` folders. Versions match: Beta4's MW DLLs are the identical build to our SDK (2025.12.1.2 / 2025.12.A6.2511200753). Repro retest still open |
+| 2026-07-30 | **The missing PostProcessor interpreter is solved** (open item 1 → fix #8). `deploy_ppf.exe` in the SDK turned out to be the source: an offline PyInstaller deployer bundling `pypy3.10-v7.3.16-win64.zip` + the licensed `ppframework` PyPy wheel. Ran it in place (`--no-Config.GUI --Config.OFFLINE --Config.PYPY_TO_INSTALL PyPy310`); the resulting tree imports `ppframework` 2.17.0-dev3 and its root is **identical** to the interpreter in Robert's shipped `KLSOneMillFullVersion_210_Beta4`. Note the deployer writes a `deploy_ppf.ini` next to itself pinning `INTERPRETER`, so a second run upgrades that install instead of creating a new one — run it from the target folder. `CopyPostProcessorData` reworked: `EXISTS` guard with an actionable warning, `ALL`, a stamp file (a bare `ALL` custom target would re-copy 153 MB every build) and a full-tree copy instead of the old `*.dll` + `pypy3.exe` + `Lib/` subset. The subset was measured to work (141 MB, `import ppframework` fine) but omits `tcl/`, `Scripts/`, `include/`, `libs/`, `shared/` — 12 MB to match what actually ships. **Not yet rebuilt/installed** |
 | 2026-07-29 | **Debug turns out not to run**: `__acrt_first_block == header` at startup. Root cause is pre-existing — static CRT in `MainApp` + 10 plugins = 12 CRT heaps, and the debug heap catches the first cross-boundary free that Release silently tolerates. Not caused by the 7 fixes, not narrowly fixable; recorded as open item 5 with three options. Debug's "0 unresolved imports" also downgraded to a this-box-only claim, since the debug CRT is non-redistributable |
