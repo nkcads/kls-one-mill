@@ -31,10 +31,14 @@ install tree `D:\deployData\KLSOneMill4\win-msvc-x64-<config>`.
 **One new port was required:** `boost-asio`. See `vcpkgPackages.txt`, which is now a real pin
 (commit + triplet + every explicit port with its version).
 
-## Status: green — all three configurations
+## Status: green — both configurations, both IDEs
 
-Verified 2026-07-29 with all three `Install | Win | MSVC | x64 | <config>` workflow presets.
-Every step of every workflow exits 0.
+**VS Code and Visual Studio are both verified working paths** as of 2026-07-31 — same checkout, same
+presets, same build directory. See [IDE integration](#ide-integration) for the Visual Studio flow and
+its three CMake-integration limitations.
+
+Verified 2026-07-29 with all three `Install | Win | MSVC | x64 | <config>` workflow presets — Debug
+included, before it was removed. Every step of every workflow exits 0.
 
 | | configure+generate | build | top-level DLLs | module DLLs | unresolved imports | app launched |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -284,7 +288,14 @@ Neither target branch carries any policy today.
    implies 22.0 (details in Gotchas). It is per-developer and per-install-tree, so it can never
    identify a build, and it will keep climbing forever. Either wire it to the real project version or
    drop it from the title bar; the auto-increment is worse than showing nothing.
-8. **The stray `Modules/ModuleTemplate` gitlink keeps coming back — fix it at the source.**
+8. **Does anyone actually need the Qt Visual Studio Tools extension?** It rewrites the **committed**
+   `CMakePresets.json` as well as the local user file, and on 2026-07-31 it left the two out of sync
+   badly enough that the presets became unreadable and the configure silently switched to Visual
+   Studio's bundled vcpkg (details in Gotchas). Nothing in OneMill needs it — Qt comes from `Qt6_DIR`,
+   and there are no `.pro` or Qt-MSBuild projects. Ask everyone to disable it; if somebody does need it
+   for another product, the shared file needs protecting some other way, because one bad write there
+   breaks the build environment for whoever pulls it next.
+9. **The stray `Modules/ModuleTemplate` gitlink keeps coming back — fix it at the source.**
    Fix 1 removed it; Robert's `6c04455` re-added it a day later, and the 2026-07-30 merge dropped it
    again. It is not a template repository: its before and after SHAs are **byte-identical to
    `Modules/ModuleFixture`**, so the gitlink points at `om_ModuleFixture`. Someone created
@@ -310,6 +321,13 @@ convention: the build presets build the default target **`all`**, because `MainA
 `ModuleInterface` and `ModuleUtils` — the ten plugin DLLs and every `add_custom_target(... ALL)` copy
 step are unreachable from it, so a pinned target list would silently produce an app with no modules
 and no config data.
+
+**Preset order is load-bearing: RelWithDebInfo is listed first in every array.** IDEs preselect the
+first non-hidden preset, and while `release` came first, Visual Studio silently configured Release on
+a fresh open — the IDE default disagreed with the documented default. Both
+`CMakeUserPresets.json.example` and the local file now list `relwithdebinfo` first in
+`configurePresets`, `buildPresets` and `workflowPresets`, and the reason is in the preset's own
+`description` so nobody re-alphabetises it.
 
 `install_plugins` and `install_fitting` are deliberately not wired to presets; run them with
 `cmake --build <dir> --target <name>`. **`install_fitting`** deploys a *second product* from the same
@@ -349,7 +367,74 @@ header so nobody re-litigates them.
 config, for `Updater.exe`, and one that follows the CMake sidebar's launch target — the last needs
 Qt and VTK on `PATH` because the build tree has no DLLs next to the exe.
 
+### Visual Studio (verified 2026-07-31, VS 18)
+
+Both IDEs are supported and drive the *same* presets from one checkout, sharing the build directory.
+The flow: *File → Open → Folder*, enable **Tools → Options → CMake → General → "Always use
+CMakePresets.json"** (**off by default**; without it VS ignores the presets and the dropdowns look
+empty exactly like a missing `CMakeUserPresets.json`), then VS **configures by itself** on folder
+open, on preset change and whenever the cache goes stale — so the `<dir> is not a directory` trap does
+not exist there and no Cold start equivalent is needed. Verified: it configures into the preset's
+`binaryDir` with `VCPKG_ROOT=D:/DevTools/vcpkg`, triplet `x64-windows-static`, Ninja, and Qt/VTK from
+`D:`.
+
+Three limitations of VS's CMake integration, all found the hard way:
+
+1. **`install_full` cannot be run from the Build Preset dropdown.** Selecting
+   `Install (target only) | …` and running *Build All* rebuilds `all`, reports success and never
+   installs — the install tree is not even created. Microsoft documents `buildPresets.targets` as
+   unsupported. Use **CMake Targets View → `install_full` → Build**, or a terminal. (Same shape as the
+   CMake Tools sidebar problem in VS Code: builds the wrong thing, reports success.)
+2. **VS cannot debug the install tree.** A launch configuration bound to a CMake target
+   (`project` + `projectTarget`) **ignores `program`**, even with a literal absolute path; drop
+   `projectTarget` and the entry disappears from the startup dropdown entirely. So there is no way to
+   aim VS's debugger at `INSTALL_DIR` — debug the build tree, and check the installed artifact from
+   VS Code or outside the IDE.
+3. **`projectTarget` embeds the configuration**, so one launch entry per configuration is required:
+   `MainApp.exe (bin\RelWithDebInfo\MainApp.exe)` vs `…(bin\Release\MainApp.exe)`. An entry bound to
+   one config simply does not appear under the other, which reads as "my launch config vanished".
+
+VS also **never routes through `dev-run.cmd`**, so its builds are uncapped — Ninja defaults to
+cores + 2. Accepted rather than fixed: pinning `jobs` in the build presets would also override the cap
+for VS Code and the CLI. A terminal inside VS prefixed with `.vscode\dev-run.cmd` is therefore *better
+behaved* than *Build All*.
+
 ## Gotchas (hard-won, don't re-learn)
+
+- **The Qt Visual Studio Tools extension rewrites both preset files and can brick the toolchain.**
+  Identified from `HKCU\SOFTWARE\QtProject\QtVsTools\Versions\msvc2022_64`
+  (`InstallDir = C:\Qt\6.10.2\msvc2022_64` — the registry key name matches the injected preset name
+  exactly) and its own `Notifications_CMake_Presets_Modified` setting, so rewriting presets is a
+  designed feature. What it did here, in two passes: first it injected a hidden `Qt` preset into
+  **committed** `CMakePresets.json` plus a `Qt-Default` → `msvc2022_64` → `Qt` chain into
+  `CMakeUserPresets.json`, and appended `"Qt-Default"` to both configure presets' `inherits`; later it
+  **removed its own `Qt` preset from `CMakePresets.json` while leaving the dependents in the user
+  file**. Result: `CMake Error: Could not read presets ... Invalid preset: "msvc2022_64"` — *both*
+  files unreadable. The failure chain from there is silent and total: VS falls back to its built-in
+  `x64-debug` configuration → no `VCPKG_ROOT` cache variable → `CMakeLists.txt:39` falls back to
+  `$ENV{VCPKG_ROOT}`, which `VsDevCmd.bat` points at **VS's own bundled vcpkg**
+  (`…/VC/vcpkg/scripts/buildsystems/vcpkg.cmake`) → configure dies on `find_package(cpr)`, and it
+  configures into `out/build/x64-debug` with the wrong triplet. **Disable the extension**; nothing here
+  needs it (Qt is found via `Qt6_DIR`, and there are no `.pro` or Qt-MSBuild projects). Note the
+  `VCPKG_ROOT`-as-a-cache-variable protection in `onemill-local-toolchain` exists precisely for the
+  `VsDevCmd.bat` overwrite — but it only works while the presets are readable at all. Because
+  `CMakePresets.json` is committed, this is a **shared-file** risk, not just a local one.
+- **Debugging the build tree needs Qt *and* VTK on `PATH`; the install tree does not.** The build tree
+  has no Qt/VTK DLLs next to `MainApp.exe`. Symptom on this machine: the persistent `PATH` had
+  `C:\Qt\6.10.2\msvc2022_64\bin` but **no VTK**, so a build-tree launch found Qt and then failed with
+  `vtkRenderingCellGrid-9.5.dll was not found`; once started, `ModuleMillingKalotte` (largest
+  dependency closure of the ten) was the module that failed to load while the others succeeded.
+  Colleagues whose machine `PATH` carries both directories never see any of this — that difference,
+  nothing else, is why the same commit "works for Robert" and fails elsewhere. `launch.json` (VS Code)
+  and `.vs/launch.vs.json` (VS) both inject the two directories.
+- **Match the Qt on `PATH` to the Qt the build links against.** `C:\Qt\6.10.2\msvc2022_64` on `PATH`
+  while the build uses `D:\DevTools\Qt\6.10.2\msvc2022_64` means the build-tree exe loads Qt from a
+  *different installation* than it compiled against. It works while the versions coincide and turns
+  inexplicable when they stop. Both launch configs list the build's Qt `bin` first.
+- **Two failure messages mean "not configured", not one.** `<dir> is not a directory` when the build
+  directory is absent, and `Error: not a CMake build directory (missing CMakeCache.txt)` when the
+  directory exists but the configure never completed — the second happens after an abandoned configure
+  leaves a stub behind (VS did exactly that for Release). Both are cured by Cold start.
 
 - **The CMake sidebar cannot run this project's install.** CMake Tools substitutes its own
   status-bar target into **every** build step, including each step of a `workflowPresets` chain.
@@ -438,8 +523,9 @@ Qt and VTK on `PATH` because the build tree has no DLLs next to the exe.
 | 2026-07-30 | **Debug configuration removed** (presets, tasks, launch entry, docs, and the local gitignored copies) — it built and installed but could never run, so keeping it only invited the assertion again. The CRT analysis stays as open item 5, rewritten as what reviving it would require. **Added `Cold start` tasks** for both remaining configurations, after `cmake --build --preset` failed with `<dir> is not a directory` on a wiped build tree — that error had no recovery entry in the task list. Deliberately **no Configure task, no Clean task, no wipe task and no `--fresh` variant**; reasoning recorded under IDE integration, in `README.md` and in the `tasks.json` header. **Corrected this ledger**: the title-bar version is not round-tripped runtime state — it is an install counter that `update_version_json()` increments on every install (open item 7). Documented `INSTALL_DIR_FITTING` / `install_fitting` (the KLSOneAnalyse deployment) |
 | 2026-07-29 | Branch `SetupBuildEnvOnBeta220` created and committed across **13 repositories** (not 11 — 5 wrapper repos exist only to carry a gitlink bump upward). All 26 gitlinks in sync afterwards, every working tree clean |
 | 2026-07-30 | Team decision: **no pull requests for now**, `version/Beta220` stays as it is. All 13 branches pushed to their remotes for backup and visibility. Recorded the ADO policy survey and the merge-commit-only constraint above, since nothing in Azure DevOps enforces it |
-| 2026-07-30 | **Merged Robert's `6c04455`** ("VHF HoleMilling Showcase / PP Bugfix") into the branch, bottom-up, 13 merge commits, superproject `2cad38c`. 8 gitlink conflicts + 1 modify/delete, no textual conflicts survived. All three configurations re-built and re-verified green. `Modules/ModuleTemplate` deletion kept — recurrence recorded as open item 8. Merge commits kept **local** pending a launch check |
+| 2026-07-30 | **Merged Robert's `6c04455`** ("VHF HoleMilling Showcase / PP Bugfix") into the branch, bottom-up, 13 merge commits, superproject `2cad38c`. 8 gitlink conflicts + 1 modify/delete, no textual conflicts survived. All three configurations re-built and re-verified green. `Modules/ModuleTemplate` deletion kept — recurrence recorded as open item 9. Merge commits kept **local** pending a launch check |
 | 2026-07-30 | **The ModuleWorks license was my own 16-byte placeholder** ("DUMMY by SCHACHI"), which is why toolpath generation died with "License file marker is missing!" (KOM-8). Placement was never wrong — the shipping `KLSOneMillFullVersion_210_Beta4` deployment keeps `mwSupport.lic` in the same two `modulesBert/<Module>/deps/` folders our build produces, and nothing next to `MainApp.exe`. Took the real 6096-byte license (CADS GmbH, BuildVersion 2025.12.1.3, no hardware key, perpetual) out of that deployment into `$MODULEWORKS_DIR/quickstart/` plus all 12 live `deps/` folders. Versions match: Beta4's MW DLLs are the identical build to our SDK (2025.12.1.2 / 2025.12.A6.2511200753). Repro retest still open |
 | 2026-07-30 | **The missing PostProcessor interpreter is solved** (open item 1 → fix #8). `deploy_ppf.exe` in the SDK turned out to be the source: an offline PyInstaller deployer bundling `pypy3.10-v7.3.16-win64.zip` + the licensed `ppframework` PyPy wheel. Ran it in place (`--no-Config.GUI --Config.OFFLINE --Config.PYPY_TO_INSTALL PyPy310`); the resulting tree imports `ppframework` 2.17.0-dev3 and its root is **identical** to the interpreter in Robert's shipped `KLSOneMillFullVersion_210_Beta4`. Note the deployer writes a `deploy_ppf.ini` next to itself pinning `INTERPRETER`, so a second run upgrades that install instead of creating a new one — run it from the target folder. `CopyPostProcessorData` reworked: `EXISTS` guard with an actionable warning, `ALL`, a stamp file (a bare `ALL` custom target would re-copy 153 MB every build) and a full-tree copy instead of the old `*.dll` + `pypy3.exe` + `Lib/` subset. The subset was measured to work (141 MB, `import ppframework` fine) but omits `tcl/`, `Scripts/`, `include/`, `libs/`, `shared/` — 12 MB to match what actually ships. **Not yet rebuilt/installed** |
 | 2026-07-30 | **Install made self-sufficient and fail-fast; VS Code entry points added.** All three install targets declared only `DEPENDS MainApp Updater` (`install_fitting`: just MainApp), and MainApp links neither the plugin DLLs nor the `ALL` copy targets — so an install target staged whatever was left in `bin/`. `install_full`, `install_plugins` and `install_fitting` now each depend on every buildable target under `Modules/` (walk, not a hand list, so new modules are covered; scoped to `Modules/` deliberately — a whole-tree walk would drag in OpenXLSX's Doxygen `Documentation` target and its `EXCLUDE_FROM_ALL` benchmarks). `install_app.cmake.in` now **fails hard** on a missing module DLL, `Updater.exe`, `deps/` or `interpreter/` with a payload-specific remediation, instead of warning and exiting 0 — the mechanism that let the interpreter gap survive. Added `.vscode/tasks.json` (6 tasks through `dev-run.cmd`, `$msCompile` matcher, **no bare `--parallel`**), a root `README.md`, the fleet `.editorconfig`, and `.vscode/OneMill-Fleet-Conformance.md` recording which CADS Superbuild rules apply here and which are deliberately rejected (vcpkg above all). Fleet spec reviewed at `SuperbuildEngine@d6b4a31`. **Not yet reconfigured or rebuilt** |
 | 2026-07-29 | **Debug turns out not to run**: `__acrt_first_block == header` at startup. Root cause is pre-existing — static CRT in `MainApp` + 10 plugins = 12 CRT heaps, and the debug heap catches the first cross-boundary free that Release silently tolerates. Not caused by the build-environment fixes, not narrowly fixable; recorded as open item 5 with three options. Debug's "0 unresolved imports" also downgraded to a this-box-only claim, since the debug CRT is non-redistributable |
+| 2026-07-31 | **Visual Studio verified as a supported path** (VS 18), so both IDEs now work from one checkout: auto-configure on folder open into the preset's `binaryDir` with the right vcpkg/triplet/Qt/VTK. Recorded its three CMake-integration limits — `Install (target only)` in the Build Preset dropdown never installs, `program` is ignored so VS cannot debug the install tree, and `projectTarget` is config-specific so each configuration needs its own launch entry — plus that VS builds bypass `dev-run.cmd` and run uncapped. **Qt VS Tools broke the toolchain**: it rewrites committed `CMakePresets.json` *and* the user file, desynced them, and the unreadable presets sent the configure to VS's bundled vcpkg until the injected chain was removed — now open item 8. Build-tree debugging documented as needing Qt **and** VTK on `PATH` (the machine `PATH` had Qt from a *different* install and no VTK — the whole "works on his PC" difference). **RelWithDebInfo moved first in every preset array** after VS silently picked Release. README restructured around *which tree are you running?* with per-IDE walkthroughs, since `all` vs `install_full` depends entirely on that answer |

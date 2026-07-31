@@ -21,6 +21,20 @@
       }
     },
     {
+      "name": "onemill-config-win-msvc-x64-relwithdebinfo",
+      "inherits": [
+        "onemill-local-toolchain",
+        "onemill-base-win-msvc-x64-relwithdebinfo"
+      ],
+      "displayName": "Configure | Win | MSVC | x64 | RelWithDebInfo",
+      "description": "Default configuration - listed FIRST on purpose: IDEs preselect the first non-hidden preset, so this keeps the IDE default and the documented default the same. Build tree and toolchain live on D: to keep them off the system disk. Every path in this file is machine-specific - copy to CMakeUserPresets.json and adjust.",
+      "binaryDir": "D:/BuildDirectory/KLSOneMill/win-msvc-x64-relwithdebinfo",
+      "cacheVariables": {
+        "INSTALL_DIR": "D:/deployData/KLSOneMill/win-msvc-x64-relwithdebinfo",
+        "INSTALL_DIR_FITTING": "D:/deployData/KLSOneAnalyse/win-msvc-x64-relwithdebinfo"
+      }
+    },
+    {
       "name": "onemill-config-win-msvc-x64-release",
       "inherits": [
         "onemill-local-toolchain",
@@ -32,29 +46,9 @@
         "INSTALL_DIR": "D:/deployData/KLSOneMill/win-msvc-x64-release",
         "INSTALL_DIR_FITTING": "D:/deployData/KLSOneAnalyse/win-msvc-x64-release"
       }
-    },
-    {
-      "name": "onemill-config-win-msvc-x64-relwithdebinfo",
-      "inherits": [
-        "onemill-local-toolchain",
-        "onemill-base-win-msvc-x64-relwithdebinfo"
-      ],
-      "displayName": "Configure | Win | MSVC | x64 | RelWithDebInfo",
-      "description": "Default configuration. Build tree and toolchain live on D: to keep them off the system disk. Every path in this file is machine-specific - copy to CMakeUserPresets.json and adjust.",
-      "binaryDir": "D:/BuildDirectory/KLSOneMill/win-msvc-x64-relwithdebinfo",
-      "cacheVariables": {
-        "INSTALL_DIR": "D:/deployData/KLSOneMill/win-msvc-x64-relwithdebinfo",
-        "INSTALL_DIR_FITTING": "D:/deployData/KLSOneAnalyse/win-msvc-x64-relwithdebinfo"
-      }
     }
   ],
   "buildPresets": [
-    {
-      "name": "onemill-build-win-msvc-x64-release",
-      "inherits": "onemill-build-base",
-      "configurePreset": "onemill-config-win-msvc-x64-release",
-      "displayName": "Build | Win | MSVC | x64 | Release"
-    },
     {
       "name": "onemill-build-win-msvc-x64-relwithdebinfo",
       "inherits": "onemill-build-base",
@@ -62,28 +56,25 @@
       "displayName": "Build | Win | MSVC | x64 | RelWithDebInfo"
     },
     {
-      "name": "onemill-install-target-win-msvc-x64-release",
-      "inherits": "onemill-install-target-base",
+      "name": "onemill-build-win-msvc-x64-release",
+      "inherits": "onemill-build-base",
       "configurePreset": "onemill-config-win-msvc-x64-release",
-      "displayName": "Install (target only) | Win | MSVC | x64 | Release"
+      "displayName": "Build | Win | MSVC | x64 | Release"
     },
     {
       "name": "onemill-install-target-win-msvc-x64-relwithdebinfo",
       "inherits": "onemill-install-target-base",
       "configurePreset": "onemill-config-win-msvc-x64-relwithdebinfo",
       "displayName": "Install (target only) | Win | MSVC | x64 | RelWithDebInfo"
+    },
+    {
+      "name": "onemill-install-target-win-msvc-x64-release",
+      "inherits": "onemill-install-target-base",
+      "configurePreset": "onemill-config-win-msvc-x64-release",
+      "displayName": "Install (target only) | Win | MSVC | x64 | Release"
     }
   ],
   "workflowPresets": [
-    {
-      "name": "onemill-install-win-msvc-x64-release",
-      "displayName": "Install | Win | MSVC | x64 | Release",
-      "steps": [
-        { "type": "configure", "name": "onemill-config-win-msvc-x64-release" },
-        { "type": "build", "name": "onemill-build-win-msvc-x64-release" },
-        { "type": "build", "name": "onemill-install-target-win-msvc-x64-release" }
-      ]
-    },
     {
       "name": "onemill-install-win-msvc-x64-relwithdebinfo",
       "displayName": "Install | Win | MSVC | x64 | RelWithDebInfo",
@@ -91,6 +82,15 @@
         { "type": "configure", "name": "onemill-config-win-msvc-x64-relwithdebinfo" },
         { "type": "build", "name": "onemill-build-win-msvc-x64-relwithdebinfo" },
         { "type": "build", "name": "onemill-install-target-win-msvc-x64-relwithdebinfo" }
+      ]
+    },
+    {
+      "name": "onemill-install-win-msvc-x64-release",
+      "displayName": "Install | Win | MSVC | x64 | Release",
+      "steps": [
+        { "type": "configure", "name": "onemill-config-win-msvc-x64-release" },
+        { "type": "build", "name": "onemill-build-win-msvc-x64-release" },
+        { "type": "build", "name": "onemill-install-target-win-msvc-x64-release" }
       ]
     }
   ]
