@@ -10,14 +10,14 @@ elsewhere — see [Where to look next](#where-to-look-next).
 
 | | |
 | --- | --- |
-| Live branch | `version/Beta220` — **`main` is dead** (32 commits behind, do not target it) |
+| Live branch | `version/Beta220` — **`main` is dead** (33 commits behind, do not target it) |
 | Structure | superproject + 26 git submodules; use `GitHelper.ps1` for recursive operations |
 | Deliverable | `MainApp.exe` + `Updater.exe` + 10 plugin DLLs under `modulesBert/` |
 | Generator | Ninja, MSVC x64, C++20, static runtime (`x64-windows-static`) |
 | Build tree | `D:/BuildDirectory/KLSOneMill/win-msvc-x64-<config>` (set by your `CMakeUserPresets.json`) |
 | Install tree | `D:/deployData/KLSOneMill/win-msvc-x64-<config>` (likewise) |
 | Build targets | `all`, `install_full`, `install_plugins`, `install_fitting`, `deploy` |
-| Configurations | `relwithdebinfo` (default), `release`, `debug` (**builds but cannot run** — see ledger open item 5) |
+| Configurations | `relwithdebinfo` (default), `release`. There is **no `debug`** — it builds and installs but cannot run (see ledger open item 5); debug the RelWithDebInfo build, it has full PDBs |
 
 ## Prerequisites
 
@@ -38,8 +38,6 @@ Machine-level, none of it fetched by the build:
 
   Run it *from* that folder — it writes a `deploy_ppf.ini` next to itself pinning the interpreter
   path, so a second run elsewhere upgrades the first install instead of creating a new one.
-  An interpreter from pypy.org will **not** work: `ppframework` is a licensed ModuleWorks wheel
-  (`pp310` ABI tag, not on PyPI) that exists only inside that deployer.
 
 ## Cold start
 
@@ -65,6 +63,13 @@ The workflow runs configure → build `all` → `install_full`. Add `--fresh` to
 developer environment, caps parallelism at cores−2 and runs at below-normal priority so a build
 never freezes the machine.
 
+> **`Build`/`Install` need an already-configured build directory.** `cmake --build --preset` never
+> configures one itself, so on a fresh clone — or after deleting the build directory — they fail with
+> `<dir> is not a directory`. Run **`Cold start | Win | MSVC | x64 | <config>`** instead: it is the
+> workflow preset, so it configures, builds `all` and runs `install_full` in one step. That is the
+> only recovery action there is; deliberately no separate Configure task exists, so there is never a
+> question of which one to run.
+
 > **Do not use the CMake sidebar's Build/Install buttons.** CMake Tools substitutes its own
 > status-bar target into *every* build step, including each step of a workflow preset — so
 > "Workflow → Install" builds only that one target and installs nothing, while reporting success.
@@ -81,6 +86,23 @@ cmake --build --preset onemill-install-target-win-msvc-x64-relwithdebinfo   # in
 
 Open `KLSOneMill.code-workspace` (not the bare folder) — it ships the VS Dev PowerShell profile that
 puts `cl`/`ninja` on `PATH` in the integrated terminal.
+
+## Full reset
+
+After editing `CMakeUserPresets.json` — a new Qt, VTK, vcpkg or ModuleWorks path — the existing
+CMake cache still holds the old values and wins over the preset. Rather than reaching for
+`--fresh`, wipe and cold start:
+
+1. Delete the build directory and the install directory. **Both paths are in your own
+   `CMakeUserPresets.json`** (`binaryDir` and `INSTALL_DIR`; also `INSTALL_DIR_FITTING` if you use
+   `install_fitting`).
+2. Run the **`Cold start | …`** task for that configuration.
+
+There is deliberately **no Clean task**. `cmake --build --target clean` would not clean what
+matters: the per-module `add_custom_target(... ALL)` steps copy `config/`, `releaseNotes/` and the
+ModuleWorks `deps/` folders into `bin/<config>/modulesBert/`, and Ninja does not track those as
+outputs, so they would survive. A half-clean that leaves stale plugin data behind is worse than
+none — it produces bugs that look like code bugs.
 
 ## Adding a module
 

@@ -21,19 +21,6 @@
       }
     },
     {
-      "name": "onemill-config-win-msvc-x64-debug",
-      "inherits": [
-        "onemill-local-toolchain",
-        "onemill-base-win-msvc-x64-debug"
-      ],
-      "displayName": "Configure | Win | MSVC | x64 | Debug",
-      "binaryDir": "D:/BuildDirectory/KLSOneMill/win-msvc-x64-debug",
-      "cacheVariables": {
-        "INSTALL_DIR": "D:/deployData/KLSOneMill/win-msvc-x64-debug",
-        "INSTALL_DIR_FITTING": "D:/deployData/KLSOneAnalyse/win-msvc-x64-debug"
-      }
-    },
-    {
       "name": "onemill-config-win-msvc-x64-release",
       "inherits": [
         "onemill-local-toolchain",
@@ -63,12 +50,6 @@
   ],
   "buildPresets": [
     {
-      "name": "onemill-build-win-msvc-x64-debug",
-      "inherits": "onemill-build-base",
-      "configurePreset": "onemill-config-win-msvc-x64-debug",
-      "displayName": "Build | Win | MSVC | x64 | Debug"
-    },
-    {
       "name": "onemill-build-win-msvc-x64-release",
       "inherits": "onemill-build-base",
       "configurePreset": "onemill-config-win-msvc-x64-release",
@@ -79,12 +60,6 @@
       "inherits": "onemill-build-base",
       "configurePreset": "onemill-config-win-msvc-x64-relwithdebinfo",
       "displayName": "Build | Win | MSVC | x64 | RelWithDebInfo"
-    },
-    {
-      "name": "onemill-install-target-win-msvc-x64-debug",
-      "inherits": "onemill-install-target-base",
-      "configurePreset": "onemill-config-win-msvc-x64-debug",
-      "displayName": "Install (target only) | Win | MSVC | x64 | Debug"
     },
     {
       "name": "onemill-install-target-win-msvc-x64-release",
@@ -100,15 +75,6 @@
     }
   ],
   "workflowPresets": [
-    {
-      "name": "onemill-install-win-msvc-x64-debug",
-      "displayName": "Install | Win | MSVC | x64 | Debug",
-      "steps": [
-        { "type": "configure", "name": "onemill-config-win-msvc-x64-debug" },
-        { "type": "build", "name": "onemill-build-win-msvc-x64-debug" },
-        { "type": "build", "name": "onemill-install-target-win-msvc-x64-debug" }
-      ]
-    },
     {
       "name": "onemill-install-win-msvc-x64-release",
       "displayName": "Install | Win | MSVC | x64 | Release",

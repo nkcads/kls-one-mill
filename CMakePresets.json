@@ -9,7 +9,7 @@
     {
       "name": "onemill-base-win-msvc-x64",
       "hidden": true,
-      "description": "Build policy shared by every OneMill configuration. Intentionally hidden: OneMill cannot configure without machine-specific paths (QTDIR, Qt6_DIR, VCPKG_ROOT, VTK_DIR, MODULEWORKS_DIR), so the selectable presets live in CMakeUserPresets.json. Copy CMakeUserPresets.json.example to CMakeUserPresets.json and adjust the paths - otherwise your IDE's preset list will be empty. VCPKG_TARGET_TRIPLET must be set here as a cache variable: CMakeLists.txt sets it only AFTER including the vcpkg toolchain, so by then vcpkg has already resolved the default dynamic x64-windows prefix and find_package(cpr) and friends fail. cmake-gui users do not hit this because the triplet is already in their cache.",
+      "description": "Build policy shared by every OneMill configuration. Intentionally hidden: OneMill cannot configure without machine-specific paths (QTDIR, Qt6_DIR, VCPKG_ROOT, VTK_DIR, MODULEWORKS_DIR), so the selectable presets live in CMakeUserPresets.json. Copy CMakeUserPresets.json.example to CMakeUserPresets.json and adjust the paths - otherwise your IDE's preset list will be empty. VCPKG_TARGET_TRIPLET must be set here as a cache variable: CMakeLists.txt sets it only AFTER including the vcpkg toolchain, so by then vcpkg has already resolved the default dynamic x64-windows prefix and find_package(cpr) and friends fail. cmake-gui users do not hit this because the triplet is already in their cache. There is deliberately NO Debug configuration: it builds and installs but cannot run - static CRT gives MainApp and each of the ten plugin DLLs its own heap, and the debug heap asserts on the first allocation that crosses a module boundary. Debug the RelWithDebInfo build instead. See open item 5 in .vscode/OneMill-Setup-Ledger.md for what reviving Debug would require.",
       "generator": "Ninja",
       "architecture": {
         "value": "x64",
@@ -23,15 +23,6 @@
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
-      }
-    },
-    {
-      "name": "onemill-base-win-msvc-x64-debug",
-      "hidden": true,
-      "inherits": "onemill-base-win-msvc-x64",
-      "binaryDir": "${sourceDir}/out/build/win-msvc-x64-debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
@@ -65,7 +56,7 @@
       "targets": [
         "install_full"
       ],
-      "description": "Runs only the 'install_full' custom target and assumes the app is already built - use the matching Install workflow preset for the full job. install_full stages MainApp, Updater, every enabled module and the Qt/VTK runtime into INSTALL_DIR, picking --debug or --release to match the configuration. The sibling targets 'install_plugins' (modules only) and 'install_fitting' (standalone KLSOneAnalyse deployment into INSTALL_DIR_FITTING) are not wired to presets; run them with cmake --build <dir> --target <name>. Note that the install script passes --no-compiler-runtime, so the staged folder still needs the VC redistributable present on the target machine."
+      "description": "Runs only the 'install_full' custom target and assumes the app is already built - use the matching Install workflow preset for the full job. install_full stages MainApp, Updater, every enabled module and the Qt/VTK runtime into INSTALL_DIR, passing windeployqt the flavour that matches the configuration (--release for both RelWithDebInfo and Release; there is no Debug configuration). The sibling targets 'install_plugins' (modules only) and 'install_fitting' (standalone KLSOneAnalyse deployment into INSTALL_DIR_FITTING) are not wired to presets; run them with cmake --build <dir> --target <name>. Note that the install script passes --no-compiler-runtime, so the staged folder still needs the VC redistributable present on the target machine."
     }
   ]
 }

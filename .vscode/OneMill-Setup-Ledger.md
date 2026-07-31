@@ -5,11 +5,12 @@
 ## Why this clone exists
 
 An earlier attempt built the same environment on `main`. `main` is **dead** in the whole C++ tree:
-superproject `main` = `a5ca137` ("Merged PR 25596: Merge RC10", 2025-12-10), **32 commits behind**
+superproject `main` = `a5ca137` ("Merged PR 25596: Merge RC10", 2025-12-10), **33 commits behind**
 `version/Beta220`. It is still the Azure DevOps default branch on all 30 repos, which is what makes
 it look alive. History is strictly linear — `main` → `version/20Beta` → `version/Beta220`, nothing
-diverged — so `main` was simply never fast-forwarded. See `.vscode/OneMill-Repo-Landscape.md` in
-the KLSOneMill3 checkout for the full branch/tag/gitlink survey.
+diverged — so `main` was simply never fast-forwarded. See
+[OneMill-Repo-Landscape.md](OneMill-Repo-Landscape.md) next to this file for the full
+branch/tag/gitlink survey.
 
 `version/Beta220` is the live branch. Where a submodule has no `version/Beta220`, its pinned SHA is
 the tip of `version/20Beta`; the pinning is correct, so `--recursive` gives the right SHAs.
@@ -38,8 +39,8 @@ Every step of every workflow exits 0.
 | | configure+generate | build | top-level DLLs | module DLLs | unresolved imports | app launched |
 | --- | --- | --- | --- | --- | --- | --- |
 | RelWithDebInfo | 1.9 s / 1.3 s | 556 steps | 171 | 10 | 0 | **yes** |
-| Debug | 1.9 s / 1.2 s | 556 steps | 171 | 10 | 0 | **no — asserts at startup, see below** |
 | Release | ~2 s / ~1 s | 556 steps | 171 | 10 | 0 | **yes** |
+| ~~Debug~~ | 1.9 s / 1.2 s | 556 steps | 171 | 10 | 0 | **no — asserted at startup; configuration removed 2026-07-30, see open item 5** |
 
 Per config, `install_full` stages `MainApp.exe`, `Updater.exe`, all 10 modules, and gives
 `ModuleMillingKalotte` and `ModulePostProcessor` **57 ModuleWorks DLLs + `mwSupport.lic`
@@ -98,7 +99,7 @@ Release and RelWithDebInfo survive it only by luck: since the VS2015 UCRT refact
 dynamic UCRT both allocate from the *process default heap*, so a cross-heap free usually happens to
 work. The debug heap adds per-instance bookkeeping, so the very first cross-boundary free asserts.
 
-**This is pre-existing on `version/Beta220`, not a consequence of the seven fixes.** Our binaries
+**This is pre-existing on `version/Beta220`, not a consequence of the eight fixes.** Our binaries
 are static-CRT in every configuration, including the RelWithDebInfo that runs fine, and the
 static-runtime choice is the project's own (see `CLAUDE.md`). The fixes simply made Debug
 *reachable* for the first time, which is how a latent problem became visible. It is not narrowly
@@ -254,13 +255,14 @@ Neither target branch carries any policy today.
    `.gitkeep` was chosen to keep the change minimal and behaviour identical.
 4. **`main` and the ADO default branch** — revive `main` or retire it? 28 of 30 repos have a
    misleading default.
-5. **Is a working Debug configuration wanted at all?** Debug builds and installs cleanly but
-   cannot run: static CRT (`/MT`) in `MainApp` and all ten plugins means one CRT heap per binary,
-   and the debug heap asserts on the first allocation that crosses a module boundary (details
-   above). Three ways out, in increasing cost:
-   - **Do nothing.** Debug the RelWithDebInfo build — it has full PDBs and it works. Costs
-     nothing, keeps this branch minimal. **This is what the branch currently does**, and it is my
-     recommendation unless somebody actually needs Debug.
+5. **Is a working Debug configuration wanted at all?** **Debug was removed on 2026-07-30** — presets,
+   tasks and launch entry are gone. It built and installed cleanly but could not run: static CRT
+   (`/MT`) in `MainApp` and all ten plugins means one CRT heap per binary, and the debug heap asserts
+   on the first allocation that crosses a module boundary (details above). Reviving it means picking
+   one of these first — re-adding the presets alone just recreates a configuration nobody can run:
+   - **Leave it removed.** Debug the RelWithDebInfo build — it has full PDBs and it works. Costs
+     nothing. **This is what the branch does**, and it is my recommendation unless somebody actually
+     needs Debug.
    - **Switch the CRT to dynamic** so every binary shares one heap. The vcpkg triplet designed for
      this is `x64-windows-static-md` (static libs, dynamic CRT). It means rebuilding every vcpkg
      dependency and re-pinning `vcpkgPackages.txt`, and vcpkg has no clean per-config triplet, so
@@ -276,10 +278,12 @@ Neither target branch carries any policy today.
    `mainAppConfig.json` instead would remove the need for anyone's name to be in the source.
    **Deliberately not changed on this branch** — it is app behaviour in shared code, not build
    environment.
-7. **The version in the title bar is disconnected from the build.** It reports `1.0.3` from a
-   runtime config file while the repository is at `2.1.0` and `releaseNotes/v22_0.md` implies 22.0
-   (details in Gotchas). Nobody can identify a build from it. Either wire it to the real project
-   version or drop it from the title bar.
+7. **The version in the title bar is an install counter.** `update_version_json()` in
+   `cmake/install_app.cmake.in` increments it on every install, so it reports `1.0.3` — meaning
+   "installed three times here" — while the repository is at `2.1.0` and `releaseNotes/v22_0.md`
+   implies 22.0 (details in Gotchas). It is per-developer and per-install-tree, so it can never
+   identify a build, and it will keep climbing forever. Either wire it to the real project version or
+   drop it from the title bar; the auto-increment is worse than showing nothing.
 8. **The stray `Modules/ModuleTemplate` gitlink keeps coming back — fix it at the source.**
    Fix 1 removed it; Robert's `6c04455` re-added it a day later, and the 2026-07-30 merge dropped it
    again. It is not a template repository: its before and after SHAs are **byte-identical to
@@ -300,14 +304,46 @@ selectable presets live in `CMakeUserPresets.json`, which is gitignored;
 `D:/BuildDirectory/KLSOneMill` paths. `startCmake.bat` is **untouched** and behaves exactly as
 before.
 
-Presets: 3 configure, 6 build (3 × `all`, 3 × `install_full`), 3 workflow
-(configure → build → install). Deviation from the fleet convention: the build presets build the
-default target **`all`**, because `MainApp` links only `ModuleInterface` and `ModuleUtils` — the ten
-plugin DLLs and every `add_custom_target(... ALL)` copy step are unreachable from it, so a pinned
-target list would silently produce an app with no modules and no config data.
+Presets, **RelWithDebInfo and Release only** (no Debug — open item 5): 2 configure, 4 build
+(2 × `all`, 2 × `install_full`), 2 workflow (configure → build → install). Deviation from the fleet
+convention: the build presets build the default target **`all`**, because `MainApp` links only
+`ModuleInterface` and `ModuleUtils` — the ten plugin DLLs and every `add_custom_target(... ALL)` copy
+step are unreachable from it, so a pinned target list would silently produce an app with no modules
+and no config data.
 
-`install_plugins` and `install_fitting` (standalone KLSOneAnalyse) are deliberately not wired to
-presets; run them with `cmake --build <dir> --target <name>`.
+`install_plugins` and `install_fitting` are deliberately not wired to presets; run them with
+`cmake --build <dir> --target <name>`. **`install_fitting`** deploys a *second product* from the same
+build — **KLSOneAnalyse** — into `INSTALL_DIR_FITTING` (`CACHE PATH`, `CMakeLists.txt:247`): the same
+`MainApp.exe` with only `ModuleView`, `ModuleStatistics` and `ModuleFittingAnalysis` enabled, no
+ModuleWorks `deps/`, and `applicationName` rewritten to `KLSOneAnalyse` by `update_version_json()`.
+It works by configuring `install_app.cmake.in` a *second* time with overridden `INSTALL_MOD_*`
+options, which is why `INSTALL_DIR` is reassigned at line 252 — that reassignment does not affect the
+already-configured `install_full` script. The bare CMakeLists default
+(`D:/deployData/KLSOneAnalyse`) has **no config suffix**, so all configurations would overwrite each
+other; `CMakeUserPresets.json.example` overrides it per config, so preset users are fine.
+
+### Tasks (`.vscode/tasks.json`, committed)
+
+6 tasks: `Build | …` and `Install | …` for RelWithDebInfo and Release, plus
+**`Cold start | … | <config>`** for each, which runs the *workflow* preset.
+
+`Cold start` exists because `cmake --build --preset` **never configures**: on a fresh clone, or after
+deleting the build directory, `Build`/`Install` fail with `<dir> is not a directory`. Cold start is
+the **only** recovery action — there is deliberately no separate Configure task, so the question
+"which one do I run" cannot arise, and no `--fresh` variant either: a changed toolchain path in
+`CMakeUserPresets.json` is handled by wiping the build and install directories and cold-starting,
+which is one concept instead of two.
+
+There is deliberately **no Clean task**. `cmake --build --target clean` would not clean what matters:
+the per-module `add_custom_target(... ALL)` steps copy `config/`, `releaseNotes/` and the ModuleWorks
+`deps/` folders into `bin/<config>/modulesBert/`, and Ninja does not track those as outputs, so they
+would survive. A half-clean that leaves stale plugin data behind produces bugs that look like code
+bugs. A wipe task was also rejected: it would have to resolve `binaryDir` out of the gitignored
+`CMakeUserPresets.json` (parse the preset JSON, walk `inherits`, expand `${sourceDir}`) because the
+paths are machine-specific and cannot be hardcoded in a committed file — and a path-resolution bug
+there deletes the wrong directory. Deleting two folders by hand is rare, unambiguous, and now
+recoverable via Cold start. Both decisions are documented in `README.md` and in the `tasks.json`
+header so nobody re-litigates them.
 
 `.vscode/launch.json` (gitignored, `.example` committed) has entries for the installed folder per
 config, for `Updater.exe`, and one that follows the CMake sidebar's launch target — the last needs
@@ -362,14 +398,18 @@ Qt and VTK on `PATH` because the build tree has no DLLs next to the exe.
   (`MainApp/CMakeLists.txt` sets it for Release). Use the Config window's **Debug Mode** checkbox
   instead — `SetDebugMode()` sets the same flag at runtime *and* prompts for a directory that
   actually exists.
-- **The version in the title bar is not the build's version.** It comes from
-  `config/mainAppConfig.json` in the *install* folder, next to runtime state like
-  `fileAssociationRegistered`. The string exists nowhere in the source tree, `install_full` does not
-  stage it (no build tree contains the file), and the three install trees on this machine disagree —
-  RelWithDebInfo `1.0.3`, Release and Debug `1.0.2` — despite being built from identical source
-  minutes apart. MainApp simply round-trips whatever it finds (`j.value("version", "1.0.0")`). So
-  the title bar says `1.0.3` while the repository is at `2.1.0`. Never use it to identify a build;
-  use the build date, which `BuildTitleBarContent()` appends from `__DATE__`.
+- **The version in the title bar is an install counter, not a version.** `update_version_json()` in
+  `cmake/install_app.cmake.in` (line 101) reads `config/mainAppConfig.json` from the *install*
+  folder, seeds it with `"version": "1.0.0"` if absent, and then **increments the last integer
+  component on every single install**, logging `[+] config/mainAppConfig.json (1.0.2 → 1.0.3)`. The
+  same function patches `applicationName`, which is how `install_fitting` rebrands the identical
+  `MainApp.exe` as `KLSOneAnalyse`. So `1.0.3` means "`install_full` has run three times in this
+  tree" — it is per-install-tree and per-developer, and the number appears nowhere in the source
+  because it is generated. That is why the three install trees on this machine disagreed
+  (RelWithDebInfo `1.0.3`, Release and Debug `1.0.2`) despite identical source built minutes apart.
+  The title bar therefore reads `1.0.3` while the repository is at `2.1.0`. **Never use it to
+  identify a build**; use the build date, which `BuildTitleBarContent()` appends from `__DATE__`, or
+  the superproject gitlink SHA.
 - **Heavy builds go through `.vscode/dev-run.cmd`** (VS x64 env + parallelism capped at cores−2 +
   below-normal priority). `dumpbin` is only on `PATH` inside that environment — a dependency check
   run outside it silently reports everything as OK.
@@ -393,12 +433,13 @@ Qt and VTK on `PATH` because the build tree has no DLLs next to the exe.
 | When | What |
 | --- | --- |
 | 2026-07-29 | Clone created at `version/Beta220`; 26 submodules verified at pinned SHAs. Baseline built untouched, then 7 fixes applied one failure at a time. RelWithDebInfo builds, installs and **runs** with all 10 modules. Presets, `.gitattributes`, `.gitignore`, `.vscode` IDE files and the `vcpkgPackages.txt` pin added. `D:` cleanup reclaimed 41 GB (68.9 GB free); `D:` VHDX confirmed to survive a reboot |
-| 2026-07-29 | **Debug and Release build and install cleanly too** — both workflow presets exit 0, 10 modules, 171 DLLs, 0 unresolved imports each. The 7 fixes are therefore config-independent. Corrected the ModuleWorks `deps/` count in this ledger: **57 DLLs + `mwSupport.lic`, not 67** — the old number was never right (both configs were checked and are identical, so nothing regressed). Added the `%TEMP%`-cleanup/`C1069` gotcha after losing one Debug run to it |
+| 2026-07-29 | **Debug and Release build and install cleanly too** — both workflow presets exit 0, 10 modules, 171 DLLs, 0 unresolved imports each. The build-environment fixes are therefore config-independent. Corrected the ModuleWorks `deps/` count in this ledger: **57 DLLs + `mwSupport.lic`, not 67** — the old number was never right (both configs were checked and are identical, so nothing regressed). Added the `%TEMP%`-cleanup/`C1069` gotcha after losing one Debug run to it |
 | 2026-07-29 | **Release launches and runs** from the installed folder — 2 of 3 configurations fully verified end to end |
+| 2026-07-30 | **Debug configuration removed** (presets, tasks, launch entry, docs, and the local gitignored copies) — it built and installed but could never run, so keeping it only invited the assertion again. The CRT analysis stays as open item 5, rewritten as what reviving it would require. **Added `Cold start` tasks** for both remaining configurations, after `cmake --build --preset` failed with `<dir> is not a directory` on a wiped build tree — that error had no recovery entry in the task list. Deliberately **no Configure task, no Clean task, no wipe task and no `--fresh` variant**; reasoning recorded under IDE integration, in `README.md` and in the `tasks.json` header. **Corrected this ledger**: the title-bar version is not round-tripped runtime state — it is an install counter that `update_version_json()` increments on every install (open item 7). Documented `INSTALL_DIR_FITTING` / `install_fitting` (the KLSOneAnalyse deployment) |
 | 2026-07-29 | Branch `SetupBuildEnvOnBeta220` created and committed across **13 repositories** (not 11 — 5 wrapper repos exist only to carry a gitlink bump upward). All 26 gitlinks in sync afterwards, every working tree clean |
 | 2026-07-30 | Team decision: **no pull requests for now**, `version/Beta220` stays as it is. All 13 branches pushed to their remotes for backup and visibility. Recorded the ADO policy survey and the merge-commit-only constraint above, since nothing in Azure DevOps enforces it |
 | 2026-07-30 | **Merged Robert's `6c04455`** ("VHF HoleMilling Showcase / PP Bugfix") into the branch, bottom-up, 13 merge commits, superproject `2cad38c`. 8 gitlink conflicts + 1 modify/delete, no textual conflicts survived. All three configurations re-built and re-verified green. `Modules/ModuleTemplate` deletion kept — recurrence recorded as open item 8. Merge commits kept **local** pending a launch check |
 | 2026-07-30 | **The ModuleWorks license was my own 16-byte placeholder** ("DUMMY by SCHACHI"), which is why toolpath generation died with "License file marker is missing!" (KOM-8). Placement was never wrong — the shipping `KLSOneMillFullVersion_210_Beta4` deployment keeps `mwSupport.lic` in the same two `modulesBert/<Module>/deps/` folders our build produces, and nothing next to `MainApp.exe`. Took the real 6096-byte license (CADS GmbH, BuildVersion 2025.12.1.3, no hardware key, perpetual) out of that deployment into `$MODULEWORKS_DIR/quickstart/` plus all 12 live `deps/` folders. Versions match: Beta4's MW DLLs are the identical build to our SDK (2025.12.1.2 / 2025.12.A6.2511200753). Repro retest still open |
 | 2026-07-30 | **The missing PostProcessor interpreter is solved** (open item 1 → fix #8). `deploy_ppf.exe` in the SDK turned out to be the source: an offline PyInstaller deployer bundling `pypy3.10-v7.3.16-win64.zip` + the licensed `ppframework` PyPy wheel. Ran it in place (`--no-Config.GUI --Config.OFFLINE --Config.PYPY_TO_INSTALL PyPy310`); the resulting tree imports `ppframework` 2.17.0-dev3 and its root is **identical** to the interpreter in Robert's shipped `KLSOneMillFullVersion_210_Beta4`. Note the deployer writes a `deploy_ppf.ini` next to itself pinning `INTERPRETER`, so a second run upgrades that install instead of creating a new one — run it from the target folder. `CopyPostProcessorData` reworked: `EXISTS` guard with an actionable warning, `ALL`, a stamp file (a bare `ALL` custom target would re-copy 153 MB every build) and a full-tree copy instead of the old `*.dll` + `pypy3.exe` + `Lib/` subset. The subset was measured to work (141 MB, `import ppframework` fine) but omits `tcl/`, `Scripts/`, `include/`, `libs/`, `shared/` — 12 MB to match what actually ships. **Not yet rebuilt/installed** |
 | 2026-07-30 | **Install made self-sufficient and fail-fast; VS Code entry points added.** All three install targets declared only `DEPENDS MainApp Updater` (`install_fitting`: just MainApp), and MainApp links neither the plugin DLLs nor the `ALL` copy targets — so an install target staged whatever was left in `bin/`. `install_full`, `install_plugins` and `install_fitting` now each depend on every buildable target under `Modules/` (walk, not a hand list, so new modules are covered; scoped to `Modules/` deliberately — a whole-tree walk would drag in OpenXLSX's Doxygen `Documentation` target and its `EXCLUDE_FROM_ALL` benchmarks). `install_app.cmake.in` now **fails hard** on a missing module DLL, `Updater.exe`, `deps/` or `interpreter/` with a payload-specific remediation, instead of warning and exiting 0 — the mechanism that let the interpreter gap survive. Added `.vscode/tasks.json` (6 tasks through `dev-run.cmd`, `$msCompile` matcher, **no bare `--parallel`**), a root `README.md`, the fleet `.editorconfig`, and `.vscode/OneMill-Fleet-Conformance.md` recording which CADS Superbuild rules apply here and which are deliberately rejected (vcpkg above all). Fleet spec reviewed at `SuperbuildEngine@d6b4a31`. **Not yet reconfigured or rebuilt** |
-| 2026-07-29 | **Debug turns out not to run**: `__acrt_first_block == header` at startup. Root cause is pre-existing — static CRT in `MainApp` + 10 plugins = 12 CRT heaps, and the debug heap catches the first cross-boundary free that Release silently tolerates. Not caused by the 7 fixes, not narrowly fixable; recorded as open item 5 with three options. Debug's "0 unresolved imports" also downgraded to a this-box-only claim, since the debug CRT is non-redistributable |
+| 2026-07-29 | **Debug turns out not to run**: `__acrt_first_block == header` at startup. Root cause is pre-existing — static CRT in `MainApp` + 10 plugins = 12 CRT heaps, and the debug heap catches the first cross-boundary free that Release silently tolerates. Not caused by the build-environment fixes, not narrowly fixable; recorded as open item 5 with three options. Debug's "0 unresolved imports" also downgraded to a this-box-only claim, since the debug CRT is non-redistributable |

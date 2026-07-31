@@ -19,14 +19,6 @@
 			"console": "integratedTerminal"
 		},
 		{
-			"name": "OneMill (installed folder, Debug)",
-			"type": "cppvsdbg",
-			"request": "launch",
-			"program": "D:/deployData/KLSOneMill/win-msvc-x64-debug/MainApp.exe",
-			"cwd": "D:/deployData/KLSOneMill/win-msvc-x64-debug",
-			"console": "integratedTerminal"
-		},
-		{
 			"name": "OneMill Updater (installed folder, RelWithDebInfo)",
 			"type": "cppvsdbg",
 			"request": "launch",
