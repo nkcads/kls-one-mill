@@ -26,9 +26,9 @@
   explicitly opt in.
 
 .EXAMPLE
-  .\switch-to-main-latest.ps1                     # everything onto 'develop'
+  .\switch-to-latest.ps1                     # everything onto 'develop'
 .EXAMPLE
-  .\switch-to-main-latest.ps1 -Branch main        # superproject to the last release; submodules skipped
+  .\switch-to-latest.ps1 -Branch main        # superproject to the last release; submodules skipped
 .NOTES
   The Authenticode signature was removed when this file was retargeted from 'main' to
   'develop' - an edited body invalidates it, and a stale signature reads as tampering. Re-sign

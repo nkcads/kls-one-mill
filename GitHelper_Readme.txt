@@ -97,7 +97,7 @@ Parameters:
 - Submodules must have valid remotes configured.
 - Pushing requires correct permissions on all remotes.
 - This script does not handle merge conflicts — ensure working directories are clean.
-- -DoResetDefault and switch-to-main-latest.ps1 both move submodules OFF the superproject-pinned
+- -DoResetDefault and switch-to-latest.ps1 both move submodules OFF the superproject-pinned
   commits and onto a branch tip. That yields an untested combination until it builds. To get the
   pinned (i.e. tested) tree back: git submodule update --init --recursive
 
