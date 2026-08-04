@@ -1,52 +1,52 @@
 [submodule "MainApp"]
 	path = MainApp
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_MainApp
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_MainApp
 [submodule "ModuleInterface"]
 	path = ModuleInterface
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleInterface
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModuleInterface
 [submodule "ModuleUtils"]
 	path = ModuleUtils
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleUtils
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModuleUtils
 [submodule "Modules/ModuleView"]
 	path = Modules/ModuleView
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleView
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModuleView
 [submodule "Modules/ModuleMillingKalotte"]
 	path = Modules/ModuleMillingKalotte
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleMillingKalotte
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModuleMillingKalotte
 [submodule "Modules/ModuleOverlayCritter"]
 	path = Modules/ModuleOverlayCritter
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleOverlayCritter
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModuleOverlayCritter
 [submodule "Modules/ModulePostProcessor"]
 	path = Modules/ModulePostProcessor
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModulePostProcessor
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModulePostProcessor
 [submodule "BackendUtils"]
 	path = BackendUtils
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_BackendUtils
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_BackendUtils
 [submodule "GeneralUtils/OpenXLSX"]
 	path = GeneralUtils/OpenXLSX
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_OpenXLSX
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_OpenXLSX
 [submodule "Modules/ModuleStatistics"]
 	path = Modules/ModuleStatistics
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleStatistics
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModuleStatistics
 [submodule "Modules/ModuleReporter"]
 	path = Modules/ModuleReporter
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleReporter
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModuleReporter
 [submodule "Modules/ModuleFixture"]
 	path = Modules/ModuleFixture
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleFixture
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModuleFixture
 [submodule "GeneralUtils/MeshUtils"]
 	path = GeneralUtils/MeshUtils
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_MeshUtils
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_MeshUtils
 
 [submodule "Modules/ModuleFileTransfer"]
 	path = Modules/ModuleFileTransfer
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleFileTransfer
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModuleFileTransfer
 [submodule "Modules/ModuleFittingAnalysis"]
 	path = Modules/ModuleFittingAnalysis
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleFittingAnalysis
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModuleFittingAnalysis
 [submodule "Updater"]
 	path = Updater
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_Updater
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_Updater
 [submodule "Modules/ModuleUpdater"]
 	path = Modules/ModuleUpdater
-	url = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleUpdater
+	url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_ModuleUpdater
