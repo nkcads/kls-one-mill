@@ -102,7 +102,8 @@
       "Bash(rm -f _extracted.js)",
       "Read(//c/Users/ROBERT~1.HAI/AppData/Local/Temp/claude/D--git-CADS-KLSOneMill/be94e44f-33d4-4378-bdb9-948fb97df710/scratchpad/**)",
       "Bash(node build_harness.js)",
-      "Bash(awk 'NR==683,0' \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\\\\MillingBackend\\\\MillingGeneration\\\\WorkingData\\\\Tools\\\\SampleToolFactory.cpp\")"
+      "Bash(awk 'NR==683,0' \"D:\\\\git\\\\CADS\\\\KLSOneMill\\\\Modules\\\\ModuleMillingKalotte\\\\MillingBackend\\\\MillingGeneration\\\\WorkingData\\\\Tools\\\\SampleToolFactory.cpp\")",
+      "Bash(awk -F',' 'NF>=5')"
     ]
   }
 }
