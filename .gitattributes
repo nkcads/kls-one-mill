@@ -1,0 +1,20 @@
+# Normalize text to LF in repo and working tree; CRLF only for Windows batch.
+# Pinned in-repo so it overrides each developer's core.autocrlf — nothing to configure per machine.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets — never normalize or text-diff
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.dll binary
+*.lib binary
+*.exe binary
+*.ttf binary
+*.otf binary
+*.qm binary

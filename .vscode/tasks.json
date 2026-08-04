@@ -1,0 +1,93 @@
+{
+  "version": "2.0.0",
+  "//": [
+    "Tasks run as type:process through .vscode/dev-run.cmd, which enters the VS x64 Developer",
+    "environment (cl/ninja) and then runs the given cmake command verbatim. This works regardless",
+    "of how VS Code was launched. (Interactive terminals get the same env via the VS Dev PowerShell",
+    "profile -> .vscode/dev-shell.ps1 in KLSOneMill.code-workspace.)",
+    "",
+    "Use these instead of the CMake sidebar's Build/Install buttons. CMake Tools substitutes its own",
+    "selected target into every build step of a workflow preset, so 'Workflow -> Install' silently",
+    "builds only the status-bar target and installs nothing. See .vscode/OneMill-Setup-Ledger.md.",
+    "",
+    "NEVER add a bare '--parallel' to these commands. CMake only consults CMAKE_BUILD_PARALLEL_LEVEL",
+    "(set to cores-2 by dev-run.cmd) when --parallel is absent; a bare --parallel makes Ninja",
+    "oversubscribe at cores+2 and freeze the machine.",
+    "",
+    "The presets referenced here live in CMakeUserPresets.json, which is gitignored. Copy",
+    "CMakeUserPresets.json.example and adjust the machine paths first, or these tasks will not resolve.",
+    "",
+    "'Build' and 'Install' need an already-configured build directory - 'cmake --build --preset' never",
+    "configures one itself. On a fresh clone, or after deleting the build directory, they fail with",
+    "'<dir> is not a directory'. Run the matching 'Cold start' task: it is the workflow preset, so it",
+    "configures, builds 'all' and runs install_full in one go. That is the only recovery action; there",
+    "is deliberately no separate Configure task, so there is never a question of which one to run.",
+    "",
+    "There is deliberately no Clean task either. 'cmake --build --target clean' would not clean what",
+    "matters: the per-module add_custom_target(... ALL) steps copy config/, releaseNotes/ and the",
+    "ModuleWorks deps/ folders into bin/<config>/modulesBert/, and Ninja does not track those as",
+    "outputs, so they would survive. A half-clean that leaves stale plugin data behind is worse than",
+    "none. For a full reset, delete the build and install directories (their paths are in your own",
+    "CMakeUserPresets.json) and then run Cold start - see README.md.",
+    "",
+    "No Debug configuration exists. It builds and installs but cannot run: static CRT gives MainApp",
+    "and each of the ten plugin DLLs its own heap, and the debug heap asserts on the first allocation",
+    "crossing a module boundary. Debug the RelWithDebInfo build - it has full PDBs."
+  ],
+  "tasks": [
+    {
+      "label": "Build | Win | MSVC | x64 | RelWithDebInfo",
+      "detail": "Builds the 'all' target. This is the default developer configuration.",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--build", "--preset", "onemill-build-win-msvc-x64-relwithdebinfo"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Install | Win | MSVC | x64 | RelWithDebInfo",
+      "detail": "Runs install_full, which builds every prerequisite itself before staging.",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--build", "--preset", "onemill-install-target-win-msvc-x64-relwithdebinfo"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Build | Win | MSVC | x64 | Release",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--build", "--preset", "onemill-build-win-msvc-x64-release"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Install | Win | MSVC | x64 | Release",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--build", "--preset", "onemill-install-target-win-msvc-x64-release"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Cold start | Win | MSVC | x64 | RelWithDebInfo",
+      "detail": "Configure + build 'all' + install_full in one step. Use this on a fresh clone, or after deleting the build directory, when Build/Install fail with '<dir> is not a directory'.",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--workflow", "--preset", "onemill-install-win-msvc-x64-relwithdebinfo"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Cold start | Win | MSVC | x64 | Release",
+      "detail": "Configure + build 'all' + install_full in one step. Use this on a fresh clone, or after deleting the build directory.",
+      "type": "process",
+      "command": "cmd",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\dev-run.cmd", "cmake", "--workflow", "--preset", "onemill-install-win-msvc-x64-release"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

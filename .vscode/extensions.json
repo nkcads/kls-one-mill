@@ -1,0 +1,8 @@
+{
+	"recommendations": [
+		"ms-vscode.cpptools-extension-pack",
+		"theqtcompany.qt",
+		"xaver.clang-format",
+		"ms-vscode.powershell"
+	]
+}

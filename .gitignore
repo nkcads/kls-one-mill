@@ -83,11 +83,38 @@ out/
 .vs/
 .idea/
 build/
-.vscode/
+# Claude Code's working directory. It was committed by accident as a stray gitlink
+# (.claude/worktrees/upbeat-blackwell), which made "git submodule update --init --recursive"
+# abort with "fatal: No url found for submodule path" and clone nothing at all.
+.claude/
+
+# Ignore .vscode contents, but share the files the IDE setup needs. Note the pattern must be
+# ".vscode/*" and not ".vscode/": git cannot re-include a file whose parent directory is excluded.
+# OneMill-Setup-Ledger.md is shared on purpose: it is the full record of how this build
+# environment was established and what still needs a decision from the dev lead. Once those
+# decisions are made and folded into proper docs, drop it from this list again.
+.vscode/*
+!.vscode/dev-run.cmd
+!.vscode/dev-shell.ps1
+!.vscode/extensions.json
+!.vscode/launch.json.example
+!.vscode/OneMill-Repo-Landscape.md
+!.vscode/OneMill-Setup-Ledger.md
+!.vscode/OneMill-Fleet-Conformance.md
+# tasks.json is shared, unlike launch.json: it carries no machine-specific paths
+# (only ${workspaceFolder} and preset names) and it is the supported way to build
+# from the IDE, since the CMake sidebar cannot run the install correctly.
+!.vscode/tasks.json
 CMakeSettings.json
 
+# Machine-specific: holds this PC's Qt/vcpkg/VTK/ModuleWorks paths and build directories.
+# CMakeUserPresets.json.example is the committed template.
+CMakeUserPresets.json
 project/CMakeUserPresets.json
 project/CMakeLists.txt.user
+
+# Build and run logs (e.g. the tee'd .vscode/ShellOutput.log, app run logs)
+*.log
 
 # Office temp/lock files
 ~$*

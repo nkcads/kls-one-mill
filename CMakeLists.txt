@@ -324,3 +324,71 @@ assign_solution_folder("Modules/ModuleUpdater"        ModuleUpdater UpdaterBacke
 
 # Install / deploy custom targets
 assign_solution_folder("Install" deploy install_full install_plugins install_fitting)
+
+# ============================================================
+# install_full must be self-sufficient
+# ============================================================
+# install_full declares only DEPENDS MainApp Updater. MainApp links neither the
+# ten plugin DLLs nor the add_custom_target(... ALL) copy targets that populate
+# modulesBert/<Module>/{config,deps,releaseNotes,interpreter}, so building the
+# install target on its own stages whatever happens to be left in bin/ - which
+# is how an incomplete package gets produced with nothing reporting an error.
+#
+# It also made the target unusable from the CMake Tools sidebar, which
+# substitutes its own selected target into every build step of a workflow
+# preset (see the gotchas in .vscode/OneMill-Setup-Ledger.md).
+#
+# Depend on every buildable target in the tree instead. Kept as a walk rather
+# than a hand-written list so a new module is covered without touching this.
+# The sibling orchestration targets are excluded: depending on them would run
+# the other installs as a side effect of this one.
+set(_onemill_orchestration deploy install_full install_plugins install_fitting)
+
+function(onemill_collect_targets OUT_VAR _dir)
+  set(_acc "")
+  get_property(_here DIRECTORY "${_dir}" PROPERTY BUILDSYSTEM_TARGETS)
+  list(APPEND _acc ${_here})
+  get_property(_subs DIRECTORY "${_dir}" PROPERTY SUBDIRECTORIES)
+  foreach(_sub IN LISTS _subs)
+    onemill_collect_targets(_sub_targets "${_sub}")
+    list(APPEND _acc ${_sub_targets})
+  endforeach()
+  set(${OUT_VAR} "${_acc}" PARENT_SCOPE)
+endfunction()
+
+# Scoped to Modules/ on purpose. A whole-tree walk also picks up third-party
+# extras - OpenXLSX contributes a 'Documentation' target that shells out to
+# Doxygen and EXCLUDE_FROM_ALL benchmarks. Those sit behind OPENXLSX_* options
+# today, but depending on a third-party default is how a slow or broken install
+# appears months later. The shared libraries need no mention either: the module
+# DLLs link them, so they build regardless.
+onemill_collect_targets(_onemill_targets "${CMAKE_SOURCE_DIR}/Modules")
+list(APPEND _onemill_targets MainApp Updater)
+list(REMOVE_ITEM _onemill_targets ${_onemill_orchestration})
+list(REMOVE_DUPLICATES _onemill_targets)
+
+# INTERFACE libraries build nothing, and an EXCLUDE_FROM_ALL target was excluded
+# deliberately - depending on it here would quietly put it back into the build.
+set(_onemill_install_deps "")
+foreach(_t IN LISTS _onemill_targets)
+  if(NOT TARGET ${_t})
+    continue()
+  endif()
+  get_target_property(_t_type ${_t} TYPE)
+  get_target_property(_t_excl ${_t} EXCLUDE_FROM_ALL)
+  if(NOT _t_type STREQUAL "INTERFACE_LIBRARY" AND NOT _t_excl)
+    list(APPEND _onemill_install_deps ${_t})
+  endif()
+endforeach()
+
+if(_onemill_install_deps)
+  # All three install targets had the same shallow DEPENDS and therefore the
+  # same failure mode: run one on its own and it stages whatever is in bin/.
+  # install_fitting installs only three modules but still depends on all of
+  # them - it shares one build tree, so a partial build is a stale build.
+  add_dependencies(install_full    ${_onemill_install_deps})
+  add_dependencies(install_plugins ${_onemill_install_deps})
+  add_dependencies(install_fitting ${_onemill_install_deps})
+  list(LENGTH _onemill_install_deps _onemill_dep_count)
+  message(STATUS "install targets depend on ${_onemill_dep_count} build targets")
+endif()

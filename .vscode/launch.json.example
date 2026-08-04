@@ -1,0 +1,46 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "OneMill (installed folder, RelWithDebInfo)",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "D:/deployData/KLSOneMill/win-msvc-x64-relwithdebinfo/MainApp.exe",
+			"cwd": "D:/deployData/KLSOneMill/win-msvc-x64-relwithdebinfo",
+			"console": "integratedTerminal",
+			"//": "Produced by the 'Install | Win | MSVC | x64 | RelWithDebInfo' workflow preset. Qt, VTK, the ten module DLLs and the ModuleWorks deps folders sit next to the exe, so no PATH entries are needed. NOT fully self-contained though: install_app.cmake passes --no-compiler-runtime to windeployqt, so the machine must have the VC redistributable installed (any machine with Visual Studio does)."
+		},
+		{
+			"name": "OneMill (installed folder, Release)",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "D:/deployData/KLSOneMill/win-msvc-x64-release/MainApp.exe",
+			"cwd": "D:/deployData/KLSOneMill/win-msvc-x64-release",
+			"console": "integratedTerminal"
+		},
+		{
+			"name": "OneMill Updater (installed folder, RelWithDebInfo)",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "D:/deployData/KLSOneMill/win-msvc-x64-relwithdebinfo/Updater.exe",
+			"cwd": "D:/deployData/KLSOneMill/win-msvc-x64-relwithdebinfo",
+			"console": "integratedTerminal",
+			"//": "Updater is a second executable added on version/Beta220; install_full stages it next to MainApp.exe."
+		},
+		{
+			"name": "OneMill (build tree, follows selected preset)",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${command:cmake.launchTargetPath}",
+			"cwd": "${command:cmake.launchTargetDirectory}",
+			"console": "integratedTerminal",
+			"environment": [
+				{
+					"name": "PATH",
+					"value": "D:/DevTools/Qt/6.10.2/msvc2022_64/bin;D:/DevTools/vtk/install/bin;${env:PATH}"
+				}
+			],
+			"//": "The build tree holds no Qt/VTK DLLs next to MainApp.exe, so these two bin directories must be on PATH. Both contain the debug and release flavours, so one entry serves every configuration. Requires a launch target to be set in the CMake sidebar (MainApp)."
+		}
+	]
+}

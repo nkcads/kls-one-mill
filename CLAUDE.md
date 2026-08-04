@@ -6,12 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CMake 3.16+ with vcpkg for dependency management. Windows x64, C++20, MSVC with static runtime.
 
+Use the presets — see [README.md](README.md). `Cold start` (the workflow preset) configures, builds
+and installs; `Build`/`Install` require an already-configured build directory.
+
 ```bash
-cmake -S . -B build -DVCPKG_ROOT="<path/to/vcpkg>"
-cmake --build build --config Release
-cmake --build build --config Debug
-cmake --build build --target deploy  # runs windeployqt, copies to D:/deployData/KLSOneMill
+cmake --workflow --preset onemill-install-win-msvc-x64-relwithdebinfo   # configure + build + install
+cmake --build --preset onemill-build-win-msvc-x64-relwithdebinfo        # all
+cmake --build <dir> --target deploy   # runs windeployqt, copies to D:/deployData/KLSOneMill
 ```
+
+Configurations are **RelWithDebInfo (default) and Release only**. There is deliberately no Debug: it
+builds and installs but cannot run — static CRT gives `MainApp` and each of the ten plugin DLLs its
+own heap, and the debug heap asserts on the first allocation crossing a module boundary. Debug the
+RelWithDebInfo build instead.
 
 Dependencies are declared in `vcpkgPackages.txt` (clipper2, spdlog) plus Qt6, VTK 9.4, nlohmann_json, libzippp, pugixml, cpr, Boost resolved via vcpkg.
 
