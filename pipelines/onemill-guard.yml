@@ -3,19 +3,31 @@
 # Cheap, toolchain-free checks that protect the superproject's defining invariant: the 26
 # submodule gitlinks must never move backwards. Runs on a MICROSOFT-HOSTED Linux agent, so it
 # needs no build agent, no AWS project space and no ModuleWorks licence - unlike the Windows
-# build pipeline. Same split the fleet already uses: ips-suite2 runs its capacity/orchestration
-# stages on ubuntu-latest and only the heavy build on a self-hosted pool.
+# build pipeline. Same split the fleet already uses: ips-suite2 runs its capacity and
+# orchestration stages on ubuntu-latest and only the heavy build on a self-hosted pool.
 #
-# Checks out submodules recursively, which is REQUIRED rather than convenient. This project has
-# "Protect access to repositories in YAML pipelines" enabled
-# (enforceReferencedRepoScopedToken=true), so the job token is scoped to the repositories the
-# pipeline references: an ad-hoc `git clone` of a sibling repo is refused with TF401019 even
-# though the build identity does hold GenericRead on it. Verified by measuring both the ACL and
-# the project setting, after a first run failed exactly this way. The checkout task IS
-# authorised for submodules, so the guard reuses the working copies it produces.
+# WHY THE `resources: repositories` BLOCK BELOW EXISTS
+# This project has "Protect access to repositories in YAML pipelines" enabled
+# (enforceReferencedRepoScopedToken=true, enforceJobAuthScope=true). The job's OAuth token is
+# then scoped to the repositories this YAML *references* - and nothing else. Established by
+# measurement over three failed runs:
+#   - the build identity DOES hold GenericRead on every submodule repo (effectiveAllow=34), so
+#     this was never an ACL problem
+#   - an ad-hoc `git clone` of a sibling repo is refused with TF401019
+#   - `submodules: recursive` is refused the same way - the checkout task is NOT implicitly
+#     authorised for submodules
+#   - granting per-repo *pipeline permissions* is also NOT enough: that controls which pipelines
+#     may declare a repo, not what the issued token covers
+# Declaring each repo here is what actually widens the token. The repos are NOT checked out by
+# declaring them; only `submodules: recursive` below fetches content.
 #
-# The alternative - declaring all 26 submodules under `resources: repositories` - was rejected:
-# it would have to be maintained by hand and would silently rot as submodules are added.
+# Does this list rot as submodules change? It degrades LOUDLY, not silently: the guard verifies
+# both endpoint commits are resolvable before comparing, so an undeclared submodule fails the
+# build as "unverifiable" rather than passing on an unchecked pointer.
+#
+# The alternative is to turn off enforceReferencedRepoScopedToken for the project, which removes
+# this block entirely but weakens the control for every pipeline. That is a deliberate security
+# decision and deliberately not taken here.
 #
 # Auth: SYSTEM_ACCESSTOKEN is the project build identity. Submodule access works only because
 # .gitmodules uses HTTPS URLs; a hosted agent has no SSH key, so the previous
@@ -37,6 +49,89 @@ pr:
       - develop
       - main
 
+resources:
+  repositories:
+    # 17 direct submodules
+    - repository: om_MainApp
+      type: git
+      name: 'KLS OneMill/om_MainApp'
+    - repository: om_ModuleInterface
+      type: git
+      name: 'KLS OneMill/om_ModuleInterface'
+    - repository: om_ModuleUtils
+      type: git
+      name: 'KLS OneMill/om_ModuleUtils'
+    - repository: om_ModuleView
+      type: git
+      name: 'KLS OneMill/om_ModuleView'
+    - repository: om_ModuleMillingKalotte
+      type: git
+      name: 'KLS OneMill/om_ModuleMillingKalotte'
+    - repository: om_ModuleOverlayCritter
+      type: git
+      name: 'KLS OneMill/om_ModuleOverlayCritter'
+    - repository: om_ModulePostProcessor
+      type: git
+      name: 'KLS OneMill/om_ModulePostProcessor'
+    - repository: om_BackendUtils
+      type: git
+      name: 'KLS OneMill/om_BackendUtils'
+    - repository: om_OpenXLSX
+      type: git
+      name: 'KLS OneMill/om_OpenXLSX'
+    - repository: om_ModuleStatistics
+      type: git
+      name: 'KLS OneMill/om_ModuleStatistics'
+    - repository: om_ModuleReporter
+      type: git
+      name: 'KLS OneMill/om_ModuleReporter'
+    - repository: om_ModuleFixture
+      type: git
+      name: 'KLS OneMill/om_ModuleFixture'
+    - repository: om_MeshUtils
+      type: git
+      name: 'KLS OneMill/om_MeshUtils'
+    - repository: om_ModuleFileTransfer
+      type: git
+      name: 'KLS OneMill/om_ModuleFileTransfer'
+    - repository: om_ModuleFittingAnalysis
+      type: git
+      name: 'KLS OneMill/om_ModuleFittingAnalysis'
+    - repository: om_Updater
+      type: git
+      name: 'KLS OneMill/om_Updater'
+    - repository: om_ModuleUpdater
+      type: git
+      name: 'KLS OneMill/om_ModuleUpdater'
+    # 9 nested submodules (inside the 8 module wrappers)
+    - repository: om_FileTransferBackend
+      type: git
+      name: 'KLS OneMill/om_FileTransferBackend'
+    - repository: om_FileTransferClient
+      type: git
+      name: 'KLS OneMill/om_FileTransferClient'
+    - repository: om_FittingAnalysisBackend
+      type: git
+      name: 'KLS OneMill/om_FittingAnalysisBackend'
+    - repository: om_FixtureBackend
+      type: git
+      name: 'KLS OneMill/om_FixtureBackend'
+    - repository: om_MillingBackend
+      type: git
+      name: 'KLS OneMill/om_MillingBackend'
+    - repository: om_PostProcessorBackend
+      type: git
+      name: 'KLS OneMill/om_PostProcessorBackend'
+    - repository: om_ReporterBackend
+      type: git
+      name: 'KLS OneMill/om_ReporterBackend'
+    - repository: om_StatisticsBackend
+      type: git
+      name: 'KLS OneMill/om_StatisticsBackend'
+    - repository: om_UpdaterBackend
+      type: git
+      name: 'KLS OneMill/om_UpdaterBackend'
+
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -46,7 +141,7 @@ variables:
 
 steps:
   - checkout: self
-    submodules: recursive    # see header: required, not a convenience
+    submodules: recursive
     fetchDepth: 1            # the guard fetches its own history; depth here is irrelevant
     persistCredentials: true
     displayName: 'Checkout superproject and submodules'
@@ -58,6 +153,7 @@ steps:
       echo "PR target: ${SYSTEM_PULLREQUEST_TARGETBRANCH:-<not a PR>}"
       test -f .gitmodules || { echo "##vso[task.logissue type=error]No .gitmodules at the repo root - wrong repository?"; exit 1; }
       echo "direct submodules declared: $(git config -f .gitmodules --get-regexp '\.path$' | wc -l)"
+      echo "submodule working copies present: $(git submodule status --recursive 2>/dev/null | wc -l)"
       test -f "$(GUARD_SCRIPT)" || { echo "##vso[task.logissue type=error]Guard script missing: $(GUARD_SCRIPT)"; exit 1; }
     displayName: 'Sanity: repo layout and script present'
 
