@@ -153,18 +153,20 @@ check_level() {
 
     # Obtain a repo that can answer ancestry questions about this submodule.
     #
-    # PREFERRED: the already-checked-out working copy at $WORKTREE/$disp. The pipeline checks
-    # submodules out recursively, and a developer has them anyway.
+    # Ancestry needs the commits BETWEEN the two endpoints, not just the endpoints. That rules
+    # out a shallow working copy: the agent checks submodules out with --depth=1, and such a
+    # clone cannot be repaired afterwards -
+    #   - `git fetch --unshallow` exits 0 and silently does nothing once the repo has become a
+    #     partial clone (promisor=true), which our own blob-filtered fetch causes
+    #   - `git fetch --deepen` is rejected outright: "Server does not support --deepen" (ADO)
+    # Both measured, not assumed. So a shallow copy is unusable and we clone full history
+    # instead - blob-filtered and --no-checkout, so it stays cheap.
     #
-    # Why not just clone $url: this project has "Protect access to repositories in YAML
-    # pipelines" enabled (enforceReferencedRepoScopedToken=true), so the job token is scoped to
-    # the repositories the pipeline references. An ad-hoc clone of a sibling repo is refused
-    # with TF401019 even though the build identity holds GenericRead on it - confirmed by
-    # measurement, not inference. The checkout task IS authorised for submodules, so we reuse
-    # what it fetched instead of maintaining a 26-entry `resources: repositories` list that
-    # would silently rot as submodules are added.
+    # A non-shallow local working copy is preferred when present: that is the developer case,
+    # where it is both correct and faster than a network clone.
     tmp=""; sub=""
-    if git -C "${WORKTREE}/${disp}" rev-parse --git-dir >/dev/null 2>&1; then
+    if git -C "${WORKTREE}/${disp}" rev-parse --git-dir >/dev/null 2>&1 \
+       && [ "$(git -C "${WORKTREE}/${disp}" rev-parse --is-shallow-repository 2>/dev/null)" != "true" ]; then
       sub="${WORKTREE}/${disp}"
     else
       tmp="$(mktemp -d)"
@@ -179,8 +181,9 @@ check_level() {
       fi
       sub="$tmp"
     fi
-    # Both endpoints must be present locally to compare them; a shallow checkout has neither.
+    # Both endpoints must be present locally to compare them.
     git -C "$sub" "${auth[@]}" fetch -q --filter=blob:none origin "$bs" "$hs" 2>/dev/null </dev/null || true
+
     if ! git -C "$sub" cat-file -e "${bs}^{commit}" 2>/dev/null || ! git -C "$sub" cat-file -e "${hs}^{commit}" 2>/dev/null; then
       echo "##vso[task.logissue type=error]$disp: cannot resolve both endpoints ($bs, $hs) in $sub."
       fail=1; summary+=("X $disp (endpoints missing)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
@@ -191,7 +194,16 @@ check_level() {
       # Descend: a nested downgrade hides inside a parent that moved forward.
       check_level "$sub" "$bs" "$hs" "${disp}/" $((level + 1)) </dev/null
     else
-      if git -C "$sub" merge-base --is-ancestor "$hs" "$bs" 2>/dev/null; then kind=BACKWARD; else kind=DIVERGED; fi
+      if git -C "$sub" merge-base --is-ancestor "$hs" "$bs" 2>/dev/null; then
+        kind=BACKWARD
+      elif [ "$(git -C "$sub" rev-parse --is-shallow-repository 2>/dev/null)" = "true" ]; then
+        # Neither direction resolves AND the history is still truncated: we genuinely cannot
+        # tell. Say that instead of accusing the branch of a divergence we have not proven.
+        echo "##vso[task.logissue type=error]$disp: history too shallow to relate $bs and $hs - cannot verify (deepen failed)."
+        fail=1; summary+=("X $disp (indeterminate: shallow)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
+      else
+        kind=DIVERGED
+      fi
       dropped="$(git -C "$sub" rev-list --count "${hs}..${bs}" 2>/dev/null || echo '?')"
       if has_override "$disp"; then
         echo "##vso[task.logissue type=warning]$disp: $kind overridden by $TRAILER trailer (drops $dropped commit(s))."

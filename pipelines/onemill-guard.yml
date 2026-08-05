@@ -6,32 +6,33 @@
 # build pipeline. Same split the fleet already uses: ips-suite2 runs its capacity and
 # orchestration stages on ubuntu-latest and only the heavy build on a self-hosted pool.
 #
-# WHY THE `resources: repositories` BLOCK BELOW EXISTS
-# This project has "Protect access to repositories in YAML pipelines" enabled
-# (enforceReferencedRepoScopedToken=true, enforceJobAuthScope=true). The job's OAuth token is
-# then scoped to the repositories this YAML *references* - and nothing else. Established by
-# measurement over three failed runs:
-#   - the build identity DOES hold GenericRead on every submodule repo (effectiveAllow=34), so
-#     this was never an ACL problem
-#   - an ad-hoc `git clone` of a sibling repo is refused with TF401019
-#   - `submodules: recursive` is refused the same way - the checkout task is NOT implicitly
-#     authorised for submodules
-#   - granting per-repo *pipeline permissions* is also NOT enough: that controls which pipelines
-#     may declare a repo, not what the issued token covers
-# Declaring each repo here is what actually widens the token. The repos are NOT checked out by
-# declaring them; only `submodules: recursive` below fetches content.
+# WHY submodules ARE NOT CHECKED OUT HERE
+# The guard needs to know whether one submodule commit is an ANCESTOR of another, which requires
+# the commits between them - not just the two endpoints. ADO checks submodules out with
+# `--depth=1`, and such a clone cannot be repaired after the fact:
+#   - `git fetch --unshallow` exits 0 and silently does nothing once the repo has become a
+#     partial clone (promisor=true), which a blob-filtered fetch causes
+#   - `git fetch --deepen` is refused outright: "Server does not support --deepen" (ADO)
+# A shallow submodule therefore reports neither direction as an ancestor, and a naive check
+# concludes DIVERGED for what is really an ordinary fast-forward - a false positive that fails
+# legitimate PRs. So the guard clones full history itself (blob-filtered, --no-checkout) for the
+# handful of submodules whose pointer actually changed. That is both correct and faster than
+# checking out 26 repos.
 #
-# Does this list rot as submodules change? It degrades LOUDLY, not silently: the guard verifies
-# both endpoint commits are resolvable before comparing, so an undeclared submodule fails the
-# build as "unverifiable" rather than passing on an unchecked pointer.
-#
-# The alternative is to turn off enforceReferencedRepoScopedToken for the project, which removes
-# this block entirely but weakens the control for every pipeline. That is a deliberate security
-# decision and deliberately not taken here.
+# This requires the job token to be able to read sibling repos, which in turn required
+# "Protect access to repositories in YAML pipelines" to be OFF for this project
+# (enforceReferencedRepoScopedToken=false, matching 8 of the 10 CADS projects including IPS
+# Suite). With it ON, every route was refused with TF401019 - ad-hoc clone, `submodules:
+# recursive`, and per-repo pipeline permissions alike - even though the build identity holds
+# GenericRead on all 26 repos (effectiveAllow=34). Measured over five runs, not inferred.
+# `enforceJobAuthScope` stays ON: the project-scoped token is sufficient because all 26
+# submodules live in this same project.
 #
 # Auth: SYSTEM_ACCESSTOKEN is the project build identity. Submodule access works only because
 # .gitmodules uses HTTPS URLs; a hosted agent has no SSH key, so the previous
-# git@ssh.dev.azure.com form would have made submodule checkout impossible outright.
+# git@ssh.dev.azure.com form would have made this impossible outright. The guard also strips the
+# "cads-team@" userinfo from those URLs, since git treats it as a basic-auth username with no
+# password and that conflicts with the bearer token.
 
 name: onemill-guard-$(Date:yyyyMMdd)-$(Rev:r)
 
@@ -49,89 +50,6 @@ pr:
       - develop
       - main
 
-resources:
-  repositories:
-    # 17 direct submodules
-    - repository: om_MainApp
-      type: git
-      name: 'KLS OneMill/om_MainApp'
-    - repository: om_ModuleInterface
-      type: git
-      name: 'KLS OneMill/om_ModuleInterface'
-    - repository: om_ModuleUtils
-      type: git
-      name: 'KLS OneMill/om_ModuleUtils'
-    - repository: om_ModuleView
-      type: git
-      name: 'KLS OneMill/om_ModuleView'
-    - repository: om_ModuleMillingKalotte
-      type: git
-      name: 'KLS OneMill/om_ModuleMillingKalotte'
-    - repository: om_ModuleOverlayCritter
-      type: git
-      name: 'KLS OneMill/om_ModuleOverlayCritter'
-    - repository: om_ModulePostProcessor
-      type: git
-      name: 'KLS OneMill/om_ModulePostProcessor'
-    - repository: om_BackendUtils
-      type: git
-      name: 'KLS OneMill/om_BackendUtils'
-    - repository: om_OpenXLSX
-      type: git
-      name: 'KLS OneMill/om_OpenXLSX'
-    - repository: om_ModuleStatistics
-      type: git
-      name: 'KLS OneMill/om_ModuleStatistics'
-    - repository: om_ModuleReporter
-      type: git
-      name: 'KLS OneMill/om_ModuleReporter'
-    - repository: om_ModuleFixture
-      type: git
-      name: 'KLS OneMill/om_ModuleFixture'
-    - repository: om_MeshUtils
-      type: git
-      name: 'KLS OneMill/om_MeshUtils'
-    - repository: om_ModuleFileTransfer
-      type: git
-      name: 'KLS OneMill/om_ModuleFileTransfer'
-    - repository: om_ModuleFittingAnalysis
-      type: git
-      name: 'KLS OneMill/om_ModuleFittingAnalysis'
-    - repository: om_Updater
-      type: git
-      name: 'KLS OneMill/om_Updater'
-    - repository: om_ModuleUpdater
-      type: git
-      name: 'KLS OneMill/om_ModuleUpdater'
-    # 9 nested submodules (inside the 8 module wrappers)
-    - repository: om_FileTransferBackend
-      type: git
-      name: 'KLS OneMill/om_FileTransferBackend'
-    - repository: om_FileTransferClient
-      type: git
-      name: 'KLS OneMill/om_FileTransferClient'
-    - repository: om_FittingAnalysisBackend
-      type: git
-      name: 'KLS OneMill/om_FittingAnalysisBackend'
-    - repository: om_FixtureBackend
-      type: git
-      name: 'KLS OneMill/om_FixtureBackend'
-    - repository: om_MillingBackend
-      type: git
-      name: 'KLS OneMill/om_MillingBackend'
-    - repository: om_PostProcessorBackend
-      type: git
-      name: 'KLS OneMill/om_PostProcessorBackend'
-    - repository: om_ReporterBackend
-      type: git
-      name: 'KLS OneMill/om_ReporterBackend'
-    - repository: om_StatisticsBackend
-      type: git
-      name: 'KLS OneMill/om_StatisticsBackend'
-    - repository: om_UpdaterBackend
-      type: git
-      name: 'KLS OneMill/om_UpdaterBackend'
-
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -141,10 +59,10 @@ variables:
 
 steps:
   - checkout: self
-    submodules: recursive
+    submodules: false        # see header: a --depth=1 submodule checkout is USELESS for ancestry
     fetchDepth: 1            # the guard fetches its own history; depth here is irrelevant
     persistCredentials: true
-    displayName: 'Checkout superproject and submodules'
+    displayName: 'Checkout superproject (guard clones what it needs)'
 
   - bash: |
       set -euo pipefail
