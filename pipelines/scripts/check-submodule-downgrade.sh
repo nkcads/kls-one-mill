@@ -36,6 +36,16 @@ source="${source#refs/heads/}"
 # --- Auth: the build token reads every repo in this project ---
 auth=()
 [ -n "${SYSTEM_ACCESSTOKEN:-}" ] && auth=(-c "http.extraheader=AUTHORIZATION: bearer ${SYSTEM_ACCESSTOKEN}")
+# Never let git block on an interactive prompt or a desktop credential manager on an agent.
+export GIT_TERMINAL_PROMPT=0
+auth+=(-c "credential.helper=")
+
+# .gitmodules carries the fleet's "https://cads-team@dev.azure.com/..." form. That userinfo is
+# a basic-auth USERNAME with no password: git attempts basic auth with it, which conflicts with
+# the bearer header above and 401s non-interactively on an agent. Strip it and let the bearer
+# token authenticate. (Local clones work either way because a developer has a credential
+# manager, which is why this only shows up in CI.)
+strip_userinfo() { printf '%s' "$1" | sed -E 's#^(https?://)[^/@]*@#\1#'; }
 
 # --- Fetch target + source (blob-filtered), deepening until their merge-base exists ---
 fetch_at() {
@@ -135,8 +145,13 @@ check_level() {
     fi
 
     tmp="$(mktemp -d)"
-    if ! git "${auth[@]}" clone -q --filter=blob:none --no-checkout --no-tags "$url" "$tmp" 2>/dev/null; then
-      echo "##vso[task.logissue type=error]$disp: cannot fetch $url to verify (token lacks read access?)."
+    curl_url="$(strip_userinfo "$url")"
+    # Capture git's stderr instead of discarding it. The original swallowed it and guessed
+    # "token lacks read access?", which sent us hunting a permissions problem when the real
+    # cause was the URL's userinfo. An unverifiable gitlink must say WHY.
+    if ! clone_err="$(git "${auth[@]}" clone -q --filter=blob:none --no-checkout --no-tags "$curl_url" "$tmp" 2>&1 </dev/null)"; then
+      echo "##vso[task.logissue type=error]$disp: cannot clone $curl_url to verify the gitlink."
+      { echo "  git said:"; printf '%s\n' "$clone_err" | sed 's/^/    /'; } >&2
       fail=1; summary+=("X $disp (unverifiable)"); rm -rf "$tmp"; continue
     fi
     git -C "$tmp" "${auth[@]}" fetch -q --filter=blob:none origin "$bs" "$hs" 2>/dev/null </dev/null || true
