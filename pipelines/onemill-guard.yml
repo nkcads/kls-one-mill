@@ -1,0 +1,61 @@
+# OneMill guard pipeline
+#
+# Cheap, toolchain-free checks that protect the superproject's defining invariant: the 26
+# submodule gitlinks must never move backwards. Runs on a MICROSOFT-HOSTED Linux agent, so it
+# needs no build agent, no AWS project space and no ModuleWorks licence - unlike the Windows
+# build pipeline. Same split the fleet already uses: ips-suite2 runs its capacity/orchestration
+# stages on ubuntu-latest and only the heavy build on a self-hosted pool.
+#
+# Deliberately does NOT check out submodules: the guard script fetches exactly the objects it
+# needs (blob-filtered, bounded depth) and clones each changed submodule itself. Checking out
+# 26 repos to compare 26 hashes would be several minutes of pure waste.
+#
+# Auth: SYSTEM_ACCESSTOKEN is the project build identity, which holds GenericRead at project
+# scope and therefore reads all 26 submodule repos. This works only because .gitmodules uses
+# HTTPS URLs - a hosted agent has no SSH key, so the previous git@ssh.dev.azure.com form would
+# have made recursive submodule access impossible.
+
+name: onemill-guard-$(Date:yyyyMMdd)-$(Rev:r)
+
+trigger:
+  branches:
+    include:
+      - develop
+      - main
+      - 'release/*'
+      - 'feature/*'
+
+pr:
+  branches:
+    include:
+      - develop
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: GUARD_SCRIPT
+    value: pipelines/scripts/check-submodule-downgrade.sh
+
+steps:
+  - checkout: self
+    submodules: false        # intentional - see header
+    fetchDepth: 1            # the guard fetches its own history; depth here is irrelevant
+    persistCredentials: true
+    displayName: 'Checkout superproject (no submodules)'
+
+  - bash: |
+      set -euo pipefail
+      echo "branch : ${BUILD_SOURCEBRANCH:-<none>}"
+      echo "reason : ${BUILD_REASON:-<none>}"
+      echo "PR target: ${SYSTEM_PULLREQUEST_TARGETBRANCH:-<not a PR>}"
+      test -f .gitmodules || { echo "##vso[task.logissue type=error]No .gitmodules at the repo root - wrong repository?"; exit 1; }
+      echo "direct submodules declared: $(git config -f .gitmodules --get-regexp '\.path$' | wc -l)"
+      test -f "$(GUARD_SCRIPT)" || { echo "##vso[task.logissue type=error]Guard script missing: $(GUARD_SCRIPT)"; exit 1; }
+    displayName: 'Sanity: repo layout and script present'
+
+  - bash: bash "$(GUARD_SCRIPT)"
+    displayName: 'Guard: no submodule gitlink may move backwards'
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
