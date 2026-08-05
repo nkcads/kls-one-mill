@@ -35,10 +35,15 @@ source="${source#refs/heads/}"
 
 # --- Auth: the build token reads every repo in this project ---
 auth=()
-[ -n "${SYSTEM_ACCESSTOKEN:-}" ] && auth=(-c "http.extraheader=AUTHORIZATION: bearer ${SYSTEM_ACCESSTOKEN}")
-# Never let git block on an interactive prompt or a desktop credential manager on an agent.
-export GIT_TERMINAL_PROMPT=0
-auth+=(-c "credential.helper=")
+if [ -n "${SYSTEM_ACCESSTOKEN:-}" ]; then
+  # CI: authenticate with the bearer token only. Disable the credential helper so git cannot
+  # fall back to an interactive/basic-auth attempt, and forbid terminal prompts so a missing
+  # credential fails fast instead of hanging the agent job.
+  auth=(-c "http.extraheader=AUTHORIZATION: bearer ${SYSTEM_ACCESSTOKEN}" -c "credential.helper=")
+  export GIT_TERMINAL_PROMPT=0
+fi
+# No token (a developer running this locally): leave git's credential configuration alone.
+# Disabling the helper here broke the local path with "could not read Password ...".
 
 # .gitmodules carries the fleet's "https://cads-team@dev.azure.com/..." form. That userinfo is
 # a basic-auth USERNAME with no password: git attempts basic auth with it, which conflicts with
