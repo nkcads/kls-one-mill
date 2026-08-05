@@ -112,6 +112,8 @@ report() {  # $1=display path  $2=kind  $3=base sha  $4=head sha  $5=commits dro
 
 fail=0
 summary=()
+# Absolute path of the checkout, so a nested display path resolves to a real working copy.
+WORKTREE="$(pwd)"
 
 # --- Recursive walk ---
 # $1=repo dir  $2=base commit  $3=head commit  $4=display prefix  $5=level
@@ -124,7 +126,7 @@ check_level() {
     rm -f "$gm"; return 0            # no submodules at this level
   fi
 
-  local key path name url disp bs hs tmp kind dropped nested
+  local key path name url disp bs hs tmp sub curl_url clone_err kind dropped nested
   nested="top"; [ "$level" -gt 1 ] && nested="nested"
 
   while read -r key path; do
@@ -149,25 +151,48 @@ check_level() {
       summary+=("= $disp"); continue   # identical pointer => whole subtree identical
     fi
 
-    tmp="$(mktemp -d)"
-    curl_url="$(strip_userinfo "$url")"
-    # Capture git's stderr instead of discarding it. The original swallowed it and guessed
-    # "token lacks read access?", which sent us hunting a permissions problem when the real
-    # cause was the URL's userinfo. An unverifiable gitlink must say WHY.
-    if ! clone_err="$(git "${auth[@]}" clone -q --filter=blob:none --no-checkout --no-tags "$curl_url" "$tmp" 2>&1 </dev/null)"; then
-      echo "##vso[task.logissue type=error]$disp: cannot clone $curl_url to verify the gitlink."
-      { echo "  git said:"; printf '%s\n' "$clone_err" | sed 's/^/    /'; } >&2
-      fail=1; summary+=("X $disp (unverifiable)"); rm -rf "$tmp"; continue
+    # Obtain a repo that can answer ancestry questions about this submodule.
+    #
+    # PREFERRED: the already-checked-out working copy at $WORKTREE/$disp. The pipeline checks
+    # submodules out recursively, and a developer has them anyway.
+    #
+    # Why not just clone $url: this project has "Protect access to repositories in YAML
+    # pipelines" enabled (enforceReferencedRepoScopedToken=true), so the job token is scoped to
+    # the repositories the pipeline references. An ad-hoc clone of a sibling repo is refused
+    # with TF401019 even though the build identity holds GenericRead on it - confirmed by
+    # measurement, not inference. The checkout task IS authorised for submodules, so we reuse
+    # what it fetched instead of maintaining a 26-entry `resources: repositories` list that
+    # would silently rot as submodules are added.
+    tmp=""; sub=""
+    if git -C "${WORKTREE}/${disp}" rev-parse --git-dir >/dev/null 2>&1; then
+      sub="${WORKTREE}/${disp}"
+    else
+      tmp="$(mktemp -d)"
+      curl_url="$(strip_userinfo "$url")"
+      # Capture git's stderr rather than discarding it. The original swallowed it and guessed
+      # "token lacks read access?", which sent us hunting a permissions problem that did not
+      # exist. An unverifiable gitlink must report WHY it was unverifiable.
+      if ! clone_err="$(git "${auth[@]}" clone -q --filter=blob:none --no-checkout --no-tags "$curl_url" "$tmp" 2>&1 </dev/null)"; then
+        echo "##vso[task.logissue type=error]$disp: no local working copy, and cannot clone $curl_url to verify the gitlink."
+        { echo "  git said:"; printf '%s\n' "$clone_err" | sed 's/^/    /'; } >&2
+        fail=1; summary+=("X $disp (unverifiable)"); rm -rf "$tmp"; continue
+      fi
+      sub="$tmp"
     fi
-    git -C "$tmp" "${auth[@]}" fetch -q --filter=blob:none origin "$bs" "$hs" 2>/dev/null </dev/null || true
+    # Both endpoints must be present locally to compare them; a shallow checkout has neither.
+    git -C "$sub" "${auth[@]}" fetch -q --filter=blob:none origin "$bs" "$hs" 2>/dev/null </dev/null || true
+    if ! git -C "$sub" cat-file -e "${bs}^{commit}" 2>/dev/null || ! git -C "$sub" cat-file -e "${hs}^{commit}" 2>/dev/null; then
+      echo "##vso[task.logissue type=error]$disp: cannot resolve both endpoints ($bs, $hs) in $sub."
+      fail=1; summary+=("X $disp (endpoints missing)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
+    fi
 
-    if git -C "$tmp" merge-base --is-ancestor "$bs" "$hs" 2>/dev/null; then
+    if git -C "$sub" merge-base --is-ancestor "$bs" "$hs" 2>/dev/null; then
       summary+=("^ $disp (forward)")
       # Descend: a nested downgrade hides inside a parent that moved forward.
-      check_level "$tmp" "$bs" "$hs" "${disp}/" $((level + 1)) </dev/null
+      check_level "$sub" "$bs" "$hs" "${disp}/" $((level + 1)) </dev/null
     else
-      if git -C "$tmp" merge-base --is-ancestor "$hs" "$bs" 2>/dev/null; then kind=BACKWARD; else kind=DIVERGED; fi
-      dropped="$(git -C "$tmp" rev-list --count "${hs}..${bs}" 2>/dev/null || echo '?')"
+      if git -C "$sub" merge-base --is-ancestor "$hs" "$bs" 2>/dev/null; then kind=BACKWARD; else kind=DIVERGED; fi
+      dropped="$(git -C "$sub" rev-list --count "${hs}..${bs}" 2>/dev/null || echo '?')"
       if has_override "$disp"; then
         echo "##vso[task.logissue type=warning]$disp: $kind overridden by $TRAILER trailer (drops $dropped commit(s))."
         summary+=("! $disp ($kind, overridden)")
@@ -176,7 +201,9 @@ check_level() {
         fail=1; summary+=("X $disp ($kind)")
       fi
     fi
-    rm -rf "$tmp"
+    # Only ever remove a temp clone WE created. $sub may be the developer's real submodule
+    # working copy, and an unguarded rm -rf here would be destructive.
+    [ -n "$tmp" ] && rm -rf "$tmp"
   done < <(git config -f "$gm" --get-regexp '\.path$')
 
   rm -f "$gm"

@@ -6,14 +6,20 @@
 # build pipeline. Same split the fleet already uses: ips-suite2 runs its capacity/orchestration
 # stages on ubuntu-latest and only the heavy build on a self-hosted pool.
 #
-# Deliberately does NOT check out submodules: the guard script fetches exactly the objects it
-# needs (blob-filtered, bounded depth) and clones each changed submodule itself. Checking out
-# 26 repos to compare 26 hashes would be several minutes of pure waste.
+# Checks out submodules recursively, which is REQUIRED rather than convenient. This project has
+# "Protect access to repositories in YAML pipelines" enabled
+# (enforceReferencedRepoScopedToken=true), so the job token is scoped to the repositories the
+# pipeline references: an ad-hoc `git clone` of a sibling repo is refused with TF401019 even
+# though the build identity does hold GenericRead on it. Verified by measuring both the ACL and
+# the project setting, after a first run failed exactly this way. The checkout task IS
+# authorised for submodules, so the guard reuses the working copies it produces.
 #
-# Auth: SYSTEM_ACCESSTOKEN is the project build identity, which holds GenericRead at project
-# scope and therefore reads all 26 submodule repos. This works only because .gitmodules uses
-# HTTPS URLs - a hosted agent has no SSH key, so the previous git@ssh.dev.azure.com form would
-# have made recursive submodule access impossible.
+# The alternative - declaring all 26 submodules under `resources: repositories` - was rejected:
+# it would have to be maintained by hand and would silently rot as submodules are added.
+#
+# Auth: SYSTEM_ACCESSTOKEN is the project build identity. Submodule access works only because
+# .gitmodules uses HTTPS URLs; a hosted agent has no SSH key, so the previous
+# git@ssh.dev.azure.com form would have made submodule checkout impossible outright.
 
 name: onemill-guard-$(Date:yyyyMMdd)-$(Rev:r)
 
@@ -40,10 +46,10 @@ variables:
 
 steps:
   - checkout: self
-    submodules: false        # intentional - see header
+    submodules: recursive    # see header: required, not a convenience
     fetchDepth: 1            # the guard fetches its own history; depth here is irrelevant
     persistCredentials: true
-    displayName: 'Checkout superproject (no submodules)'
+    displayName: 'Checkout superproject and submodules'
 
   - bash: |
       set -euo pipefail
