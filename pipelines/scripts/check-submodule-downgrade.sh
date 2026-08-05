@@ -52,13 +52,40 @@ fi
 # manager, which is why this only shows up in CI.)
 strip_userinfo() { printf '%s' "$1" | sed -E 's#^(https?://)[^/@]*@#\1#'; }
 
-# --- Fetch target + source (blob-filtered), deepening until their merge-base exists ---
+# --- Fetch target + source, deepening only when that is safe ---
+#
+# NEVER pass --depth or --filter into a repository that is not already shallow. Doing so
+# CONVERTS a full clone into a shallow, partial one - it silently truncated a developer's working
+# clone during development of this script (origin/main..origin/develop went from 22 commits to 1)
+# and the damage is not trivially reversible: `git fetch --unshallow` no-ops once the repo has
+# become a partial clone, and ADO rejects `--deepen` outright. The upstream ips-suite2 script has
+# the same flaw; it is invisible there because CI checkouts are disposable.
+#
+# So: deepen only when the host repo is ALREADY shallow (i.e. a CI checkout, where it is both
+# necessary to reach the merge-base and harmless). In a developer's full clone the history is
+# already present, so a plain additive fetch is enough and nothing is truncated.
+host_shallow="$(git rev-parse --is-shallow-repository 2>/dev/null || echo false)"
+depth_args() {   # $1 = desired depth; emits nothing unless deepening is safe
+  if [ "$host_shallow" = "true" ]; then printf '%s\n%s\n%s\n' --filter=blob:none --depth "$1"; fi
+}
+
+# The refs/guard/* refs below are scratch. Remove them on exit so the script leaves no litter in
+# a developer's repository.
+cleanup_guard_refs() {
+  git for-each-ref --format='%(refname)' refs/guard 2>/dev/null | while read -r r; do
+    git update-ref -d "$r" 2>/dev/null || true
+  done
+}
+trap cleanup_guard_refs EXIT
+
 fetch_at() {
-  git "${auth[@]}" fetch -q --filter=blob:none --depth "$1" origin \
+  local da=(); mapfile -t da < <(depth_args "$1")   # da=() first: empty-array expansion under set -u
+  git "${auth[@]}" fetch -q ${da[@]+"${da[@]}"} origin \
     "+refs/heads/${target}:refs/guard/target" "+refs/heads/${source}:refs/guard/source"
 }
 if [ "$source" = "HEAD" ] || [ "$source" = "$target" ]; then
-  git "${auth[@]}" fetch -q --filter=blob:none --depth 1 origin "$target" \
+  da1=(); mapfile -t da1 < <(depth_args 1)
+  git "${auth[@]}" fetch -q ${da1[@]+"${da1[@]}"} origin "$target" \
     || { echo "ERROR: cannot fetch '$target'"; exit 1; }
   target_tip="$(git rev-parse FETCH_HEAD)"
   head_commit="$(git rev-parse HEAD)"
