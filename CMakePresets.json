@@ -42,6 +42,23 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
+    },
+    {
+      "name": "onemill-config-ci-win-msvc-x64-relwithdebinfo",
+      "inherits": "onemill-base-win-msvc-x64-relwithdebinfo",
+      "displayName": "CI | Win | MSVC | x64 | RelWithDebInfo",
+      "description": "The only SELECTABLE configure preset in this file, and the one CI uses. It hardcodes NO machine paths: the four read-only toolchain inputs come from environment variables, and every output goes inside the source tree. So the same preset works on a dev box (Qt under D:/DevTools/...) and on a build agent (Qt under C:/Qt/...) with no edit - the local/CI parity requirement recorded as D5 in .vscode/OneMill-Fleet-Conformance.md. REQUIRED on the machine: ONEMILL_QTDIR, ONEMILL_VCPKG_ROOT, ONEMILL_VTK_DIR, ONEMILL_MODULEWORKS_DIR - all four, no defaults. An unset one expands to an empty string and produces a misleading find_package error (verified: dropping ONEMILL_VTK_DIR yields 'Could not find a package configuration file provided by VTK', not 'variable unset'), so the pipeline asserts them before calling cmake. INSTALL_DIR / INSTALL_DIR_FITTING are deliberately NOT taken from the environment: an unset variable would write an empty string into the cache and override the CMakeLists default, installing nowhere. They point inside the build tree instead, following the fleet output grammar out/install/<tuple>-<config> (D6), so CI never writes to a fixed machine path such as D:/deployData. A pipeline that wants the artifact staging directory instead can still pass -DINSTALL_DIR=... on the command line, which overrides this. Note QTDIR must be an ENVIRONMENT entry, not a cache variable, because CMakeLists.txt reads it as $ENV{QTDIR} to locate windeployqt. Caveat: the separate 'deploy' target is NOT usable in CI - CMakeLists.txt sets DEPLOY_DIR/DEPLOY_EXE with a plain set() to D:/deployData/KLSOneMill, so they cannot be overridden. Use install_full, which honours INSTALL_DIR.",
+      "environment": {
+        "QTDIR": "$env{ONEMILL_QTDIR}"
+      },
+      "cacheVariables": {
+        "Qt6_DIR": "$env{ONEMILL_QTDIR}/lib/cmake/Qt6",
+        "VCPKG_ROOT": "$env{ONEMILL_VCPKG_ROOT}",
+        "VTK_DIR": "$env{ONEMILL_VTK_DIR}",
+        "MODULEWORKS_DIR": "$env{ONEMILL_MODULEWORKS_DIR}",
+        "INSTALL_DIR": "${sourceDir}/out/install/win-msvc-x64-relwithdebinfo",
+        "INSTALL_DIR_FITTING": "${sourceDir}/out/install/win-msvc-x64-relwithdebinfo-analyse"
+      }
     }
   ],
   "buildPresets": [
@@ -57,6 +74,30 @@
         "install_full"
       ],
       "description": "Runs only the 'install_full' custom target and assumes the app is already built - use the matching Install workflow preset for the full job. install_full stages MainApp, Updater, every enabled module and the Qt/VTK runtime into INSTALL_DIR, passing windeployqt the flavour that matches the configuration (--release for both RelWithDebInfo and Release; there is no Debug configuration). The sibling targets 'install_plugins' (modules only) and 'install_fitting' (standalone KLSOneAnalyse deployment into INSTALL_DIR_FITTING) are not wired to presets; run them with cmake --build <dir> --target <name>. Note that the install script passes --no-compiler-runtime, so the staged folder still needs the VC redistributable present on the target machine."
+    },
+    {
+      "name": "onemill-build-ci-win-msvc-x64-relwithdebinfo",
+      "inherits": "onemill-build-base",
+      "configurePreset": "onemill-config-ci-win-msvc-x64-relwithdebinfo",
+      "displayName": "CI Build | Win | MSVC | x64 | RelWithDebInfo"
+    },
+    {
+      "name": "onemill-install-target-ci-win-msvc-x64-relwithdebinfo",
+      "inherits": "onemill-install-target-base",
+      "configurePreset": "onemill-config-ci-win-msvc-x64-relwithdebinfo",
+      "displayName": "CI Install (target only) | Win | MSVC | x64 | RelWithDebInfo"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "onemill-install-ci-win-msvc-x64-relwithdebinfo",
+      "displayName": "CI Install | Win | MSVC | x64 | RelWithDebInfo",
+      "description": "Configure + build + install_full in one call - the single entry point the build pipeline uses, so CI runs exactly the sequence a developer runs locally.",
+      "steps": [
+        { "type": "configure", "name": "onemill-config-ci-win-msvc-x64-relwithdebinfo" },
+        { "type": "build", "name": "onemill-build-ci-win-msvc-x64-relwithdebinfo" },
+        { "type": "build", "name": "onemill-install-target-ci-win-msvc-x64-relwithdebinfo" }
+      ]
     }
   ]
 }

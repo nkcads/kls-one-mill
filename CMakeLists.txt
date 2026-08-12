@@ -31,8 +31,6 @@ if(DEFINED ENV{VTK_DIR})
 endif()
 set(VTK_DIR "${VTK_DIR_DEFAULT}" CACHE PATH "Path to vtk lib/cmake/vtk-9.4 directory")
 
-set(MAIN_APP_NAME "KLSOneMill")
-
 #####VCPKG START
 
 # Set VCPKG_ROOT from env if available
@@ -95,8 +93,18 @@ add_subdirectory(Modules)
 # ModuleWorks setup
 
 # === Fast deploy knobs (override at configure time) ===
-set(DEPLOY_DIR "D:/deployData/KLSOneMill" )
-set(DEPLOY_EXE "D:/deployData/KLSOneMill/MainApp.exe" )
+# CACHE, so -DDEPLOY_DIR=... actually works. Both were plain set() before, which silently
+# discarded any override and made the comment above untrue - and pinned the target to one
+# machine's D: drive, so it could never run on a build agent.
+set(DEPLOY_DIR "D:/deployData/KLSOneMill" CACHE PATH
+    "Destination directory for the 'deploy' target. CI must override this.")
+# Empty by default, so 'deploy' deploys the binary you just built. Previously this defaulted to
+# D:/deployData/KLSOneMill/MainApp.exe, which is non-empty, so the 'if(NOT DEPLOY_EXE)' branch
+# below was never taken: the target did not depend on building the app, and windeployqt ran
+# against whatever stale exe already sat in the deploy directory. Set this only when you
+# deliberately want to deploy a pre-built binary.
+set(DEPLOY_EXE "" CACHE FILEPATH
+    "Pre-built MainApp.exe to deploy instead of the freshly built one. Empty = build and deploy MainApp.")
 
 # Find windeployqt once
 find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt windeployqt.exe HINTS "$ENV{QTDIR}/bin")
@@ -123,7 +131,9 @@ if(NOT EXISTS "${_exe}")
   message(FATAL_ERROR "APP EXE not found: ${_exe}")
 endif()
 
-file(MAKE_DIRECTORY "${DEPLOY_DIR}")
+# OUTDIR, not DEPLOY_DIR: this runs as a separate `cmake -P` script and only receives the -D
+# variables listed above, so DEPLOY_DIR is empty here and this created a directory named "".
+file(MAKE_DIRECTORY "${OUTDIR}")
 
 # 1) Qt deploy
 execute_process(
@@ -152,9 +162,14 @@ message(STATUS "Deploy done -> ${OUTDIR}")
 
 # Make the 'deploy' target fast to run
 # If DEPLOY_EXE is not given, we depend on building the app first.
+# NOTE: the target is MainApp, NOT ${PROJECT_NAME}. MainApp/CMakeLists.txt calls PROJECT(MainApp),
+# but that only renames PROJECT_NAME inside that subdirectory scope - here in the root scope
+# PROJECT_NAME is still KLSOneMill (see project() at the top), and no target has that name. Using
+# ${PROJECT_NAME} here appended a non-existent dependency, and the same mistake is why the APP_EXE
+# line below was commented out: $<TARGET_FILE:KLSOneMill> fails at generate time.
 set(_deploy_deps)
 if(NOT DEPLOY_EXE)
-  list(APPEND _deploy_deps ${PROJECT_NAME})
+  list(APPEND _deploy_deps MainApp)
 endif()
 
 add_custom_target(deploy
@@ -162,7 +177,7 @@ add_custom_target(deploy
   COMMAND ${CMAKE_COMMAND}
           -DOUTDIR=${DEPLOY_DIR}
           -DOVERRIDE_EXE=${DEPLOY_EXE}
-         # -DAPP_EXE=$<TARGET_FILE:${PROJECT_NAME}>
+          -DAPP_EXE=$<TARGET_FILE:MainApp>
           -DALL_DLLS=$<TARGET_RUNTIME_DLLS:MainApp>
           -DWINDEPLOY=${WINDEPLOYQT_EXECUTABLE}
           -DCFGFLAG=--release

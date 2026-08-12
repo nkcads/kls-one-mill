@@ -71,6 +71,7 @@ without a manifest would signal something false.
 | `{lane}` token in the preset grammar (**A6/B5**) | OneMill has a single lane; renaming every preset buys conformance only, and costs muscle memory plus any script that names a preset. |
 | Row in `FleetTracker.md` / `fleet.json` (**B8**) | Only meaningful for products on the engine. |
 | `.clang-format` | Product-owned upstream too, and OneMill has no formatting policy yet. |
+| **Squash as the `develop` merge strategy** — *not a Superbuild-spec rule; an ADO policy convention observed across the fleet 2026-08-04* | **Rejected, and it must stay rejected.** Every other CADS project sets `Require a merge strategy` with `allowSquash=True` on `develop` and `allowNoFastForward=True` on `main`/`master` (verified in IPS Suite, CADS Libraries, MIRAGE, Product Data Storage, Hypervisor, NAVIGATOR, IPS CaseDesigner, Segmentation Web Service). A squash on the **superproject** collapses the merge into one commit, so the submodule commits its gitlinks reference stop being reachable from any branch — the §5 unresolvable-gitlink breakage, self-inflicted. OneMill therefore uses **merge-commit on both `main` and `develop`**. Enforced on `main` since 2026-08-04 (policy `2506`, `allowNoFastForward` only); `develop` pending Robert's agreement, because **any** branch policy makes ADO require pull requests. |
 
 ## Template provenance
 
@@ -105,3 +106,15 @@ git diff --no-index /tmp/sbe/templates/dev-run.cmd .vscode/dev-run.cmd    # expe
    `targets` with the status-bar target in every workflow step**, so any product relying on that
    through the GUI shares this latent failure. Belongs in `ProblemsAndLessons.md`; evidence in
    `.vscode/out.log` and the gotchas section of [`OneMill-Setup-Ledger.md`](OneMill-Setup-Ledger.md).
+3. **Squash-on-`develop` is unsafe for any submodule-bearing product.** The fleet's ADO convention
+   (`allowSquash=True` on `develop`) is fine for single-repo products but silently corrupts a
+   superproject: the squash makes the submodule commits its gitlinks point at unreachable from any
+   branch. Worth stating as a caveat wherever that convention is documented — OneMill is unlikely to
+   be the only product with submodules. Verdict and evidence: the "Deliberately not adopted" row above.
+4. **Two ADO mechanics found the hard way (2026-08-04), worth sharing fleet-wide.**
+   (a) The branch-policy toggle in the ADO UI **deletes** the configuration rather than disabling it —
+   capture the policy JSON *before* touching it, because "toggle off, do the thing, toggle on" leaves
+   nothing to toggle back on. (b) **Any** enabled branch policy makes ADO reject direct pushes
+   (`TF402455`), not only reviewer policies — verified with a merge-strategy-only policy on a
+   throwaway branch. So adding *any* policy to a branch is a workflow change for everyone who pushes
+   to it, which matters when planning a rollout.

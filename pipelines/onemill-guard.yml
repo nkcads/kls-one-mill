@@ -1,0 +1,81 @@
+# OneMill guard pipeline
+#
+# Cheap, toolchain-free checks that protect the superproject's defining invariant: the 26
+# submodule gitlinks must never move backwards. Runs on a MICROSOFT-HOSTED Linux agent, so it
+# needs no build agent, no AWS project space and no ModuleWorks licence - unlike the Windows
+# build pipeline. Same split the fleet already uses: ips-suite2 runs its capacity and
+# orchestration stages on ubuntu-latest and only the heavy build on a self-hosted pool.
+#
+# WHY submodules ARE NOT CHECKED OUT HERE
+# The guard needs to know whether one submodule commit is an ANCESTOR of another, which requires
+# the commits between them - not just the two endpoints. ADO checks submodules out with
+# `--depth=1`, and such a clone cannot be repaired after the fact:
+#   - `git fetch --unshallow` exits 0 and silently does nothing once the repo has become a
+#     partial clone (promisor=true), which a blob-filtered fetch causes
+#   - `git fetch --deepen` is refused outright: "Server does not support --deepen" (ADO)
+# A shallow submodule therefore reports neither direction as an ancestor, and a naive check
+# concludes DIVERGED for what is really an ordinary fast-forward - a false positive that fails
+# legitimate PRs. So the guard clones full history itself (blob-filtered, --no-checkout) for the
+# handful of submodules whose pointer actually changed. That is both correct and faster than
+# checking out 26 repos.
+#
+# This requires the job token to be able to read sibling repos, which in turn required
+# "Protect access to repositories in YAML pipelines" to be OFF for this project
+# (enforceReferencedRepoScopedToken=false, matching 8 of the 10 CADS projects including IPS
+# Suite). With it ON, every route was refused with TF401019 - ad-hoc clone, `submodules:
+# recursive`, and per-repo pipeline permissions alike - even though the build identity holds
+# GenericRead on all 26 repos (effectiveAllow=34). Measured over five runs, not inferred.
+# `enforceJobAuthScope` stays ON: the project-scoped token is sufficient because all 26
+# submodules live in this same project.
+#
+# Auth: SYSTEM_ACCESSTOKEN is the project build identity. Submodule access works only because
+# .gitmodules uses HTTPS URLs; a hosted agent has no SSH key, so the previous
+# git@ssh.dev.azure.com form would have made this impossible outright. The guard also strips the
+# "cads-team@" userinfo from those URLs, since git treats it as a basic-auth username with no
+# password and that conflicts with the bearer token.
+
+name: onemill-guard-$(Date:yyyyMMdd)-$(Rev:r)
+
+trigger:
+  branches:
+    include:
+      - develop
+      - main
+      - 'release/*'
+      - 'feature/*'
+
+pr:
+  branches:
+    include:
+      - develop
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: GUARD_SCRIPT
+    value: pipelines/scripts/check-submodule-downgrade.sh
+
+steps:
+  - checkout: self
+    submodules: false        # see header: a --depth=1 submodule checkout is USELESS for ancestry
+    fetchDepth: 1            # the guard fetches its own history; depth here is irrelevant
+    persistCredentials: true
+    displayName: 'Checkout superproject (guard clones what it needs)'
+
+  - bash: |
+      set -euo pipefail
+      echo "branch : ${BUILD_SOURCEBRANCH:-<none>}"
+      echo "reason : ${BUILD_REASON:-<none>}"
+      echo "PR target: ${SYSTEM_PULLREQUEST_TARGETBRANCH:-<not a PR>}"
+      test -f .gitmodules || { echo "##vso[task.logissue type=error]No .gitmodules at the repo root - wrong repository?"; exit 1; }
+      echo "direct submodules declared: $(git config -f .gitmodules --get-regexp '\.path$' | wc -l)"
+      echo "submodule working copies present: $(git submodule status --recursive 2>/dev/null | wc -l)"
+      test -f "$(GUARD_SCRIPT)" || { echo "##vso[task.logissue type=error]Guard script missing: $(GUARD_SCRIPT)"; exit 1; }
+    displayName: 'Sanity: repo layout and script present'
+
+  - bash: bash "$(GUARD_SCRIPT)"
+    displayName: 'Guard: no submodule gitlink may move backwards'
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)

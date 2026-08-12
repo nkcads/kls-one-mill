@@ -4,9 +4,11 @@
 all branches + tags) and cross-checked against the local clone. Supersedes the 2026-07-29 snapshot;
 what changed is listed in §0.
 
-**§1–§10 are observed facts. §11–§13 are proposals, not agreed with anyone yet** — §11 a concrete
+**§1–§10 are observed facts. §11–§14 are proposals, not agreed with anyone yet** — §11 a concrete
 `develop`-branch plan meant to be executed, §12 a draft on removing the 26-submodule overhead,
-§13 a minimal CI pipeline modelled on `ips-suite2`.
+§13 a minimal CI pipeline modelled on `ips-suite2`, §14 how to rehearse all of it in a fail-closed
+local sandbox. **§12.9 and §15 are measured results, not proposals** — §12.9 an executed
+absorb/extract round trip, §15 a tag audit that **corrects §11.2**.
 
 > Context: the dev lead's own summary was *"it's a bit of a mess at the moment"*. The history is
 > actually clean and linear. What's messy is that `main` is the ADO default on all 30 repos while
@@ -59,8 +61,10 @@ git submodule update --init --recursive   # ignore the 2 stray-gitlink errors, s
 ```
 
 Do **not** check out branch names inside each submodule by hand — the pinning is correct (§8), so
-`--recursive` gives the right SHAs automatically. `.gitmodules` has **no `branch =` entries**, so
-`git submodule update --remote` is meaningless here; the tree is SHA-pinned only.
+`--recursive` gives the right SHAs automatically. `.gitmodules` has **no `branch =` entries** — the
+tree is SHA-pinned only, which matches the fleet convention (`ips-suite2` has none either) and is
+deliberately kept that way (§11.3c). `git submodule update --remote` still works: it follows each
+submodule remote's `HEAD`.
 
 ---
 
@@ -240,6 +244,60 @@ om_MillingBackend carries 31 branches total — by far the bulk of the project's
 
 ---
 
+### 7.1 VERIFIED 2026-08-04 — the "still-open work" is already merged
+
+Robert states he merged all outstanding work from others locally on his PC and pushed it. **Checked in
+`om_MillingBackend`** (the repo carrying 31 of the project's branches, i.e. the bulk of §7's inventory),
+against its `version/Beta220` tip `418dfc0a` — `git rev-list --count <tip>..<branch>`:
+
+**Fully merged (0 commits outside `version/Beta220`)** — every branch §7 listed as live work:
+`strongUshapedContour` (§7 said +59), `bugfixUShapeContourSpline` (+34), `feature/innerHoles` (+32),
+`feature/dynamicStrats` (+24), `feature/footprints` (+10), `feature/manualStruts`,
+`feature/contourBuilderUV`, `feature/orientatedItems`, `undercutCheckerV2`, plus all ~19 older ones.
+
+**Genuinely still outside `Beta220`** — all stale, none of it recent work:
+
+| Branch | Not in Beta220 | Owner / era |
+|---|---|---|
+| `feature/post-processor` | +11 | Wladislaw, 2025-07 |
+| `feature/CenterSplineLogic` | +3 | Pia, 2025-11 |
+| `feature/result-comparison` | +2 | Wladislaw, 2025-12 |
+| `feature/tool-handling` | +1 | Wladislaw |
+| `SelfcontainedSuperbuild` | +1 | ours |
+| `SetupBuildEnvOnBeta220` | +1 | ours — expected, it *is* our work |
+
+**Consequences:** §11.5's "decide per branch" collapses to "delete them", and §12.7 blocker #4 — the last
+real cost of the monorepo option — **evaporates**. The four stale branches above are abandonment
+candidates (8+ months old), not migration blockers.
+
+Two incidental findings worth knowing:
+
+- **`om_MillingBackend`'s `main` has 1 commit not reachable from `version/Beta220`.** §1's strict-linearity
+  finding was verified for the *superproject*, not per submodule. Harmless — but it confirms §15.4's rule:
+  fast-forward `main` in the **superproject only**, never in submodules.
+- ~~There is a stray remote branch literally named **`origin`** in `om_MillingBackend`.~~
+  **RETRACTED 2026-08-04 — this was my error, there is no such branch.** `git for-each-ref` renders
+  `refs/remotes/origin/HEAD` with `%(refname:short)` = **`origin`** (git's shorthand for the remote's
+  default branch), and my survey script mistook that for a branch name. Verified against both the
+  mirror's `refs/heads` and the live production repo: **no `origin` branch exists in any repo.** The
+  same bug briefly put 25 bogus `origin` entries in the rehearsal's delete list — the fix is to filter
+  on the **full** refname, never the short form:
+  `git for-each-ref --format='%(refname)' refs/remotes/origin | grep -v '^refs/remotes/origin/HEAD$'`.
+
+**Scope of this check:** `om_MillingBackend` only, because it holds the overwhelming majority of
+branches. Re-run across the tree before the migration:
+
+```sh
+git submodule foreach --recursive --quiet '
+  base=$(git rev-parse --verify --quiet origin/version/Beta220 || git rev-parse origin/version/20Beta)
+  git for-each-ref --format="%(refname:short)" refs/remotes/origin | grep -v "origin/HEAD" | while read b; do
+    n=$(git rev-list --count "$base..$b" 2>/dev/null)
+    [ "$n" != "0" ] && echo "$displaypath  $b  +$n"
+  done' | sort
+```
+
+---
+
 ## 8. Gitlink resolution on `version/Beta220` (verified 2026-07-30)
 
 Superproject `origin/version/Beta220` = `6c04455`. **All 25 real gitlinks resolve exactly to their
@@ -328,8 +386,8 @@ Three pains, one root cause — *there is no single branch name that means "curr
 | Pain | Cause |
 |---|---|
 | `origin/HEAD` and the ADO default point at a dead branch in 28 of 30 repos | nobody switched the default (§3) |
-| `git submodule update --remote` is meaningless | no `branch =` in any `.gitmodules` (§1) |
-| Tags don't identify anything (`Version_1.0.1` on RC10) | no release branch, so nothing to tag (§4) |
+| ~~`git submodule update --remote` is meaningless~~ | **Not a problem — see §11.3(c).** `--remote` follows the remote's `HEAD`, so switching the ADO default to `develop` is enough. No `branch =` needed, which is also the fleet rule. |
+| Tags don't identify anything (`Version_1.0.1` on RC10) | no release branch, so nothing to tag (§4); **and where submodule tags exist, most point at the wrong commit — §15.2** |
 | Two live `version/*` names to keep straight | historical; **as of 2026-07-29 largely self-resolved** (§0) |
 
 History is strictly linear, so this is pure bookkeeping — **no merge work, no conflicts.**
@@ -345,10 +403,15 @@ No `release/*`, no `version/*`, no gitflow. Rationale:
 
 - **`develop` = integration** because that is what `version/Beta220` already is in practice.
 - **`main` = release** gives tags a home and makes §4 fixable: a tag on `main` means "we shipped
-  this", which is the only meaning anybody wanted from `Version_2.1.0`.
-- **Do *not* fast-forward `main` now.** Switching the ADO *default branch* to `develop` removes the
-  misleading-default problem without touching `main`, and `main` keeps its honest meaning ("RC10 is
-  the last thing that shipped") until the next real release.
+  this", which is the only meaning anybody wanted from `Version_2.1.0`. But note the limit: this
+  gives a tag a *home*, not a *meaning across the tree* — a release still means tagging 26 repos, and
+  a superproject tag still captures only gitlink SHAs. **Only §12's absorb makes one tag mean the
+  whole product** (§12.10.3).
+- ~~**Do *not* fast-forward `main` now.**~~ **Superseded by §15.1 — this was wrong.** `Version_2.1.0`
+  sits on `43f8ced` (2026-07-21) and was a real delivery, so "last thing shipped" means `main` belongs
+  at `43f8ced` *now*, not at RC10. It is a 29-commit fast-forward on linear history, and it makes both
+  release tags reachable from `main` as a side effect. Switching the ADO *default branch* to `develop`
+  is still separate and still needed.
 - `version/Beta220` / `version/20Beta` become frozen markers. Don't delete yet — deployed builds are
   traceable only via gitlink SHA (§4). Tag the final tips (`frozen/Beta220`, `frozen/20Beta`) and
   delete the branches in a month.
@@ -392,16 +455,44 @@ checkout configure, build and install. Merge it into `develop` immediately. Unti
 `git rm --cached .claude/worktrees/upbeat-blackwell Modules/ModuleTemplate` — and add
 `.claude/worktrees/` to `.gitignore`.
 
-**(c) Add `branch = develop` to every `.gitmodules`** — the superproject's *and* the 8 wrapper
-modules with a nested backend. This makes `git submodule update --remote` meaningful for the first
-time. Follow with `git submodule sync --recursive` on every clone.
+**(c) ~~Add `branch = develop` to every `.gitmodules`~~ — DROPPED 2026-08-04. Do not do this.**
 
-**(d) Rewrite `.gitmodules` URLs from SSH to HTTPS** (§2). Removes the local `insteadOf` workaround
-every new machine needs, and is a hard prerequisite for CI (§13.4). Same commit as (c).
+Two independent reasons, and the second one makes the first free:
 
-> **Rule about `--remote`:** use it as a deliberate "pull everyone's latest" action, *then build*,
-> *then* commit the gitlink bumps. Never as part of a scripted commit. The pinned SHA stays the record
-> of what was tested (§4).
+1. **The fleet forbids it.** `ips-suite2/.gitmodules` has **no `branch =` entry on any of its four
+   submodules**, nor on the nested MIRAGE tree — the convention across the company's projects is
+   SHA-pinned only. OneMill should not be the exception.
+2. **It is redundant — verified empirically.** `git submodule update --remote` **works without it**:
+   with no `branch =` set, git follows the submodule remote's **`HEAD`**. Tested in a scratch repo —
+   the pin moved from `6649f8a` to `46e0ea4`, exactly the submodule's `develop` tip, with
+   `.gitmodules` carrying no `branch` key at all.
+
+So `--remote` follows `develop` automatically **as a consequence of §11.4 item 1** (switching the ADO
+default branch to `develop`) plus item 2 (`git remote set-head origin -a` to refresh `origin/HEAD`).
+The convenience arrives for free, and no `.gitmodules` entry is needed to get it.
+
+Nothing else consumes `submodule.<name>.branch`. It has **zero** effect on
+`clone --recurse-submodules`, `submodule update --init --recursive`, `submodule sync`, gitlink
+resolution, the CMake build, or Azure Pipelines' `checkout: submodules: recursive` — all of which use
+the pinned SHA. The tree stays fully functional without it.
+
+**(d) Rewrite `.gitmodules` URLs from SSH to HTTPS** (§2) — the one `.gitmodules` change that *is*
+needed. Removes the local `insteadOf` workaround every new machine needs, and is a hard prerequisite
+for CI (§13.4). Use the **fleet form, with the org as user**, matching `ips-suite2/.gitmodules`:
+
+```
+url = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_MainApp
+```
+
+Follow with `git submodule sync --recursive` on every clone.
+
+> **Rule about `--remote`:** it is available but never automatic. Use it as a deliberate "pull
+> everyone's latest" action, *then build*, *then* commit the gitlink bumps — never inside a script. The
+> pinned SHA stays the record of what was tested (§4). If you want it fully explicit instead, skip
+> `--remote` and use `git submodule foreach --recursive 'git checkout develop && git pull --ff-only'`,
+> which shows exactly what moved. **This is the reason the fleet rule is right:** `--remote` silently
+> retargets gitlinks to whatever a branch tip is *now*, which is precisely how an untested combination
+> gets committed as though it were deliberate.
 
 ### 11.4 ADO settings + git config
 
@@ -437,11 +528,20 @@ Do it in the same sitting; it will never be cheaper. Full inventory in §7.
 - **Delete `SetupBuildEnvOnMain`** (7 repos) — dead line, superseded by `SetupBuildEnvOnBeta220`.
 - **`SelfcontainedSuperbuild`** (7 repos) — land into `develop` or tag and delete. It should not
   survive as a third long-lived line.
-- **Pia's 9 live branches** are the only real in-flight work. Decide per branch: land into `develop`
+- ~~**Pia's 9 live branches** are the only real in-flight work.~~ **Resolved 2026-08-04 — see §7.1.
+  Robert merged them locally and pushed; they are all already contained in `version/Beta220`.**
+  They are pure deletion candidates, not decisions. Original text kept for context: decide per branch:
+  land into `develop`
   now, or let her rebase onto `develop` (all but one are in a single repo, so this is cheap). Do
   **not** leave them branched off dead `main` — that is how they got to `-1` behind.
 
-### 11.6 How the three of us work — no PRs, but Robert sees it first
+### 11.6 How the three of us work
+
+> **Partly superseded 2026-08-04 by the decision in §11.6a: no direct push to `main` or `develop` in
+> the final repo.** In Azure DevOps that necessarily means PRs. Read **§11.6a first** — it sets the
+> gate; the mechanics below (the `review/<topic>` branches and the combined-diff script) remain
+> valuable, but as the way a reviewer *sees* a cross-repo change that ADO's PR UI cannot render,
+> not as a replacement for PRs.
 
 PRs died on 2026-01-30 for a structural reason, not a cultural one: **a typical change touches 3–6
 repos, and Azure DevOps cannot show a cross-repo diff.** Five PRs plus a superproject PR, reviewed
@@ -518,20 +618,92 @@ Then delete the `review/*` branches everywhere. Worth adding as `GitHelper.ps1` 
 to **one** repo. Open it plain (no policies, no required reviewers), let him thread comments, merge
 **locally** with `--no-ff` — ADO auto-closes it. Never press *Complete* in the UI (see §11.4 item 3).
 
+### 11.6a Branch protection — "no direct push to `main`/`develop`"
+
+**Decision taken 2026-08-04:** in the final repo, direct pushes to `main` and `develop` must not be
+permitted.
+
+**Yes — in Azure DevOps that means pull requests. There is no other mechanism.** ADO has no
+"protected branch, but push allowed for some" middle setting: the moment a branch carries **any**
+branch policy, direct pushes are rejected (`TF402455: Pushes to this branch are not permitted; you
+must use a pull request`). So "no direct push" and "PR required" are the same switch. Adding
+*Minimum number of reviewers = 1* is what additionally guarantees a human looked.
+
+#### The tension to resolve first
+
+§11.6's core finding still holds: **ADO cannot show a cross-repo diff**, and a typical change touches
+3–6 repos. So *where* you apply the policy decides whether this is one PR or six.
+
+| Scope of policy | PRs per typical change | Verdict |
+|---|---|---|
+| Every repo's `develop` + `main` (26 repos) | **3–6 + 1** | Recreates exactly the friction that killed PRs in Jan 2026. Will be worked around. |
+| **Superproject `develop` + `main` only** | **1** | ⭐ **Recommended.** |
+| `main` only, `develop` left open | 1, at release time only | Lowest friction, but no per-change review — probably not what's wanted. |
+
+**Recommended shape:** policies on the **superproject's** `develop` and `main`. Submodules keep
+`develop` push-open; optionally protect submodule `main` (they are release markers/archives).
+
+The justification is the §11.6 insight, unchanged: **the superproject commit is the reviewable unit.**
+It is the only place a cross-repo change is atomic, and it is the commit that defines what the product
+*is*. Gate that, and you gate everything — a submodule commit that no superproject gitlink references
+is not part of the product. With `diff.submodule log` (§11.4) the PR's gitlink diff reads as the list
+of submodule commits being pulled in, so the reviewer sees *what* changed even though ADO won't diff
+the content. For the actual content review, the reviewer uses §11.6's `review/<topic>` checkout or the
+combined-diff file — which is why that machinery is still worth building.
+
+#### Three settings that are mandatory, not optional, once PRs are required
+
+1. **"Require a merge strategy" → merge commit (no squash).** Previously listed as optional in §11.4.
+   With PRs mandatory it becomes **critical**: completing a superproject PR as a *squash* would orphan
+   the submodule commits the gitlinks point at, producing exactly the unresolvable-gitlink breakage of
+   §5. The setup ledger already notes there is no such policy anywhere in the project and that ADO
+   remembers each user's last-used strategy — so the default is actively dangerous here.
+2. **"Allow requestors to approve their own changes" → OFF.** Otherwise a 1-reviewer policy is
+   theatre. But be deliberate: with 3 people and Robert authoring most changes, this means **Robert
+   cannot land anything without Martin or Pia approving.** That is a real workflow commitment and
+   should be agreed explicitly, not discovered.
+3. **Decide who holds "Bypass policies when completing pull requests".** Someone needs it for a
+   production emergency. Grant it consciously to a named person; ADO logs its use.
+
+#### Why this raises the priority of §13
+
+A PR policy with no automated check is a human rubber-stamp. ADO's **build validation** policy attaches
+a pipeline to the PR so `develop` cannot receive a change that doesn't build — which is precisely the
+guarantee §11.6's "build before you bump" rule was trying to achieve by convention, and §12.7 noted
+had *zero* automation behind it. So: **§13's build pipeline plus the `check-submodule-downgrade.sh`
+guard should become build-validation policies on the superproject's `develop`.** That combination —
+1 reviewer + builds + no gitlink downgrade — is a genuinely strong gate for about a day's setup.
+
+**Not rehearsable locally.** Branch policies are an ADO feature, not a git one, so §14's sandbox cannot
+test any of this. Verifying it needs the stage-two throwaway ADO project (§14.5).
+
 ### 11.7 Migration order
 
 1. Robert pushes everything outstanding to `version/*` and agrees to stop pushing there. **Blocking.**
 2. Run §11.3 step 1+2 — `develop` exists in ~27 places.
-3. First `develop` commit: strays removed, `branch = develop` + HTTPS URLs in all 9 `.gitmodules`,
+3. First `develop` commit: strays removed (**already done on the build-env branch** — §5 verified
+   2026-08-04), HTTPS URLs in the `.gitmodules` files that need them (**no `branch =`** — §11.3c),
    `.claude/worktrees/` ignored.
 4. Merge `SetupBuildEnvOnBeta220` into `develop` — now `develop` builds from a clean clone.
 5. ADO defaults → `develop` (§11.4). Everyone: `git submodule sync --recursive`, then re-clone once.
+   *If §12.6 phase 1 is already agreed, skip this for the 8 nested `*Backend` repos — they are about
+   to become read-only archives. See §12.10.2; it is the only work the two plans duplicate.*
+5a. **Fast-forward `main` to `Version_2.1.0^{commit}` (`43f8ced`) — superproject only** (§15.1/§15.4).
+   `git push origin Version_2.1.0^{commit}:refs/heads/main`. Both release tags become reachable from
+   `main`; `develop` then sits 4 commits ahead, the correct steady state. Do **not** do this in the
+   submodules — their own `main` branches and tags are unreliable (§15.2).
 6. Branch hygiene (§11.5), including a decision on each of Pia's 9 live branches.
 7. Tag `frozen/Beta220` + `frozen/20Beta`; delete those branches after a month.
 8. The three §6 questions are then answered, except "revive or retire `main`", which becomes "keep it
    as the release branch, ff at next release".
 
 Everything except step 1 is reversible. **Do not couple this to §12** — this is the cheap half.
+
+**Do not reorder §12's absorb before this.** `git subtree add` would have to land its merge on
+`version/Beta220` / `version/20Beta`, i.e. on the very branches step 7 freezes as the only record of
+what shipped (§4). Absorbing wants `develop` to exist first — the two plans converge rather than
+compete. Worked through in **§12.10**, including why the absorb is the ideal *first* change to land on
+`develop` (step 3 there), and why it must come **after** step 4 above.
 
 ---
 
@@ -666,8 +838,10 @@ This is a git operation, not a build refactor.
 **A — full monorepo, path-preserving.** All 26 absorbed in place; keep `OpenXLSX` as the one
 legitimate submodule. Per repo:
 `git subtree add --prefix=Modules/ModuleMillingKalotte/MillingBackend <url> develop`.
-Full history preserved, paths rewritten to match, build untouched. Archive the old repos read-only;
-tag the last superproject commit first so deployed-build traceability (§4) survives.
+History preserved, build untouched. Archive the old repos read-only; tag the last superproject commit
+first so deployed-build traceability (§4) survives. **§12.9 tests this on real OneMill history** —
+read it before quoting this option, because "history preserved" means something more specific than it
+sounds, and there are two variants with a real trade-off.
 
 **B — three repos along the backend/frontend seam.** `onemill-backend` + `onemill-app` +
 2-submodule superproject. Buys a fast Qt-free backend CI. But *"add a backend API and call it from the
@@ -700,7 +874,7 @@ Phase 1 alone removes most daily friction. If it feels wrong afterwards, stop th
 | 1 | Anything outside the superproject consuming these repos? | ✅ **No.** Neither standalone test repo has a `.gitmodules` (§12.3.1). |
 | 2 | Any ADO pipeline building a single submodule repo? | ✅ **No.** One build definition project-wide — `om_documentation` (id 655), last run 2025-10-10. **Zero CI on any code repo.** |
 | 3 | Per-repo access control needed? | ❓ Ask Robert. Assumed no. |
-| 4 | In-flight work | ⚠️ **The only real cost.** Pia's 9 live branches (§7) — `subtree add` does not carry them. Land or close first; a §11.5 task anyway. |
+| 4 | In-flight work | ✅ **Resolved 2026-08-04 (§7.1).** Robert merged all outstanding work locally and pushed it; verified — every one of Pia's branches is fully contained in `version/Beta220`. There is no in-flight work to carry. **This was the last real cost, and it is gone.** |
 
 Technical blockers are gone. What remains is #4 (sequencing) and Robert's agreement.
 
@@ -714,6 +888,247 @@ than 26.
 atomicity; the backend/GUI cut and the plugin concept both live in CMake targets and output
 directories, and both survive a path-preserving monorepo conversion completely intact — so the
 boundaries can be kept, and enforced better, while the 26-repo overhead goes away.*
+
+### 12.9 VERIFIED — the absorb/extract round trip, tested on real OneMill history
+
+**Tested 2026-08-04.** Robert is not convinced by the monorepo, so the claim "you can absorb a
+submodule into its parent, and it is reversible with history preserved" was **actually executed** on
+real OneMill submodules rather than asserted. Lab: `scratchpad/subtree-lab`, bare clones of
+`om_ModuleStatistics` (12 commits) and `om_StatisticsBackend` (9 commits) taken from the local working
+tree to stand in for the ADO remotes. **No network, nothing pushed to Azure DevOps, nothing in the
+real clone touched.**
+
+`om_ModuleStatistics` was chosen because it is the *nested* case (wrapper + backend) in miniature —
+i.e. OneMill's hard shape, not the easy one.
+
+#### 12.9.1 Headline answer
+
+**Yes, it is possible, and yes, it is genuinely reversible.** But "history preserved" splits into two
+variants with a real trade-off, and only one of them gives you working `git log` on a file.
+
+| | **Variant A** — `git subtree add` | **Variant B** — re-root, then merge |
+|---|---|---|
+| Original commit SHAs | ✅ **kept byte-identical** | ❌ rewritten |
+| Original commits reachable from HEAD | ✅ yes | ✅ yes (as rewrites) |
+| `git blame <file>` reaches original commits | ✅ **yes — all of them** | ✅ yes |
+| `git log -- <file>` traverses pre-absorb history | ❌ **no — stops at the merge** | ✅ **yes** |
+| `git log --follow -- <file>` | ❌ returns nothing | ✅ yes |
+| `git log -- <dir>` | ✅ shows the gitlink-bump history | ✅ shows content history |
+| Extra tooling needed | none (`git subtree` ships with git) | `git filter-repo` **or** `filter-branch` |
+| Reversible via `git subtree split` | ✅ **yes, fast-forward** | ⚠️ split works, but SHAs already diverged |
+
+Measured on `StatisticsBackend/src/StatisticsLogger.cpp` (4 commits in its original history):
+
+- **Variant A**: `git log -- <file>` returned exactly **1** commit (the absorb merge).
+  `git log --follow` returned **0**. But `git blame` correctly named **all four** original commits —
+  `157bd71 RC10`, `5095db1 Statistics`, `535833f rc statistics`, `1781fa2 inital commit` — with the
+  right author on every line. So **per-line archaeology survives; per-file `git log` does not.**
+- **Variant B**: `git log`, `git log --follow` and `git blame` all returned all four commits.
+
+That is the honest trade-off to put in front of Robert: **A keeps the SHAs (so every existing
+reference, build record and gitlink still resolves), B keeps `git log <file>`.** Both keep `blame`,
+which is what people actually reach for.
+
+#### 12.9.2 Reversibility — proven, not argued
+
+The round trip was executed end to end in variant A:
+
+1. Absorbed `StatisticsBackend` into the wrapper (`subtree add`) → 23 commits, 14 files.
+2. Made two commits in the absorbed layout, including **one atomic commit touching wrapper *and*
+   backend at once** — the exact thing submodules make impossible.
+3. `git subtree split --prefix=StatisticsBackend -b extracted` → an 11-commit branch.
+4. Verified `git merge-base --is-ancestor 9ac7a4e extracted` → **YES**. The split branch sits directly
+   on top of the *original* component tip, with the original 9 SHAs intact underneath.
+5. `git push <component-repo> extracted:SetupBuildEnvOnBeta220` → `9ac7a4e..59fc425`,
+   **a plain fast-forward. No force push.**
+6. Tree comparison: monorepo `HEAD:StatisticsBackend` and `extracted^{tree}` were the **same tree SHA**
+   (`4dd55d4c…`) — content round-trips byte-identically.
+
+So the un-do is not "restore from backup". It is a normal fast-forward push that leaves the component
+repo a strict superset of what it was. Note step 2's atomic commit came back out as a backend-only
+commit, with its wrapper half left behind in the monorepo — the split is lossless *per component*.
+
+#### 12.9.3 The argument that should actually persuade Robert: they can coexist
+
+The migration does **not** have to be a big bang, and does not require everyone to agree at once.
+`git subtree pull` / `git subtree push` sync a prefix against the still-live component repo in both
+directions. Tested: a commit pushed straight to `om_StatisticsBackend` (simulating Pia working the old
+way) was pulled into the absorbed layout with `subtree pull`, and her **original commit SHA `c374e3b`
+is reachable in the monorepo history**.
+
+Meaning: you could absorb `MillingBackend` into the monorepo *while Pia keeps working in
+`om_MillingBackend` exactly as she does today*, and neither of you is blocked. That turns the decision
+from "bet the repo" into "try it on one component for two weeks".
+
+**The honest caveat — and it is a real one.** `subtree pull` is an ordinary merge and conflicts like
+one: the test hit a genuine content conflict when both sides edited the same line, resolved with
+ordinary conflict resolution. More importantly, coexistence means **dual maintenance** — two places a
+change can land, and someone has to remember to sync. That is a transitional state to spend weeks in,
+not months. Do not sell it as free.
+
+#### 12.9.4 Nested ordering — the requirement is real, and now demonstrated
+
+Absorbing a wrapper **top-down while it still contains its own submodule** was tested directly. The
+result at the absorbed path:
+
+```
+100644 blob …  Modules/ModuleStatistics/.gitmodules        <-- orphaned, path= now wrong
+100644 blob …  Modules/ModuleStatistics/CMakeLists.txt
+040000 tree …  Modules/ModuleStatistics/ModuleStatisticsFrontend
+100644 blob …  Modules/ModuleStatistics/README.md
+160000 commit 9ac7a4e…  Modules/ModuleStatistics/StatisticsBackend   <-- GITLINK, unresolvable
+```
+
+The superproject `.gitmodules` correctly loses its own entry, but you inherit a `160000` gitlink that
+**nothing references** — precisely the §5 stray-gitlink failure class, manufactured on purpose. So:
+
+> **Absorb bottom-up.** Backend into wrapper first (push that), then wrapper into superproject.
+> Or absorb top-down and remove the inner gitlink + orphaned nested `.gitmodules` in a follow-up
+> commit. This is exactly why §12.6 phase 1 is phase 1.
+
+#### 12.9.5 Scale — this is a seconds-long operation, not a weekend
+
+Commit counts, measured:
+
+| | Commits |
+|---|---|
+| Superproject | 83 |
+| Largest first-party submodule (`om_MillingBackend`) | 192 |
+| All 25 first-party submodules combined | **737** |
+| `om_OpenXLSX` (vendored 3rd party) | 881 |
+
+The entire lab — two absorbs, a history rewrite, a split, and a round-trip push — ran in **seconds**.
+"Rewriting history is risky and slow" is a legitimate concern at 500 000 commits. At 737 it is not a
+factor. The whole 26-repo conversion is minutes of machine time; the cost is entirely in coordination
+(§12.7 #4), not compute.
+
+#### 12.9.6 Gotchas found by actually running it
+
+These cost time if you hit them cold:
+
+1. **`git subtree add` fails with `prefix '<path>' already exists`** if the directory is still on disk
+   — and an uninitialised submodule leaves an **empty directory** behind. `git rm --cached` is not
+   enough; `rm -rf <path>` as well. The check is filesystem-based, not index-based.
+2. **`git subtree add <repo> <ref>` needs a fetchable ref name, not a SHA.** Passing a commit SHA
+   fails with `couldn't find remote ref <sha>`. Pass the branch name.
+3. **`git filter-repo` is not installed on this PC, and neither is Python** (`python --version` →
+   the Microsoft Store stub). Variant B therefore currently needs the deprecated
+   `git filter-branch --index-filter` recipe — which worked fine here, but installing `filter-repo`
+   is the better answer if variant B is chosen.
+4. Git in use is **2.53.0.windows.2**; `git subtree` ships with it at
+   `/mingw64/libexec/git-core/git-subtree`. No install needed for variant A.
+5. Line endings: every commit in the lab produced `LF will be replaced by CRLF` warnings.
+   **Correction (2026-08-04): the claim "OneMill has none" was wrong** — `SetupBuildEnvOnBeta220`
+   already tracks a `.gitattributes` (`* text=auto eol=lf`, `*.bat`/`*.cmd` → CRLF, binaries marked)
+   plus an `.editorconfig`. The real gap is narrower and worth knowing: **a superproject
+   `.gitattributes` does not apply inside submodules** — each submodule needs its own, and none of the
+   26 has one. That is exactly why the lab's submodule clones still warned. Adding it per submodule is
+   a 26-repo change and therefore its own decision, not a side effect of any plan here.
+
+#### 12.9.7 What to propose to Robert
+
+Given all of the above, the pitch is **not** "let's do a monorepo". It is:
+
+> Take the smallest nested pair — `ModuleUpdater` + `UpdaterBackend` (3 + 3 commits) or
+> `ModuleReporter` + `ReporterBackend` (8 + 7) — absorb it bottom-up on a branch, and look at the
+> result. If it's worse, `subtree split` it back out with a fast-forward push and delete the branch.
+> Total exposure: one afternoon, one branch, zero irreversible steps.
+
+That reframes the disagreement from a philosophical one into an experiment with a bounded cost — and
+§12.9.2 means the "what if we hate it" answer is a demonstrated command, not a promise.
+
+Two things worth conceding to him up front, because they are true: `git log -- <file>` really does
+break under variant A (§12.9.1), and coexistence really does mean dual maintenance (§12.9.3). Leading
+with those is more persuasive than being talked into them later.
+
+### 12.10 Sequencing — absorb *before* the `develop`/`main` reorg?
+
+Short answer: **no, and for a sharper reason than "§11 is the cheap half".** The absorb does not
+really want to happen before or after the reorg — **it wants `develop` to already exist**, because
+`develop` is the only branch you can safely absorb *into*.
+
+#### 12.10.1 Why absorbing first actively hurts
+
+`git subtree add` writes a merge commit onto whatever branch you are on. Today that branch would have
+to be `version/Beta220` or `version/20Beta` (§3). But §11.2 keeps exactly those branches as **frozen
+historical markers**, because per §4 the gitlink SHA on them is *the only reliable record of what went
+into a deployed build*. Absorbing into them **moves the markers** and mixes a structural conversion
+into the one traceability record you have.
+
+Two further frictions, both of which are just §11's problems arriving early:
+
+- **You'd have to pick the source ref per repo.** `git subtree add <url> <ref>` needs a real ref, and
+  it's `version/Beta220` in some repos, `version/20Beta` in others. That per-repo probing is precisely
+  what §11.3's script exists to eliminate. Absorb after, and every command is uniformly
+  `git subtree add --prefix=<path> <url> develop`.
+- **The superproject gitlink bump has nowhere clean to land.** Absorbing the 8 backends into their
+  wrappers creates new wrapper commits, so the superproject must bump those gitlinks. Onto
+  `version/Beta220`? Same pollution problem again.
+
+The escape hatch collapses into the same answer: to absorb cleanly you'd create a fresh integration
+branch first — and that branch **is** `develop`. So the two steps converge rather than compete.
+
+#### 12.10.2 What absorbing first would actually save — and it's small
+
+If phase 1 (8 nested backends) landed first, §11 would operate on 18 repos instead of 26. Saved work:
+
+| §11 item on the 8 absorbed repos | Genuinely saved? |
+|---|---|
+| Create `develop` (§11.3) | **No** — one scripted pass either way, and you *want* `develop` in an archived component repo; it's better archival hygiene than leaving it on `version/20Beta`. |
+| `branch = develop` in `.gitmodules` (§11.3) | **Partly** — the 8 wrapper `.gitmodules` files disappear entirely, so 9 files → 1. Nice, but it's 9 files. |
+| ADO default-branch switch (§11.4) | **Yes** — 8 manual switches on repos about to become read-only archives. The one real duplication. |
+| `frozen/*` tags + branch hygiene (§11.5, §11.7) | **No** — you want the archive tagged regardless. |
+
+So the entire saving is *eight ADO default-branch switches*. Not a reason to reorder anything.
+
+**Cheap optimization worth taking, though:** if Robert has already green-lit phase 1, simply **skip
+step 5's ADO default switch for those 8 backend repos** in §11.7. Costs nothing to decide, saves the
+only duplicated work.
+
+#### 12.10.3 Where absorbing genuinely transforms the reorg — the release tags
+
+This is the part of the question that has a real "yes" in it, and it's the half about `main` and
+release tags. It is **not order-dependent** — you get it whenever you absorb — but it is the strongest
+argument that absorbing should happen *soon after* the reorg rather than someday.
+
+Today, cutting a release means: fast-forward `main` in 26 repos, then tag 26 repos, consistently.
+**§4 is the evidence that this has never once worked** — 16 repos carry the two tags, 13 carry none,
+one carries only the second, and the names don't correspond to anything (`Version_1.0.1` sits on RC10).
+The doc's own conclusion is *"do not use tags to identify a release across the tree."*
+
+That conclusion is a **consequence of the repo count, not of anything about tagging.** After phase 3:
+
+- Fast-forward `main` in **1** repo. Tag **1** repo. **One tag = one release = the whole product.**
+- `git describe` becomes meaningful. Today it is per-repo noise.
+- **The decisive one:** today a superproject release tag captures only *gitlink SHAs*, so
+  reconstructing a shipped release requires all 26 component repos to still exist and still contain
+  those commits. After absorbing, the tag captures the **actual content**. A release becomes
+  self-contained and reconstructible from one ref.
+
+That last point is worth raising with Robert separately from any developer-convenience argument. It is
+a traceability property, not an ergonomics one — for a dental-implant milling product, "one ref
+reproduces exactly what we shipped" is a different category of argument, and it is the thing §11 alone
+*cannot* deliver. §11 gives tags a home; only the absorb makes a tag mean the whole product.
+
+#### 12.10.4 Recommended order
+
+1. **§11 as written** — `develop` everywhere, `main` left at RC10, ADO defaults switched
+   (skipping the 8 backend repos if phase 1 is already agreed, per §12.10.2).
+2. **§11.7 step 4 first: land `SetupBuildEnvOnBeta220` into `develop` before absorbing anything.**
+   That branch exists in 13 repos — including 5 of the nested backends (`StatisticsBackend`,
+   `PostProcessorBackend`, `FixtureBackend`, `FittingAnalysisBackend`, `FileTransferBackend`). Absorb
+   first and those build-env commits have to arrive through the absorbed path instead. Avoidable
+   tangle; just do it in this order.
+3. **Absorb phase 1 as the first real change on `develop`.** This is a genuinely nice alignment: it
+   *is* the §12.9.7 pilot, and landing it through a `review/<topic>` branch simultaneously
+   demonstrates the §11.6 workflow on a real change. One change, three purposes.
+4. **Phases 2 and 3 before the first release off `main`** — so that the first time anyone tags a
+   release under the new model, there are 2 repos to tag instead of 26, and §4 never repeats.
+
+The one situation that would justify reordering is political, not technical: **if the absorb pilot is
+what Robert will say yes to first, don't block it on the branch reorg.** Do it — but do it onto a new
+branch named `develop` in those few repos, which is just §11 executed early for that subtree. Same
+destination, no wasted motion.
 
 ---
 
@@ -956,13 +1371,25 @@ and OneMill, being simple, is the better place to get its shape right first.
 | Scripts | `pipelines/scripts/` | — | same |
 | Build output | `out/build/<tuple>-<config>` | ✅ same | same |
 | Install output | `out/install/<tuple>-<config>` | install → `INSTALL_DIR` | `out/install/<tuple>-<config>` |
-| Preset naming | `<product>-config-<tuple>-<lane>-<config>` | `onemill-config-<tuple>-<config>` (no lane) | `<product>-{config,build,test}-<tuple>[-<lane>]-<config>` |
+| Preset naming | `<product>-config-<tuple>-<lane>-<config>` | `onemill-config-<tuple>-<config>` — **no lane, deliberately** | `<product>-{config,build,test}-<tuple>[-<lane>]-<config>`, lane **optional** |
 | Dev-env entry | `.vscode/dev-run.cmd` (fleet-shared) | ✅ byte-identical copy | same, one canonical source |
 | Version stamp | `CreateCadsVersion@3` | — | same |
 | Triggers | `develop`, `main`, `release/*` | — | same |
 | Branch→flavour | main=final, release/\*=beta, develop=alpha | — | same |
 | Submodule guard | `check-submodule-downgrade.sh` | — | same script, verbatim |
 | Cheap PR gate | separate hosted-agent pipeline | — | same |
+
+**Correction 2026-08-04:** the "no lane" cell is **not a gap.** `OneMill-Fleet-Conformance.md` records
+the `{lane}` token (upstream **A6/B5**) as *deliberately not adopted* — "OneMill has a single lane;
+renaming every preset buys conformance only, and costs muscle memory plus any script that names a
+preset." The org standard should therefore make the lane segment **optional**, not required.
+
+That file is the authority on OneMill's fleet position and should be consulted before any further
+standardization claim here. Three of its verdicts bear directly on this section: **D2** (pinned
+submodules) is recorded as already satisfied — the basis for the no-`branch =` rule in §11.3(c);
+**D5** (local/CI parity) is *deferred pending exactly the CI work proposed here*, so parity is a
+requirement **on** §13, not a claim; and **D7** (no automated tests at all) is an open gap that §13.6
+phase 2 closes by wiring in `om_integrationtest_highlevel`.
 
 **OneMill already complies with more of this than ips-suite2's own pipelines do** — the output
 grammar, the preset families and the shared `dev-run.cmd` (whose header names
@@ -981,3 +1408,260 @@ small enough that getting it wrong is cheap, real enough to prove the template.
    visible benefit.
 4. **Formatting** — is a one-commit `clang-format` pass over the tree acceptable? Precondition for
    adopting ips-suite2's format gate, and it will produce an enormous diff.
+
+---
+
+## 14. Rehearsing the whole reorg in a sandbox, without touching production
+
+> **The executable runbook derived from this section is
+> [`OneMill-Sandbox-Rehearsal.md`](OneMill-Sandbox-Rehearsal.md)** (created 2026-08-04). This section is
+> the *why*; that file is the step-by-step *how*. Its scope excludes §12's submodule absorb by decision
+> — the submodule structure stays as-is for now.
+
+**Verified mechanism, 2026-08-04.** The entire §11 + §12 plan can be rehearsed locally against a
+**fail-closed mirror farm** — a set of local bare repos that stand in for the ADO remotes, wired up so
+the sandbox is *structurally incapable* of reaching Azure DevOps.
+
+### 14.1 Why a mirror farm rather than branches in the real clone
+
+Rehearsing on branches in `KLSOneMill4` without pushing tests almost nothing that matters: the risky
+part of §11 is **multi-repo push ordering**, `push.recurseSubmodules`, `submodule update --remote` with
+`branch = develop`, and gitlink consistency across 27 repos. All of that needs real remotes you are
+allowed to push to. And it carries a live risk of an accidental push to production.
+
+Size makes this easy: the **entire 26-repo tree with full history is 29 MB** (`.git`, measured). A
+complete mirror of all 30 repos is a rounding error on disk.
+
+### 14.2 The mechanism — URL rewriting, no content changes
+
+Do **not** edit `.gitmodules` to point at local paths; that would be a commit in the sandbox and would
+pollute exactly the thing you are testing. Instead redirect the *existing* URLs with `insteadOf` in a
+sandbox-only config selected by `GIT_CONFIG_GLOBAL` (supported since git 2.32; this PC has **2.53.0**).
+
+**Verified behaviour:**
+
+```
+$ GIT_CONFIG_GLOBAL=$SB/gitconfig git ls-remote --get-url \
+      git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_ModuleStatistics
+  → …/scratchpad/redirect-test/srv/om_ModuleStatistics.git     # per-repo rule wins
+$ … git clone git@ssh.dev.azure.com:v3/…/om_ModuleStatistics
+  → CLONE OK, 12 commits, no network used
+```
+
+`insteadOf` resolves by **longest match**, so a per-repo rule beats the broad SSH→HTTPS prefix rule
+already configured on this PC (`url.https://cads-team@dev.azure.com/…/_git/.insteadOf =
+git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/`). Content stays byte-identical to production.
+
+### 14.3 ⚠ The safety trap, and the fix
+
+Testing revealed the one thing that could actually hurt you:
+
+```
+$ … git ls-remote --get-url git@ssh…/om_MainApp     # no per-repo rule defined
+  → https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/om_MainApp
+```
+
+**A repo you forget to map silently resolves to the real ADO.** Harmless for a fetch — but the whole
+point of the rehearsal is running `git push`, and an unmapped repo would push to **production**.
+
+So build the config **fail-closed**: do *not* `[include]` the real `~/.gitconfig`; instead map the
+whole ADO namespace to a dead local path *first*, then add the 30 specific rules on top.
+
+```ini
+# $SB/gitconfig  — sandbox only, selected via GIT_CONFIG_GLOBAL
+[user]
+	name = Martin Schachinger
+	email = martin.schachinger@cads.at
+
+# CATCH-ALL FIRST: anything not explicitly mapped resolves to a path that does not
+# exist -> hard failure, never the network. Shorter match, so per-repo rules win.
+[url "C:/DATA/sandbox/onemill/srv/UNMAPPED--"]
+	insteadOf = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/
+	insteadOf = https://dev.azure.com/cads-team/KLS%20OneMill/_git/
+	insteadOf = https://cads-team@dev.azure.com/cads-team/KLS%20OneMill/_git/
+
+# then one longer, winning rule per repo (generated — 30 of these)
+[url "C:/DATA/sandbox/onemill/srv/om_MainApp.git"]
+	insteadOf = git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/om_MainApp
+```
+
+**Pre-flight gate before running anything:** assert that every one of the 30 URLs resolves inside the
+sandbox and that *none* resolves to `dev.azure.com`. Refuse to start otherwise.
+
+```sh
+for r in $REPOS; do
+  u=$(GIT_CONFIG_GLOBAL=$SB/gitconfig git ls-remote --get-url \
+        "git@ssh.dev.azure.com:v3/cads-team/KLS%20OneMill/$r")
+  case "$u" in "$SB"/*) ;; *) echo "UNSAFE: $r -> $u"; exit 1 ;; esac
+done
+```
+
+Belt and braces: `export GIT_TERMINAL_PROMPT=0` so nothing can interactively authenticate.
+
+### 14.4 Bootstrap
+
+```sh
+SB=/c/DATA/sandbox/onemill          # deliberately NOT under the real clone
+ORG='https://dev.azure.com/cads-team/KLS%20OneMill/_git'
+mkdir -p "$SB/srv"
+# --mirror gets ALL refs — every branch AND every tag. Essential: §11.5 and §15 test both.
+for r in 'KLS%20OneMill' om_MainApp om_ModuleInterface om_ModuleUtils om_BackendUtils …; do
+  git clone --mirror "$ORG/$r" "$SB/srv/${r//%20/}.git"
+done
+```
+
+Then generate the config, run the pre-flight gate, clone the superproject **through the redirect**,
+and execute §11.3 / §11.7 / §12.6 **verbatim** — the commands need no modification, which is the point:
+what you rehearse is exactly what you will later run.
+
+Bare mirrors accept pushes to any ref, which is faithful here — §11.4 item 3 confirms no branch
+policies exist on any target branch today. Don't run `git remote update` on a mirror after you have
+pushed to it; `--mirror` sets `fetch = +refs/*:refs/*` and would clobber your rehearsal.
+
+### 14.5 What the sandbox proves — and what it cannot
+
+| Testable locally | Not testable — needs ADO |
+|---|---|
+| §11.3 create `develop` in 27 repos | ADO **default-branch** switch (§11.4) |
+| §11.3(c) `.gitmodules` edits (`branch=`, HTTPS URLs) | Branch policies, PR UI/threads |
+| Stray-gitlink removal (§5) | `CreateCadsVersion@3`, agent pool, **any pipeline run** (§13) |
+| Merging `SetupBuildEnvOnBeta220` | Permissions, tag-protection rules |
+| §11.5 branch deletions, §11.7 `frozen/*` tags | How ADO renders a cross-repo review |
+| `push.recurseSubmodules`, `submodule update --remote` | |
+| **All of §12.6** absorb phases + `subtree split` reversal | |
+| §15 tag reconstruction | |
+| §13's `check-submodule-downgrade.sh` (pure git) | |
+| **Does it still build?** (see the trap in §14.6) | |
+
+For the right-hand column, stage two is a **throwaway ADO project** ("KLS OneMill Sandbox"): ADO's
+*Import repository* pulls a full mirror including tags, and 30 imports are scriptable via REST. That is
+the only way to rehearse §13's pipeline and the default-branch switch. Do it only after the git
+mechanics are green locally — it costs project-creation rights and org-admin goodwill.
+
+A local Gitea/Forgejo container is a third option if PR-flow ergonomics matter, but it won't match
+ADO's behaviour and is not worth the setup for this.
+
+### 14.6 ⚠ Build trap in the sandbox
+
+`CMakeUserPresets.json` hardcodes **absolute** paths — `binaryDir: D:/BuildDirectory/KLSOneMill/…` and
+`INSTALL_DIR: D:/deployData/KLSOneMill/…`. A sandbox clone using the same presets would **build into
+and install over the real build and deploy trees**. Write a sandbox-only `CMakeUserPresets.json`
+pointing at e.g. `D:/BuildDirectory/onemill-sandbox/…` before building anything. (This is also an
+argument for the env-var-driven CI preset in §13.4 item 1 — one mechanism for CI *and* sandbox.)
+
+### 14.7 Verification harness — give the rehearsal a pass/fail
+
+A rehearsal without assertions is a vibe. Worth scripting:
+
+1. `develop` exists in all N mirrors, tip == the pre-migration `version/Beta220` tip.
+2. `git submodule update --init --recursive` exits 0 with **no** `No url found for submodule path`.
+3. No `160000` entry whose path is absent from `.gitmodules` (catches §5-class strays, including the
+   one §12.9.4 showed a top-down absorb creates).
+4. **Content invariance:** `git diff` between the old `version/Beta220` tree and the new `develop` tree
+   is limited to *exactly* the intended paths (`.gitmodules`, the two strays). The reorg must change
+   no source.
+5. The build configures, builds and `install_full`s from a clean sandbox clone.
+6. `check-submodule-downgrade.sh` passes on the result.
+
+### 14.8 Do this even for the real run
+
+`git clone --mirror` of all 30 repos into a dated folder is a complete, restorable backup of the
+entire project — **29 MB**. Take one immediately before touching production, regardless of how much
+rehearsing happened. It makes every step in §11 recoverable, not just the reversible ones.
+
+---
+
+## 15. Release tags and reactivating `main` — what's actually possible
+
+**Analysis, 2026-08-04. Amends §11.2 — see §15.4.** Question: `main` is to be the release branch, so
+can `Version_1.0.1` and `Version_2.1.0` be placed on it, since those were the real past deliveries?
+
+### 15.1 The superproject: nothing to move, just fast-forward
+
+Measured facts:
+
+| | Target commit | Subject | Reachable from `origin/main`? |
+|---|---|---|---|
+| `Version_1.0.1` | `a5ca1373` | Merged PR 25596: Merge RC10 (2025-12-10) | ✅ **YES — it *is* main's tip** |
+| `Version_2.1.0` | `43f8ced3` | Version 2.1.0 (2026-07-21) | ❌ no — 29 commits ahead |
+
+And `origin/main` **is an ancestor of** `Version_2.1.0` (history is linear, §1). Therefore:
+
+> **No tag surgery is needed at all.** The tags already point at the right commits. `Version_2.1.0`
+> simply isn't *reachable* from `main` yet. Fast-forward `main` onto it and both tags are on the
+> release branch, permanently and truthfully.
+
+```sh
+git push origin Version_2.1.0^{commit}:refs/heads/main    # plain fast-forward, a5ca137..43f8ced
+```
+
+Result: `main` = "Version 2.1.0", both release tags in its history, and `develop` sits **4 commits**
+ahead carrying the unreleased Beta220 work. That is the §11.2 two-branch model correct on day one,
+with real history behind it rather than a declaration.
+
+### 15.2 The submodules: the existing tags are wrong, not just inconsistent
+
+§4 called the tags "inconsistently applied". The truth is worse, and it is now measured. Using the
+superproject's tag tree (`git ls-tree -r <tag>`) as the reference for what each submodule actually
+contained at that release:
+
+| | agrees with the release | **WRONG commit** | no tag |
+|---|---|---|---|
+| `Version_1.0.1` | 2 | **9** | 0 |
+| `Version_2.1.0` | 12 | **3** | 2 |
+
+And the errors are systematic, not random: **all 9 wrong `Version_1.0.1` tags point 1–5 commits
+*ahead* of the real release point** (`ModuleUtils` +5, `ModulePostProcessor` +3, `BackendUtils` +2,
+`ModuleInterface` +2, `ModuleMillingKalotte` +2, `ModuleOverlayCritter` +2, `MainApp` +1,
+`ModuleReporter` +1, `ModuleView` +1).
+
+That is the signature of a **later batch sweep**: somebody tagged the repos at whatever their tips were
+at tagging time, rather than going back to the released commit. The clincher — `BackendUtils`'
+`Version_1.0.1` tag points at `e31c0c9c2`, which is *precisely what `Version_2.1.0` pins for
+BackendUtils*. Its "1.0.1" tag marks 2.1.0 content.
+
+**So the per-submodule tags are not a weaker record than the superproject tag — they are a false one.**
+§4's conclusion ("do not use tags to identify a release across the tree") is now proven per repo, and
+it holds for a stronger reason than assumed.
+
+Both tags are also **lightweight** (`git cat-file -t Version_2.1.0` → `commit`, not `tag`): no tagger,
+no date, no message. The only timestamp is the commit's own.
+
+### 15.3 Options for the submodule side
+
+The superproject tag tree **is** authoritative and complete — it yields the exact per-submodule SHA for
+every component of both releases. So correct tags are *reconstructible*, which gives three options:
+
+- **(a) Force-move the 9 + 3 wrong tags to the correct commits.** Technically easy
+  (`git tag -f` + `git push --force origin refs/tags/…`). But moving a **published** tag is the one
+  git operation with no clean client story: git does not update an existing tag on fetch, so anyone who
+  already has the old one keeps it silently, forever. **Not recommended.**
+- **(b) Generate a fresh, correctly-placed set under a new name** — `release/1.0.1`, `release/2.1.0` —
+  derived from the superproject tree, as **annotated** tags. Leave the old ones untouched and record in
+  this file that `Version_*` in submodules is untrustworthy. Non-destructive, and the historical record
+  becomes accurate for the first time.
+- **(c) Stop tagging submodules entirely.** Declare the superproject tag the single release record —
+  which §4 already established is the only thing that ever worked. Tag one repo per release.
+
+**Recommended: (c), optionally with (b) once** as a one-off historical cleanup. Maintaining 26
+consistent tags by hand is precisely the process that has now failed twice; a third attempt will fail
+the same way. And per §12.10.3, after the absorb this whole class of problem stops existing: one repo,
+one tag, nothing to reconcile and nothing to reconstruct.
+
+For **future** releases: use **annotated** tags (`git tag -a`) so the release carries a tagger, date and
+message, and `git describe` prefers them. Note the naming stays odd regardless — `Version_1.0.1` labels
+*release candidate 10* (§4) — so a consistent scheme from 2.2.0 onward is worth agreeing separately.
+
+### 15.4 Correction to §11.2
+
+§11.2 recommended leaving `main` at RC10 and fast-forwarding it "at the next real release". Given
+§15.1, that was **wrong**: `Version_2.1.0` was a real delivery on `43f8ced`, so "main = last thing
+shipped" means `main` belongs at `43f8ced` **now**, not at RC10. Fast-forwarding it is a 29-commit
+fast-forward on strictly linear history — no merge, no risk, and it makes both release tags reachable
+as a side effect rather than as a task.
+
+Slot this into §11.7 as a step of its own, after the `develop` branches exist:
+
+> **Fast-forward `main` to `Version_2.1.0^{commit}` (`43f8ced`).** Superproject only — do not attempt
+> it in the submodules, whose own `main` branches and tags are unreliable (§15.2). `develop` then sits
+> 4 commits ahead of `main`, which is the correct steady state.
