@@ -50,7 +50,13 @@ ui_*.h
 *.qmlc
 *.jsc
 Makefile*
-*build-*
+# Qt Creator shadow-build DIRECTORIES (build-<project>-<kit>-<config>). Narrowed from `*build-*`
+# on 2026-08-12: as a file-matching glob it silently ignored ANY path containing "build-", which
+# swallowed pipelines/onemill-build-windows.yml, and would equally swallow a pipeline named like
+# the fleet's own build-validation-windows.yaml. Verified before narrowing that the old pattern
+# matched exactly one path in the whole tree (that file) and that no build-* directory exists,
+# so this loses no coverage.
+build-*/
 *.qm
 *.prl
 

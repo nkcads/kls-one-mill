@@ -1,0 +1,466 @@
+# OneMill Windows build pipeline - self-hosted EC2 agent
+#
+# Ported from the `azure-pipelines` branch (commit 8cee220, created by the ADO wizard and then
+# adapted from ips-suite2/pipelines/build-validation-windows.yaml). Two of that file's three stages
+# are kept VERBATIM because they are correct and hard-won:
+#
+#   Warmup   - checks how many candidate EC2 instances are already running, starts one if there is
+#              capacity, and publishes its id so Shutdown can stop exactly that one
+#   Shutdown - stops the instance this run started; `condition: always()` so a failed build still
+#              releases it, and it handles the pending-instance case a cancelled Warmup leaves behind
+#
+# Its third stage (BuildAndTest) was DISCARDED: 52 of its lines are MIRAGE/SuperbuildEngine content
+# (MIRAGE_Tests.exe, SB_OUTPUT_KEY, 3rdparty/out/install, MIRAGE-data LFS fixtures), none of which
+# exists in OneMill. Dropped rather than half-edited, because a half-ported build stage that appears
+# to work is worse than an absent one. SB_CONFIG, SB_OUTPUT_KEY and AWS_ECR_SERVICE_CONNECTION went
+# with it; the two kept stages reference none of them - verified by grep, not assumed.
+#
+# CURRENT PAYLOAD: an agent INVENTORY, not a build. The EC2 instance was forked from a suite-aws-pool
+# agent, so it has VS 18 and Qt but almost certainly lacks OneMill's three specific dependencies
+# (Qt-enabled VTK 9.5, the licensed ModuleWorks SDK, and vcpkg with the x64-windows-static ports).
+# This stage reports what is actually present so provisioning is driven by facts instead of guesses.
+# It gets replaced by the real configure/build/install_full once the gaps are closed.
+#
+# `trigger: none` ON PURPOSE. This pipeline starts a billable EC2 instance, so it must not fire on
+# every push to develop the way the guard does. Run it manually until the build stage exists and the
+# team has decided whether it should gate develop.
+
+trigger: none
+pr: none
+
+variables:
+  CANDIDATE_AGENTS: 'i-0acdb789bdfe09eac'
+  MAX_CONCURRENT_INSTANCES: 1        # limited by the org's parallel-job allocation
+  AWS_SERVICE_CONNECTION: 'OneMill Staging AWS Credentials'
+  SELF_HOSTED_POOL: 'onemill-aws-windows-pool'
+  QT_VERSION: 6.10.2
+  QTDIR: 'C:\Qt\$(QT_VERSION)\msvc2022_64'
+
+stages:
+  - stage: Warmup
+    displayName: 'Manage Windows Instance Capacity'
+    jobs:
+      - job: ManageCapacity
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: none
+          - task: AWSShellScript@1
+            name: CheckCapacity
+            displayName: 'Check Capacity and Start Instance if Needed'
+            inputs:
+              awsCredentials: '$(AWS_SERVICE_CONNECTION)'
+              regionName: 'eu-west-1'
+              scriptType: 'inline'
+              inlineScript: |
+                set -e
+                
+                # Parse candidate instances
+                CANDIDATES="$(CANDIDATE_AGENTS)"
+                MAX_INSTANCES=$(MAX_CONCURRENT_INSTANCES)
+                IFS=',' read -ra INSTANCES <<< "$CANDIDATES"
+                
+                echo "========================================"
+                echo "Checking capacity for pipeline execution"
+                echo "Candidate instances: ${INSTANCES[*]}"
+                echo "Max concurrent instances: $MAX_INSTANCES"
+                echo "========================================"
+
+                # Publish the instance ID the moment the start call succeeds, BEFORE the
+                # multi-minute readiness waits: a run cancelled during those waits must still
+                # hand the ID to the Shutdown stage, or the instance keeps running forever.
+                claim_started_instance() {
+                  echo "##vso[task.setvariable variable=StartedInstanceId;isOutput=true]$1"
+                }
+
+                # Atomically start AND claim an instance. start-instances succeeds even when the
+                # instance is already pending/running, so the exit code alone cannot detect a
+                # concurrent Warmup racing us to the same stopped instance. Only the caller that
+                # actually flips it stopped -> pending (PreviousState=stopped) owns it; everyone
+                # else must treat the instance as taken.
+                start_and_claim_instance() {
+                  local instance_id="$1"
+                  local prev_state
+
+                  prev_state=$(aws ec2 start-instances --instance-ids "$instance_id" \
+                    --query 'StartingInstances[0].PreviousState.Name' \
+                    --output text 2>/dev/null || echo "start-failed")
+
+                  if [ "$prev_state" != "stopped" ]; then
+                    echo "⚠️  Could not claim $instance_id (previous state: $prev_state)"
+                    return 1
+                  fi
+
+                  claim_started_instance "$instance_id"
+                }
+
+                publish_started_instance() {
+                  local instance_id="$1"
+                  local agent_name
+
+                  agent_name=$(aws ec2 describe-tags \
+                    --filters "Name=resource-id,Values=$instance_id" "Name=key,Values=Name" \
+                    --query 'Tags[0].Value' \
+                    --output text 2>/dev/null || echo "")
+
+                  if [ -z "$agent_name" ] || [ "$agent_name" = "None" ]; then
+                    echo "##vso[task.logissue type=error]Instance $instance_id has no Name tag matching its Azure Agent.Name"
+                    return 1
+                  fi
+
+                  echo "##vso[task.setvariable variable=StartedAgentName;isOutput=true]$agent_name"
+                }
+                
+                # Check current state of all instances
+                RUNNING_COUNT=0
+                STOPPED_INSTANCES=()
+                STOPPING_INSTANCES=()
+                
+                for instance_id in "${INSTANCES[@]}"; do
+                    instance_id=$(echo "$instance_id" | tr -d ' ')
+                    
+                    STATE=$(aws ec2 describe-instances \
+                        --instance-ids "$instance_id" \
+                        --query 'Reservations[0].Instances[0].State.Name' \
+                        --output text 2>/dev/null || echo "not-found")
+                    
+                    echo "Instance $instance_id: $STATE"
+                    
+                    if [ "$STATE" = "running" ] || [ "$STATE" = "pending" ]; then
+                        RUNNING_COUNT=$((RUNNING_COUNT + 1))
+                    elif [ "$STATE" = "stopped" ]; then
+                        STOPPED_INSTANCES+=("$instance_id")
+                    elif [ "$STATE" = "stopping" ]; then
+                        STOPPING_INSTANCES+=("$instance_id")
+                    fi
+                done
+                
+                echo "Currently running/starting: $RUNNING_COUNT instances"
+                echo "Available stopped instances: ${#STOPPED_INSTANCES[@]}"
+                echo "Currently stopping instances: ${#STOPPING_INSTANCES[@]}"
+
+                if [ "$RUNNING_COUNT" -ge "$MAX_INSTANCES" ]; then
+                    echo "❌ ERROR: Capacity limit reached: $RUNNING_COUNT of $MAX_INSTANCES instances are already running or starting."
+                    exit 1
+                fi
+
+                # Decision logic: prioritize stopped instances, then handle stopping instances
+                if [ ${#STOPPED_INSTANCES[@]} -gt 0 ]; then
+                    # Try every stopped instance: a lost claim race just means another pipeline
+                    # took that one, the next candidate is usually still free.
+                    for INSTANCE_TO_START in "${STOPPED_INSTANCES[@]}"; do
+                        echo "🚀 Starting stopped instance: $INSTANCE_TO_START"
+
+                        if start_and_claim_instance "$INSTANCE_TO_START"; then
+                            aws ec2 wait instance-running --instance-ids "$INSTANCE_TO_START"
+                            aws ec2 wait instance-status-ok --instance-ids "$INSTANCE_TO_START"
+                            echo "✅ Instance $INSTANCE_TO_START is ready"
+
+                            publish_started_instance "$INSTANCE_TO_START"
+                            CLAIMED_INSTANCE=1
+                            break
+                        fi
+
+                        echo "⚠️  Lost $INSTANCE_TO_START to a concurrent run, trying next stopped instance..."
+                    done
+
+                    if [ -z "$CLAIMED_INSTANCE" ]; then
+                        echo "❌ ERROR: All stopped instances were claimed by concurrent runs"
+                        exit 1
+                    fi
+                    
+                elif [ ${#STOPPING_INSTANCES[@]} -gt 0 ]; then
+                    # No stopped instances, but stopping instances available - wait for one
+                    echo "⏳ No stopped instances available, but found stopping instances: ${STOPPING_INSTANCES[*]}"
+                    echo "Waiting for a stopping instance to become available..."
+                    
+                    max_wait=120
+                    waited=0
+
+                    while [ ${#STOPPING_INSTANCES[@]} -gt 0 ] && [ $waited -lt $max_wait ]; do
+                        sleep 15
+                        waited=$((waited + 15))
+                        STILL_STOPPING=()
+                        NEWLY_STOPPED=()
+                        
+                        for instance_id in "${STOPPING_INSTANCES[@]}"; do
+                            STATE=$(aws ec2 describe-instances \
+                                --instance-ids "$instance_id" \
+                                --query 'Reservations[0].Instances[0].State.Name' \
+                                --output text 2>/dev/null || echo "not-found")
+                            
+                            if [ "$STATE" = "stopping" ]; then
+                                STILL_STOPPING+=("$instance_id")
+                            elif [ "$STATE" = "stopped" ]; then
+                                echo "✅ Instance $instance_id finished stopping"
+                                NEWLY_STOPPED+=("$instance_id")
+                            fi
+                        done
+                        
+                        # If any instance became available, start it immediately
+                        if [ ${#NEWLY_STOPPED[@]} -gt 0 ]; then
+                            INSTANCE_TO_START="${NEWLY_STOPPED[0]}"
+                            
+                            # Double-check the instance is still stopped (race condition protection)
+                            CURRENT_STATE=$(aws ec2 describe-instances \
+                                --instance-ids "$INSTANCE_TO_START" \
+                                --query 'Reservations[0].Instances[0].State.Name' \
+                                --output text 2>/dev/null || echo "not-found")
+                            
+                            if [ "$CURRENT_STATE" = "stopped" ]; then
+                                echo "🚀 Starting newly available instance: $INSTANCE_TO_START"
+                                
+                                # Try to start the instance - may fail if another pipeline grabbed it
+                                if start_and_claim_instance "$INSTANCE_TO_START"; then
+                                    aws ec2 wait instance-running --instance-ids "$INSTANCE_TO_START"
+                                    aws ec2 wait instance-status-ok --instance-ids "$INSTANCE_TO_START"
+                                    echo "✅ Instance $INSTANCE_TO_START is ready"
+                                    
+                                    publish_started_instance "$INSTANCE_TO_START"
+                                    CLAIMED_INSTANCE=1
+                                    break
+                                else
+                                    echo "⚠️  Failed to start $INSTANCE_TO_START (likely race condition), continuing search..."
+                                fi
+                            else
+                                echo "⚠️  Instance $INSTANCE_TO_START is no longer stopped ($CURRENT_STATE), continuing search..."
+                            fi
+                        fi
+                        
+                        STOPPING_INSTANCES=("${STILL_STOPPING[@]}")
+                        
+                        if [ ${#STOPPING_INSTANCES[@]} -gt 0 ]; then
+                            echo "Still waiting for: ${STOPPING_INSTANCES[*]} ($waited/$max_wait seconds)"
+                        fi
+                    done
+
+                    # Check the claim flag, NOT the remaining-stopping list: a successful claim
+                    # breaks out of the loop with other instances possibly still stopping, and a
+                    # lost race can drain the list without any claim.
+                    if [ -z "$CLAIMED_INSTANCE" ]; then
+                        echo "❌ ERROR: No instance could be claimed within ${max_wait}s"
+                        exit 1
+                    fi
+                else
+                    # No stopped or stopping instances available
+                    echo "❌ ERROR: No available instances found!"
+                    echo "   - Stopped instances: ${#STOPPED_INSTANCES[@]}"
+                    echo "   - Stopping instances: ${#STOPPING_INSTANCES[@]}"
+                    echo "   - Running instances: $RUNNING_COUNT"
+                    exit 1
+                fi
+
+
+  - stage: AgentInventory
+    displayName: 'Inventory the build agent (read-only)'
+    dependsOn: Warmup
+    jobs:
+      - job: Inventory
+        displayName: 'What is actually installed'
+        timeoutInMinutes: 20
+        pool:
+          name: '$(SELF_HOSTED_POOL)'
+        steps:
+          - checkout: none        # nothing to build yet - this only interrogates the machine
+
+          - powershell: |
+              $ErrorActionPreference = 'Continue'
+              function H($t) { Write-Host ""; Write-Host "=== $t ===" }
+
+              H 'Machine'
+              Write-Host "host      : $env:COMPUTERNAME"
+              $os = Get-CimInstance Win32_OperatingSystem
+              $cs = Get-CimInstance Win32_ComputerSystem
+              Write-Host "os        : $($os.Caption) build $($os.BuildNumber)"
+              Write-Host "cores     : $($cs.NumberOfLogicalProcessors)"
+              Write-Host "RAM GB    : $([math]::Round($cs.TotalPhysicalMemory/1GB,1))"
+              Write-Host "agent user: $env:USERNAME  sessionId=$((Get-Process -Id $PID).SessionId) (0 = service session)"
+              Get-PSDrive -PSProvider FileSystem | Where-Object { $null -ne $_.Used } |
+                Select-Object Name, @{n='FreeGB';e={[math]::Round($_.Free/1GB,1)}}, @{n='UsedGB';e={[math]::Round($_.Used/1GB,1)}} |
+                Format-Table -AutoSize | Out-String | Write-Host
+
+              H 'Visual Studio / MSVC   (OneMill verified on VS 18 Professional, MSVC 14.51.36231)'
+              $vsw = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+              if (Test-Path $vsw) {
+                & $vsw -products * -format value -property displayName 2>&1 | ForEach-Object { Write-Host "  edition: $_" }
+                & $vsw -products * -format value -property installationVersion 2>&1 | ForEach-Object { Write-Host "  version: $_" }
+                $inst = & $vsw -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+                if ($inst) {
+                  Write-Host "  x64 C++ toolset in: $inst"
+                  Get-ChildItem (Join-Path $inst 'VC\Tools\MSVC') -Directory -ErrorAction SilentlyContinue |
+                    ForEach-Object { Write-Host "    MSVC $($_.Name)" }
+                } else { Write-Host "  !! no installation carries the x64 C++ toolset" }
+              } else { Write-Host "  !! vswhere absent -> no Visual Studio" }
+
+              H 'CMake / Ninja / git   (OneMill verified on CMake 4.2.4, Ninja 1.13.2)'
+              foreach ($t in @('cmake','ninja','git')) {
+                $c = Get-Command $t -ErrorAction SilentlyContinue
+                if ($c) {
+                  $ver = (& $t --version 2>&1 | Select-Object -First 1)
+                  Write-Host ("  {0,-6} {1}" -f $t, $ver)
+                  Write-Host ("         at {0}" -f $c.Source)
+                } else { Write-Host "  !! $t NOT on PATH" }
+              }
+
+              H 'Qt   (need 6.10.2 msvc2022_64)'
+              Write-Host "  QTDIR env: '$env:QTDIR'"
+              foreach ($p in @($env:QTDIR, 'C:\Qt', 'D:\Qt')) {
+                if ($p -and (Test-Path $p)) {
+                  Write-Host "  EXISTS $p"
+                  Get-ChildItem $p -Directory -ErrorAction SilentlyContinue | Select-Object -First 8 |
+                    ForEach-Object { Write-Host "      $($_.Name)" }
+                }
+              }
+              $wdq = Get-ChildItem 'C:\Qt' -Recurse -Filter 'windeployqt.exe' -Depth 4 -ErrorAction SilentlyContinue | Select-Object -First 3
+              if ($wdq) { $wdq | ForEach-Object { Write-Host "  windeployqt: $($_.FullName)" } }
+              else { Write-Host "  !! windeployqt not found under C:\Qt" }
+
+              H 'VTK   (need 9.5 built WITH Qt - the gap most likely to be missing)'
+              $vtk = Get-ChildItem 'C:\','D:\' -Recurse -Filter 'VTKConfig.cmake' -Depth 5 -ErrorAction SilentlyContinue | Select-Object -First 5
+              if ($vtk) {
+                foreach ($v in $vtk) {
+                  Write-Host "  found: $($v.FullName)"
+                  $qtHit = Select-String -Path $v.FullName -Pattern 'GUISupportQt' -ErrorAction SilentlyContinue | Select-Object -First 1
+                  if ($qtHit) { Write-Host "         Qt-enabled? YES (GUISupportQt referenced)" }
+                  else { Write-Host "         Qt-enabled? NO or undetermined" }
+                }
+              } else { Write-Host "  !! no VTKConfig.cmake found -> VTK ABSENT" }
+
+              H 'vcpkg   (need commit b81cab76..., triplet x64-windows-static, 13 explicit ports)'
+              $vcs = @($env:VCPKG_ROOT,'C:\vcpkg','D:\vcpkg','D:\DevTools\vcpkg','C:\DevTools\vcpkg') |
+                     Where-Object { $_ -and (Test-Path $_) }
+              if ($vcs) {
+                foreach ($v in $vcs) {
+                  Write-Host "  root: $v"
+                  Write-Host "    commit: $(& git -C $v rev-parse HEAD 2>&1)"
+                  $exe = Join-Path $v 'vcpkg.exe'
+                  if (Test-Path $exe) {
+                    $lst = & $exe list 2>&1
+                    Write-Host "    installed entries      : $(($lst | Measure-Object).Count)"
+                    Write-Host "    x64-windows-static ones: $(($lst | Select-String 'x64-windows-static' | Measure-Object).Count)"
+                  } else { Write-Host "    !! vcpkg.exe missing - not bootstrapped" }
+                }
+              } else { Write-Host "  !! vcpkg ABSENT (expected: fleet policy is no-vcpkg, so a suite agent would not carry it)" }
+
+              H 'ModuleWorks SDK   (licensed, ~4.5 GB - the item that could block)'
+              $mw = @($env:MODULEWORKS_DIR,'C:\DATA\install\ModuleWorksSdk','C:\ModuleWorksSdk','D:\ModuleWorksSdk') |
+                    Where-Object { $_ -and (Test-Path $_) }
+              if ($mw) {
+                foreach ($m in $mw) {
+                  Write-Host "  EXISTS $m"
+                  Get-ChildItem $m -Directory -ErrorAction SilentlyContinue | Select-Object -First 6 |
+                    ForEach-Object { Write-Host "      $($_.Name)" }
+                }
+              } else { Write-Host "  !! ModuleWorks SDK ABSENT" }
+
+              H 'ONEMILL_* machine environment variables (what the CI preset reads)'
+              foreach ($n in @('ONEMILL_QTDIR','ONEMILL_VCPKG_ROOT','ONEMILL_VTK_DIR','ONEMILL_MODULEWORKS_DIR')) {
+                $v = [Environment]::GetEnvironmentVariable($n,'Machine')
+                if ($v) { Write-Host ("  {0,-26} = {1}" -f $n, $v) } else { Write-Host ("  {0,-26} <NOT SET>" -f $n) }
+              }
+
+              H 'SUMMARY - what provisioning still has to do'
+              $gaps = New-Object System.Collections.Generic.List[string]
+              if (-not $vtk) { $gaps.Add('VTK 9.5 built with Qt') }
+              if (-not $vcs) { $gaps.Add('vcpkg + x64-windows-static ports') }
+              if (-not $mw)  { $gaps.Add('ModuleWorks SDK (licensed)') }
+              if (-not [Environment]::GetEnvironmentVariable('ONEMILL_QTDIR','Machine')) { $gaps.Add('ONEMILL_* machine env vars') }
+              if ($gaps.Count -eq 0) { Write-Host "  nothing obvious missing - a real configure is the next test" }
+              else { foreach ($g in $gaps) { Write-Host "  MISSING: $g" } }
+              exit 0
+            displayName: 'Inventory: toolchain, dependencies, env vars'
+
+  - stage: Shutdown
+    displayName: 'Stop Instance After Build'
+    dependsOn:
+      - Warmup
+      - AgentInventory        # was BuildAndTest upstream; that stage was MIRAGE-specific and dropped
+    condition: always()  # Always run to stop instance even if build fails
+    variables:
+      StartedInstanceId: $[ stageDependencies.Warmup.ManageCapacity.outputs['CheckCapacity.StartedInstanceId'] ]
+    jobs:
+      - job: StopInstance
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: none
+          - task: AWSShellScript@1
+            displayName: 'Stop the Instance That Ran This Build'
+            inputs:
+              awsCredentials: '$(AWS_SERVICE_CONNECTION)'
+              regionName: 'eu-west-1'
+              scriptType: 'inline'
+              inlineScript: |
+                set -e
+                
+                INSTANCE_TO_STOP="$(StartedInstanceId)"
+                
+                echo "======================================="
+                echo "Shutting down instance from this build"
+                echo "Instance ID: $INSTANCE_TO_STOP"
+                echo "======================================="
+                
+                if [ -z "$INSTANCE_TO_STOP" ]; then
+                    echo "⚠️  No instance ID passed from Warmup stage"
+                    echo "⚠️  Skipping shutdown"
+                    exit 0
+                fi
+                
+                # Verify instance is running
+                STATE=$(aws ec2 describe-instances \
+                    --instance-ids "$INSTANCE_TO_STOP" \
+                    --query 'Reservations[0].Instances[0].State.Name' \
+                    --output text 2>/dev/null || echo "not-found")
+                
+                echo "Instance state: $STATE"
+                
+                if [ "$STATE" = "pending" ]; then
+                    # Run cancelled during Warmup: the instance is still starting. A pending
+                    # instance cannot be stopped, so wait until it is running first.
+                    echo "⏳ Instance is still starting (pending), waiting until it is running so it can be stopped"
+                    aws ec2 wait instance-running --instance-ids "$INSTANCE_TO_STOP"
+                    STATE="running"
+                fi
+
+                if [ "$STATE" != "running" ]; then
+                    echo "⚠️  Instance is not running (state: $STATE), skipping shutdown"
+                    exit 0
+                fi
+                
+                echo "⏳ Waiting 60 seconds before stopping instance to allow post-job cleanup to finish"
+                sleep 60
+
+                echo "🛑 Stopping instance: $INSTANCE_TO_STOP"
+
+                if aws ec2 stop-instances --instance-ids "$INSTANCE_TO_STOP"; then
+                  echo "Stop command sent successfully. Checking instance state..."
+                  max_wait=30
+                  check_interval=5
+                  waited=0
+
+                  while [ $waited -lt $max_wait ]; do
+                    CURRENT_STATE=$(aws ec2 describe-instances \
+                      --instance-ids "$INSTANCE_TO_STOP" \
+                      --query 'Reservations[0].Instances[0].State.Name' \
+                      --output text 2>/dev/null || echo "error")
+
+                    echo "Instance state after ${waited}s: $CURRENT_STATE"
+
+                    if [ "$CURRENT_STATE" = "stopping" ] || [ "$CURRENT_STATE" = "stopped" ]; then
+                      echo "✅ Instance $INSTANCE_TO_STOP is stopping"
+                      exit 0
+                    elif [ "$CURRENT_STATE" = "error" ]; then
+                      echo "❌ Error checking instance state"
+                      exit 1
+                    fi
+
+                    sleep $check_interval
+                    waited=$((waited + check_interval))
+                  done
+
+                  echo "⚠️  Instance did not enter stopping state within ${max_wait}s"
+                  exit 1
+                else
+                    echo "❌ Failed to send stop command to instance $INSTANCE_TO_STOP"
+                    exit 1
+                fi
