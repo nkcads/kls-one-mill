@@ -302,8 +302,8 @@ stages:
               }
               cmake --version | Select-Object -First 1 | Write-Host
               Write-Host ""
-              Write-Host "=== the four inputs the preset reads ==="
-              foreach ($n in @('ONEMILL_QTDIR','ONEMILL_VCPKG_ROOT','ONEMILL_VTK_DIR','ONEMILL_MODULEWORKS_DIR')) {
+              Write-Host "=== the five inputs the preset reads ==="
+              foreach ($n in @('ONEMILL_QTDIR','ONEMILL_VCPKG_ROOT','ONEMILL_VTK_DIR','ONEMILL_MODULEWORKS_DIR','ONEMILL_POLYGONICA_DIR')) {
                 $v = [Environment]::GetEnvironmentVariable($n,'Machine')
                 Write-Host ("  {0,-26} {1}" -f $n, $(if ($v) { $v } else { '<NOT SET>' }))
                 if (-not $v) { throw "$n is not set on this machine - the preset cannot resolve its toolchain" }
@@ -315,6 +315,18 @@ stages:
                 throw "ONEMILL_VTK_DIR does not contain vtk-config.cmake: $vtk"
               }
               Write-Host "  VTK config resolves: $vtk\vtk-config.cmake"
+              # Polygonica: the fifth dependency, and the one a developer never notices because
+              # MillingBackend/CMakeLists.txt falls back to $ENV{POLYGONICA_DIR}. Check both paths
+              # the build actually consumes, not just that the directory exists.
+              $pg = ([Environment]::GetEnvironmentVariable('ONEMILL_POLYGONICA_DIR','Machine')) -replace '/','\'
+              if (-not (Test-Path (Join-Path $pg 'include\pg'))) {
+                throw "ONEMILL_POLYGONICA_DIR has no include\pg subdirectory: $pg"
+              }
+              $pgLib = Join-Path $pg 'lib\amd\winxp64\msoft143\dds_\pg.lib'
+              if (-not (Test-Path $pgLib)) {
+                throw "Polygonica pg.lib missing: expected $pgLib"
+              }
+              Write-Host "  Polygonica resolves: $pg  (include\pg + msoft143\dds_\pg.lib)"
               $mw = ([Environment]::GetEnvironmentVariable('ONEMILL_MODULEWORKS_DIR','Machine')) -replace '/','\'
               if (-not (Test-Path (Join-Path $mw 'quickstart\mwSupport.lic'))) {
                 Write-Host "##vso[task.logissue type=warning]mwSupport.lic not found under $mw\quickstart - builds will succeed but ModuleWorks fails at RUNTIME"
