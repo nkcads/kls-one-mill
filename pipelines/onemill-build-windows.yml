@@ -15,16 +15,30 @@
 # to work is worse than an absent one. SB_CONFIG, SB_OUTPUT_KEY and AWS_ECR_SERVICE_CONNECTION went
 # with it; the two kept stages reference none of them - verified by grep, not assumed.
 #
-# CURRENT PAYLOAD: a CONFIGURE, not yet a full build. The instance was forked from a suite-aws-pool
-# agent and then provisioned with OneMill's three missing dependencies - the Qt-enabled VTK 9.5
-# install tree, the licensed ModuleWorks SDK plus its mwSupport.lic, and vcpkg at the pinned commit
-# with the x64-windows-static ports (146 of them). A configure is the honest test that the
-# provisioning is complete: find_package() has to resolve Qt, VTK, ModuleWorks and all 13 vcpkg
-# ports, so it exercises every input at once. An earlier inventory stage searched the filesystem
-# instead and produced two false negatives from its own arbitrary limits (-Depth 5, then -First 6),
-# which is why this now tests the real thing rather than a proxy for it.
+# PAYLOAD: configure -> build -> install_full -> verify -> publish a downloadable zip.
 #
-# The build and install_full steps come next, once configure is green.
+# The agent was forked from a suite-aws-pool image and then provisioned with the FIVE external
+# dependencies OneMill needs: Qt 6.10.2, the Qt-enabled VTK 9.5 install tree, the licensed
+# ModuleWorks SDK with its mwSupport.lic in quickstart/, vcpkg at the pinned commit with 146
+# x64-windows-static packages, and the Polygonica SDK. Polygonica was missed on the first pass
+# because MillingBackend reads it from $ENV{POLYGONICA_DIR} as a fallback, so it never appeared in
+# CMakeUserPresets.json and no developer had to think about it - a clean agent found it in seconds.
+#
+# An earlier inventory stage tried to establish readiness by searching the filesystem and produced
+# two false negatives from its own arbitrary limits (-Depth 5, then -First 6). Configure replaced
+# it because find_package() resolving is the real question, not whether a file search finds a path.
+#
+# The staged tree is verified against the known-good dev box install (6626 files / 1994 MB / 10
+# module DLLs / 72 files per deps/ / 5991 interpreter files) before publishing. install_full
+# exiting 0 is not sufficient evidence: configure reports 40 install targets here where the dev box
+# reports 41, so a short payload is a live possibility, and an artifact that launches but is missing
+# a module or its config is worse than one that fails loudly in CI.
+#
+# The zip is named from the version install_full patches into mainAppConfig.json plus the build
+# number. It contains mwSupport.lic, because install_full stages it from the SDK's quickstart/ into
+# each ModuleWorks deps/ folder - the app does not run without it. Note that this means anyone with
+# project read access can download the licence; Robert's hand-built release zips already worked
+# this way, so it is the existing distribution posture rather than a new one.
 #
 # NOTE the VsDevCmd step below is REQUIRED, not decorative: the agent runs as a machine account whose
 # PATH contains no cmake, ninja or MSVC. They exist only under VS's Common7\IDE\CommonExtensions, so
@@ -264,12 +278,12 @@ stages:
 
 
   - stage: Configure
-    displayName: 'Configure OneMill with the CI preset'
+    displayName: 'Configure, build, install and publish'
     dependsOn: Warmup
     jobs:
       - job: ConfigureJob
         displayName: 'cmake --preset onemill-config-ci-win-msvc-x64-relwithdebinfo'
-        timeoutInMinutes: 60
+        timeoutInMinutes: 150
         pool:
           name: '$(SELF_HOSTED_POOL)'
         steps:
@@ -357,6 +371,107 @@ stages:
               Write-Host "  build.ninja present: $(Test-Path 'out/build/win-msvc-x64-relwithdebinfo/build.ninja')"
             displayName: 'Verify the resolved cache'
             condition: succeededOrFailed()
+
+
+          - script: |
+              cmake --build --preset onemill-build-ci-win-msvc-x64-relwithdebinfo
+            displayName: 'BUILD (target all - see the preset note on why not a target list)'
+
+          - script: |
+              cmake --build --preset onemill-install-target-ci-win-msvc-x64-relwithdebinfo
+            displayName: 'INSTALL (install_full - stages app, modules, deps, interpreter)'
+
+          - powershell: |
+              $ErrorActionPreference = 'Stop'
+              $staged = 'out/install/win-msvc-x64-relwithdebinfo'
+              if (-not (Test-Path $staged)) { throw "install_full produced nothing at $staged" }
+
+              # Compare against the known-good local install tree rather than trusting that
+              # install_full exited 0. The configure step reported 40 install targets where the
+              # dev box reports 41, so a silently short payload is a live possibility - and an
+              # artifact that downloads and launches but is missing a module or its config is
+              # worse than one that fails loudly here.
+              Write-Host "=== staged tree vs the known-good dev box install ==="
+              $all = Get-ChildItem $staged -Recurse -File
+              $mb  = [math]::Round(($all | Measure-Object Length -Sum).Sum/1MB,0)
+              Write-Host ("  files            {0,6}   (dev box: 6626)" -f $all.Count)
+              Write-Host ("  size MB          {0,6}   (dev box: 1994)" -f $mb)
+
+              $exes = (Get-ChildItem $staged -Filter *.exe).Name
+              Write-Host ("  exes             {0}   (expect MainApp.exe, Updater.exe)" -f ($exes -join ', '))
+
+              $modDir = Join-Path $staged 'modulesBert'
+              $dlls = @(Get-ChildItem $modDir -Filter *.dll -ErrorAction SilentlyContinue)
+              Write-Host ("  module DLLs      {0,6}   (dev box: 10)" -f $dlls.Count)
+
+              Write-Host "  deps folders:"
+              $depsOk = $true
+              foreach ($m in @('ModuleMillingKalotte','ModulePostProcessor')) {
+                $d = Join-Path $modDir "$m\deps"
+                if (Test-Path $d) {
+                  $n = @(Get-ChildItem $d -Recurse -File).Count
+                  $lic = Join-Path $d 'mwSupport.lic'
+                  $licTxt = if (Test-Path $lic) { "$((Get-Item $lic).Length) bytes" } else { 'MISSING' }
+                  Write-Host ("      {0,-22} {1,4} files   mwSupport.lic: {2}   (dev box: 72 files)" -f $m, $n, $licTxt)
+                  if (-not (Test-Path $lic)) { $depsOk = $false }
+                } else { Write-Host ("      {0,-22} MISSING" -f $m); $depsOk = $false }
+              }
+
+              $ip = Join-Path $modDir 'ModulePostProcessor\interpreter'
+              if (Test-Path $ip) {
+                $n = @(Get-ChildItem $ip -Recurse -File).Count
+                Write-Host ("  interpreter      {0,6}   (dev box: 5991)" -f $n)
+              } else {
+                Write-Host "  interpreter      ABSENT"
+                Write-Host "##vso[task.logissue type=error]No interpreter/ staged. deploy_ppf.exe must be run ONCE on this agent to create PYPY_SOURCE - see .vscode/OneMill-Setup-Ledger.md fix 8. The PostProcessor module cannot work without it."
+                throw "interpreter/ missing from the staged tree"
+              }
+
+              if (-not $depsOk) { throw "a ModuleWorks deps/ folder or its mwSupport.lic is missing - the artifact would not run" }
+
+              # Hard floors, deliberately generous: catch a grossly short payload without
+              # failing on legitimate small drift between toolchains.
+              if ($all.Count -lt 6000) { throw "staged tree has only $($all.Count) files, expected ~6626 - payload looks incomplete" }
+              if ($dlls.Count -lt 10)  { throw "only $($dlls.Count) module DLLs staged, expected 10" }
+              Write-Host ""
+              Write-Host "  staged tree passes its floors"
+            displayName: 'Verify the staged tree is complete (not merely present)'
+
+          - powershell: |
+              $ErrorActionPreference = 'Stop'
+              $staged = 'out/install/win-msvc-x64-relwithdebinfo'
+
+              # Name it from the product version install_full patched into mainAppConfig.json,
+              # plus the build number so two artifacts are never ambiguous. Robert's manual zips
+              # were named KLSOneMillFullVersion_210_Beta4 - version only, no build identity.
+              $ver = 'unknown'
+              $cfg = Join-Path $staged 'config\mainAppConfig.json'
+              if (Test-Path $cfg) {
+                $m = Select-String -Path $cfg -Pattern '"version"\s*:\s*"([^"]+)"' | Select-Object -First 1
+                if ($m) { $ver = $m.Matches[0].Groups[1].Value }
+              }
+              $name = "KLSOneMill-$ver-$(Build.BuildNumber)-relwithdebinfo"
+              Write-Host "artifact name: $name   (version from mainAppConfig.json: $ver)"
+
+              New-Item -ItemType Directory -Force 'out/artifact' | Out-Null
+              $zip = "out/artifact/$name.zip"
+              # bsdtar ships with Windows Server and writes a real zip; Compress-Archive is slow
+              # and awkward at this size. -C so the archive root is the install tree itself, not
+              # a nested out/install/... path.
+              tar -a -c -f $zip -C $staged .
+              if ($LASTEXITCODE -ne 0) { throw "zip creation failed ($LASTEXITCODE)" }
+              $z = Get-Item $zip
+              Write-Host ("zip: {0} MB   (dev box tree zips to ~631 MB at 3.16x)" -f [math]::Round($z.Length/1MB,1))
+              if ($z.Length -lt 300MB) { throw "zip is only $([math]::Round($z.Length/1MB,1)) MB - suspiciously small" }
+              Write-Host "##vso[task.setvariable variable=ArtifactName]$name"
+            displayName: 'Package the staged tree as a named zip'
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish the downloadable artifact'
+            inputs:
+              targetPath: 'out/artifact'
+              artifact: 'OneMillInstall'
+              publishLocation: 'pipeline'
 
   - stage: Shutdown
     displayName: 'Stop Instance After Build'
