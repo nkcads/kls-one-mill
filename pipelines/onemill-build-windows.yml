@@ -341,6 +341,30 @@ stages:
                 throw "Polygonica pg.lib missing: expected $pgLib"
               }
               Write-Host "  Polygonica resolves: $pg  (include\pg + msoft143\dds_\pg.lib)"
+
+              # vcpkg completeness. A successful `vcpkg install libigl` still yields a tree OneMill
+              # cannot compile: libigl's own ray_mesh_intersect.cpp does
+              #   extern "C" { #include "raytri.c" }
+              # but the port (2.6.0#2) installs *.h and *.cpp and NOT that single .c file. The failure
+              # is a C1083 roughly 60 targets into MeshLogic - five minutes of build time to learn
+              # something checkable in milliseconds. Reinstalling does not help; the file must be
+              # placed by hand. Third-party packaging bug, documented in vcpkgPackages.txt.
+              $vc = ([Environment]::GetEnvironmentVariable('ONEMILL_VCPKG_ROOT','Machine')) -replace '/','\'
+              $igl = Join-Path $vc 'installed\x64-windows-static\include\igl'
+              if (Test-Path $igl) {
+                $n = @(Get-ChildItem $igl -File).Count
+                Write-Host ("  vcpkg libigl headers: {0} files   (dev box: 922)" -f $n)
+                if (-not (Test-Path (Join-Path $igl 'raytri.c'))) {
+                  throw ("libigl is missing raytri.c in $igl`n" +
+                         "  The vcpkg port does not install it although its own ray_mesh_intersect.cpp " +
+                         "includes it. Reinstalling libigl will NOT fix this - copy raytri.c into that " +
+                         "directory from libigl's source or a working machine. See the post-install fix " +
+                         "in vcpkgPackages.txt.")
+                }
+                Write-Host "  raytri.c present (the libigl port omits it - see vcpkgPackages.txt)"
+              } else {
+                throw "no libigl headers under $igl - is ONEMILL_VCPKG_ROOT correct and the port installed?"
+              }
               $mw = ([Environment]::GetEnvironmentVariable('ONEMILL_MODULEWORKS_DIR','Machine')) -replace '/','\'
               if (-not (Test-Path (Join-Path $mw 'quickstart\mwSupport.lic'))) {
                 Write-Host "##vso[task.logissue type=warning]mwSupport.lic not found under $mw\quickstart - builds will succeed but ModuleWorks fails at RUNTIME"

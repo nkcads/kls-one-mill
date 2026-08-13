@@ -61,6 +61,10 @@
 #
 # To move the pin: check out a newer vcpkg commit, re-install, re-verify, and update this file.
 # ---------------------------------------------------------------------------------------------
+#
+# ONE MANUAL STEP IS REQUIRED AFTER THE INSTALL LINES BELOW — see "post-install fix" at the end.
+# The libigl port does not ship a file its own headers include, so a correct, complete
+# `vcpkg install` still produces a tree OneMill cannot compile against.
 
 vcpkg install boost-asio:x64-windows-static
 vcpkg install boost-geometry:x64-windows-static
@@ -75,3 +79,37 @@ vcpkg install nlohmann-json:x64-windows-static
 vcpkg install opencv:x64-windows-static
 vcpkg install pugixml:x64-windows-static
 vcpkg install spdlog:x64-windows-static
+
+# ---------------------------------------------------------------------------------------------
+# POST-INSTALL FIX — libigl ships a .cpp that includes a .c file the port does not install
+# ---------------------------------------------------------------------------------------------
+#
+# Symptom, ~60 targets into a build of MeshLogic:
+#
+#   <VCPKG_ROOT>\installed\x64-windows-static\include\igl\ray_mesh_intersect.cpp(12):
+#     fatal error C1083: Cannot open include file: 'raytri.c': No such file or directory
+#
+# Cause: libigl's own ray_mesh_intersect.cpp does `extern "C" { #include "raytri.c" }`, but the
+# vcpkg libigl port (2.6.0#2) installs *.h and *.cpp and NOT the single .c file in the package.
+# So a clean, successful `vcpkg install libigl` produces a tree that cannot compile
+# igl::ray_mesh_intersect — which GeneralUtils/MeshUtils/Geometry/EigenGeometry.cpp uses.
+#
+# This is a THIRD-PARTY PACKAGING BUG, not an OneMill design problem: OneMill only calls a public
+# libigl API. Nothing in this repository can fix it properly.
+#
+# Reinstalling libigl does NOT help — the port behaves identically every time. The fix is to place
+# the missing file by hand:
+#
+#   copy raytri.c into <VCPKG_ROOT>\installed\x64-windows-static\include\igl\
+#
+# Obtain it from libigl's own source (it lives beside ray_mesh_intersect.cpp upstream) or from a
+# machine that already has a working tree.
+#
+# HOW WE KNOW the port never installed it, rather than something having deleted it: on the
+# reference dev box, ray_mesh_intersect.h and .cpp both carry libigl's upstream mtime of
+# 2025-05-15 05:21:03, while raytri.c carries 2026-07-28 17:39:36 - the moment that toolchain was
+# assembled. A file the port installed would share its siblings' timestamp.
+#
+# This step existed only as tribal knowledge until 2026-08-13, when a freshly provisioned CI agent
+# failed on it at target 56/565. The build pipeline's pre-flight now asserts the file is present so
+# a rebuilt agent or AMI cannot regress into that confusing C1083 again.
