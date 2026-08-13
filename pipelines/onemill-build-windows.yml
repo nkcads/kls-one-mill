@@ -15,11 +15,21 @@
 # to work is worse than an absent one. SB_CONFIG, SB_OUTPUT_KEY and AWS_ECR_SERVICE_CONNECTION went
 # with it; the two kept stages reference none of them - verified by grep, not assumed.
 #
-# CURRENT PAYLOAD: an agent INVENTORY, not a build. The EC2 instance was forked from a suite-aws-pool
-# agent, so it has VS 18 and Qt but almost certainly lacks OneMill's three specific dependencies
-# (Qt-enabled VTK 9.5, the licensed ModuleWorks SDK, and vcpkg with the x64-windows-static ports).
-# This stage reports what is actually present so provisioning is driven by facts instead of guesses.
-# It gets replaced by the real configure/build/install_full once the gaps are closed.
+# CURRENT PAYLOAD: a CONFIGURE, not yet a full build. The instance was forked from a suite-aws-pool
+# agent and then provisioned with OneMill's three missing dependencies - the Qt-enabled VTK 9.5
+# install tree, the licensed ModuleWorks SDK plus its mwSupport.lic, and vcpkg at the pinned commit
+# with the x64-windows-static ports (146 of them). A configure is the honest test that the
+# provisioning is complete: find_package() has to resolve Qt, VTK, ModuleWorks and all 13 vcpkg
+# ports, so it exercises every input at once. An earlier inventory stage searched the filesystem
+# instead and produced two false negatives from its own arbitrary limits (-Depth 5, then -First 6),
+# which is why this now tests the real thing rather than a proxy for it.
+#
+# The build and install_full steps come next, once configure is green.
+#
+# NOTE the VsDevCmd step below is REQUIRED, not decorative: the agent runs as a machine account whose
+# PATH contains no cmake, ninja or MSVC. They exist only under VS's Common7\IDE\CommonExtensions, so
+# without initialising the VS environment `cmake` is not even callable. Established by inventory,
+# not assumed.
 #
 # `trigger: none` ON PURPOSE. This pipeline starts a billable EC2 instance, so it must not fire on
 # every push to develop the way the guard does. Run it manually until the build stage exists and the
@@ -252,213 +262,95 @@ stages:
 
 
 
-  - stage: AgentInventory
-    displayName: 'Inventory the build agent (read-only)'
+
+  - stage: Configure
+    displayName: 'Configure OneMill with the CI preset'
     dependsOn: Warmup
     jobs:
-      - job: Inventory
-        displayName: 'What is actually installed'
-        timeoutInMinutes: 30
+      - job: ConfigureJob
+        displayName: 'cmake --preset onemill-config-ci-win-msvc-x64-relwithdebinfo'
+        timeoutInMinutes: 60
         pool:
           name: '$(SELF_HOSTED_POOL)'
         steps:
-          - checkout: none        # nothing to build yet - this only interrogates the machine
+          # Configure walks add_subdirectory() into all 26 submodules, so the whole tree is
+          # required - unlike the guard, which deliberately checks out none of them.
+          - checkout: self
+            submodules: recursive
+            fetchDepth: 1
+            persistCredentials: true
+            displayName: 'Checkout superproject + all submodules'
+
+          # WHY THIS STEP EXISTS: the inventory established that the agent's PATH is bare -
+          # cmake and ninja live only under VS's Common7\IDE\CommonExtensions and are NOT on
+          # PATH for the machine account the agent runs as. Without initialising the VS
+          # environment, `cmake` is not even callable. VsDevCmd also supplies the MSVC
+          # toolchain the compiler checks need.
+          - task: BatchScript@1
+            displayName: 'Initialize Visual Studio environment'
+            inputs:
+              filename: 'C:\Program Files\Microsoft Visual Studio\18\Professional\Common7\Tools\VsDevCmd.bat'
+              arguments: '-arch=x64 -host_arch=x64'
+              modifyEnvironment: true
 
           - powershell: |
-              $ErrorActionPreference = 'Continue'
-              # NOTE: do NOT name this helper 'H'. PowerShell aliases 'h' to Get-History, which shadows
-              # a single-letter function and turns every call into "Get-History -Id <string>". v1 of this
-              # script lost all its section headers that way.
-              function Section([string]$title) { Write-Host ""; Write-Host "=== $title ===" }
-
-              Section 'Machine'
-              $os = Get-CimInstance Win32_OperatingSystem
-              $cs = Get-CimInstance Win32_ComputerSystem
-              Write-Host "host      : $env:COMPUTERNAME"
-              Write-Host "os        : $($os.Caption) build $($os.BuildNumber)"
-              Write-Host "cores     : $($cs.NumberOfLogicalProcessors)   RAM GB: $([math]::Round($cs.TotalPhysicalMemory/1GB,1))"
-              Write-Host "agent user: $env:USERNAME   sessionId=$((Get-Process -Id $PID).SessionId) (0 = service session)"
-              Get-PSDrive -PSProvider FileSystem | Where-Object { $null -ne $_.Used } |
-                Select-Object Name, @{n='FreeGB';e={[math]::Round($_.Free/1GB,1)}}, @{n='UsedGB';e={[math]::Round($_.Used/1GB,1)}} |
-                Format-Table -AutoSize | Out-String | Write-Host
-
-              # ------------------------------------------------------------------------------------
-              # DISCOVERY FIRST. v1 guessed fixed paths and declared things absent when its guesses
-              # missed - it reported "VTK ABSENT" while a lib folder with ITK and VTK was sitting on
-              # the machine. So: enumerate what is there before concluding anything.
-              # ------------------------------------------------------------------------------------
-              Section 'Top level of every fixed drive (what actually exists)'
-              foreach ($d in (Get-PSDrive -PSProvider FileSystem | Where-Object { $null -ne $_.Used })) {
-                Write-Host "--- $($d.Name):\ ---"
-                Get-ChildItem "$($d.Name):\" -Directory -Force -ErrorAction SilentlyContinue |
-                  Sort-Object Name | ForEach-Object { Write-Host "    $($_.Name)" }
+              $ErrorActionPreference = 'Stop'
+              Write-Host "=== toolchain as configure will see it ==="
+              foreach ($t in @('cmake','ninja','cl')) {
+                $c = Get-Command $t -ErrorAction SilentlyContinue
+                if ($c) { Write-Host ("  {0,-6} {1}" -f $t, $c.Source) } else { Write-Host "  $t NOT RESOLVABLE" }
               }
-
-              Section 'Candidate dependency roots - one level deep'
-              $roots = @('C:\lib','C:\libs','C:\deps','C:\dev','C:\DevTools','C:\build','C:\3rdparty',
-                         'C:\ModuleWorks','C:\ModuleWorksSdk','C:\vcpkg','C:\VTK','C:\ITK','C:\opt','C:\tools',
-                         'C:\agent','C:\DATA') | Where-Object { Test-Path $_ }
-              if (-not $roots) { Write-Host "  none of the usual roots exist" }
-              foreach ($r in $roots) {
-                Write-Host "--- $r ---"
-                Get-ChildItem $r -Directory -Force -ErrorAction SilentlyContinue |
-                  Select-Object -First 25 | ForEach-Object { Write-Host "    $($_.Name)" }
-              }
-
-              # ------------------------------------------------------------------------------------
-              # Find CMake package configs by name, with generous depth. This is what tells us whether
-              # a dependency is actually CONSUMABLE by find_package, not merely present on disk.
-              # ------------------------------------------------------------------------------------
-              Section 'CMake package configs (VTK / ITK / Qt6) - the consumability test'
-              $searchRoots = @('C:\lib','C:\libs','C:\deps','C:\3rdparty','C:\DevTools','C:\dev','C:\VTK','C:\ITK','C:\opt','C:\tools') |
-                             Where-Object { Test-Path $_ }
-              if (-not $searchRoots) { $searchRoots = @('C:\') }
-              Write-Host "searching: $($searchRoots -join ', ')  (depth 8)"
-              foreach ($pat in @('VTKConfig.cmake','vtk-config.cmake','ITKConfig.cmake','Qt6Config.cmake')) {
-                $hits = Get-ChildItem $searchRoots -Recurse -Filter $pat -Depth 8 -Force -ErrorAction SilentlyContinue |
-                        Select-Object -First 6
-                if ($hits) {
-                  foreach ($x in $hits) {
-                    Write-Host "  $pat -> $($x.FullName)"
-                    if ($pat -like 'VTK*' -or $pat -like 'vtk*') {
-                      $dir = Split-Path $x.FullName
-                      $verFile = Join-Path $dir 'VTKConfigVersion.cmake'
-                      if (Test-Path $verFile) {
-                        $v = Select-String -Path $verFile -Pattern 'PACKAGE_VERSION\s+"?([0-9.]+)' -ErrorAction SilentlyContinue | Select-Object -First 1
-                        if ($v) { Write-Host "        version: $($v.Matches[0].Groups[1].Value)" }
-                      }
-                      $qtMod = Get-ChildItem $dir -Filter '*GUISupportQt*' -Recurse -Depth 2 -ErrorAction SilentlyContinue | Select-Object -First 1
-                      if ($qtMod) { Write-Host "        Qt-enabled: YES ($($qtMod.Name))" }
-                      else {
-                        $grep = Select-String -Path $x.FullName -Pattern 'GUISupportQt' -ErrorAction SilentlyContinue | Select-Object -First 1
-                        if ($grep) { Write-Host "        Qt-enabled: YES (referenced in config)" } else { Write-Host "        Qt-enabled: NOT DETECTED" }
-                      }
-                    }
-                  }
-                } else { Write-Host "  $pat -> none found" }
-              }
-
-              # ------------------------------------------------------------------------------------
-              # Tools: resolve by LOCATION, not PATH. The agent runs as a machine account in session 0,
-              # whose PATH is not an interactive session's - v1 called cmake/ninja/git absent because of
-              # that, while the agent had just used git to check out a repo.
-              # ------------------------------------------------------------------------------------
-              Section 'Build tools - resolved by location, not PATH'
-              Write-Host "PATH as the agent sees it:"
-              ($env:PATH -split ';') | Where-Object { $_ } | ForEach-Object { Write-Host "    $_" }
+              cmake --version | Select-Object -First 1 | Write-Host
               Write-Host ""
-              foreach ($tool in @('cmake.exe','ninja.exe','git.exe')) {
-                $found = @()
-                $c = Get-Command $tool -ErrorAction SilentlyContinue
-                if ($c) { $found += $c.Source }
-                $probe = @("$env:ProgramFiles\CMake\bin\$tool",
-                           "$env:ProgramFiles\Git\cmd\$tool",
-                           "$env:ProgramFiles\Git\bin\$tool",
-                           "${env:ProgramFiles(x86)}\CMake\bin\$tool",
-                           "C:\agent\externals\git\cmd\$tool",
-                           "C:\agent\externals\git\bin\$tool") | Where-Object { Test-Path $_ }
-                $found += $probe
-                $vsw = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-                if (Test-Path $vsw) {
-                  $vs = & $vsw -latest -products * -property installationPath 2>$null
-                  if ($vs) {
-                    $inVs = Get-ChildItem (Join-Path $vs 'Common7\IDE\CommonExtensions\Microsoft\CMake') -Recurse -Filter $tool -Depth 3 -ErrorAction SilentlyContinue | Select-Object -First 1
-                    if ($inVs) { $found += $inVs.FullName }
-                  }
-                }
-                $found = $found | Select-Object -Unique
-                if ($found) {
-                  foreach ($f in $found) {
-                    $ver = try { (& $f --version 2>&1 | Select-Object -First 1) } catch { '(version query failed)' }
-                    Write-Host ("  {0,-10} {1}" -f $tool, $f)
-                    Write-Host ("             {0}" -f $ver)
-                  }
-                } else { Write-Host "  $tool : not found in PATH or any known location" }
-              }
-
-              Section 'Visual Studio / MSVC   (dev box has VS 18.6.11828.311 / MSVC 14.51.36231)'
-              $vsw = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-              if (Test-Path $vsw) {
-                & $vsw -products * -format value -property installationPath 2>&1 | ForEach-Object {
-                  Write-Host "  install: $_"
-                  $mv = Join-Path $_ 'VC\Tools\MSVC'
-                  if (Test-Path $mv) { Get-ChildItem $mv -Directory | ForEach-Object { Write-Host "      MSVC $($_.Name)" } }
-                }
-                & $vsw -products * -format value -property installationVersion 2>&1 | ForEach-Object { Write-Host "  version: $_" }
-              } else { Write-Host "  vswhere absent" }
-
-              Section 'Qt'
-              Write-Host "  QTDIR env: '$env:QTDIR'"
-              if (Test-Path 'C:\Qt') {
-                Get-ChildItem 'C:\Qt' -Directory | ForEach-Object {
-                  Write-Host "  C:\Qt\$($_.Name)"
-                  Get-ChildItem $_.FullName -Directory -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "      $($_.Name)" }
-                }
-              } else { Write-Host "  C:\Qt absent" }
-
-              Section 'vcpkg'
-              $vcs = @($env:VCPKG_ROOT,'C:\vcpkg','C:\DevTools\vcpkg','C:\dev\vcpkg','C:\tools\vcpkg') | Where-Object { $_ -and (Test-Path $_) }
-              if ($vcs) {
-                foreach ($v in $vcs) {
-                  Write-Host "  root: $v"
-                  $g = Get-Command git -ErrorAction SilentlyContinue
-                  if ($g) { Write-Host "    commit: $(& git -C $v rev-parse HEAD 2>&1)" }
-                  $exe = Join-Path $v 'vcpkg.exe'
-                  if (Test-Path $exe) {
-                    $lst = & $exe list 2>&1
-                    Write-Host "    entries: $(($lst | Measure-Object).Count)   x64-windows-static: $(($lst | Select-String 'x64-windows-static' | Measure-Object).Count)"
-                  } else { Write-Host "    vcpkg.exe missing (not bootstrapped)" }
-                }
-              } else { Write-Host "  vcpkg not found in the usual roots" }
-
-              Section 'ModuleWorks SDK   (licensed, ~4.5 GB)'
-              $mwHits = Get-ChildItem 'C:\' -Recurse -Directory -Filter '*ModuleWorks*' -Depth 4 -Force -ErrorAction SilentlyContinue | Select-Object -First 6
-              if ($mwHits) { $mwHits | ForEach-Object { Write-Host "  $($_.FullName)" } }
-              else { Write-Host "  no directory matching *ModuleWorks* within depth 4 of C:\" }
-              $ppf = Get-ChildItem 'C:\' -Recurse -Filter 'deploy_ppf.exe' -Depth 6 -Force -ErrorAction SilentlyContinue | Select-Object -First 2
-              if ($ppf) { $ppf | ForEach-Object { Write-Host "  PPFramework deploy tool: $($_.FullName)" } }
-
-              # Structural check against the known-good dev box layout: the SDK root holds quickstart/,
-              # and quickstart/ holds both a marker DLL and the licence. Catches the classic
-              # double-nesting a ZIP extraction produces (SDK ends up one level too deep).
-              $mwRoot = [Environment]::GetEnvironmentVariable('ONEMILL_MODULEWORKS_DIR','Machine')
-              if ($mwRoot) {
-                $mwRoot = $mwRoot -replace '/','\'
-                Write-Host "  MODULEWORKS_DIR resolves to: $mwRoot  (exists: $(Test-Path $mwRoot))"
-                foreach ($rel in @('quickstart','MachSim','MachineBuilder','PPFramework')) {
-                  Write-Host ("    {0,-16} {1}" -f $rel, $(if (Test-Path (Join-Path $mwRoot $rel)) { 'present' } else { 'MISSING' }))
-                }
-                $qs = Join-Path $mwRoot 'quickstart'
-                if (Test-Path $qs) {
-                  Write-Host ("    marker DLL 5axcore.dll  {0}" -f $(if (Test-Path (Join-Path $qs '5axcore.dll')) { 'present' } else { 'MISSING - extraction may be nested one level too deep' }))
-                  # Licence presence and freshness ONLY. Never echo the contents: a build log is
-                  # readable by anyone with repo access, and a licence key does not belong in one.
-                  $lic = Join-Path $qs 'mwSupport.lic'
-                  if (Test-Path $lic) {
-                    $f = Get-Item $lic
-                    Write-Host ("    mwSupport.lic           present  {0} bytes, modified {1:yyyy-MM-dd}" -f $f.Length, $f.LastWriteTime)
-                  } else {
-                    Write-Host "    mwSupport.lic           MISSING - ModuleWorks will fail at RUNTIME, not at build time"
-                  }
-                }
-              } else { Write-Host "  ONEMILL_MODULEWORKS_DIR not set, cannot do the structural check" }
-
-              Section 'ONEMILL_* machine environment variables'
+              Write-Host "=== the four inputs the preset reads ==="
               foreach ($n in @('ONEMILL_QTDIR','ONEMILL_VCPKG_ROOT','ONEMILL_VTK_DIR','ONEMILL_MODULEWORKS_DIR')) {
                 $v = [Environment]::GetEnvironmentVariable($n,'Machine')
-                if ($v) { Write-Host ("  {0,-26} = {1}" -f $n, $v) } else { Write-Host ("  {0,-26} <NOT SET>" -f $n) }
+                Write-Host ("  {0,-26} {1}" -f $n, $(if ($v) { $v } else { '<NOT SET>' }))
+                if (-not $v) { throw "$n is not set on this machine - the preset cannot resolve its toolchain" }
+              }
+              # Fail here with a clear message rather than letting find_package produce a
+              # confusing error 40 lines into configure output.
+              $vtk = ([Environment]::GetEnvironmentVariable('ONEMILL_VTK_DIR','Machine')) -replace '/','\'
+              if (-not (Test-Path (Join-Path $vtk 'vtk-config.cmake'))) {
+                throw "ONEMILL_VTK_DIR does not contain vtk-config.cmake: $vtk"
+              }
+              Write-Host "  VTK config resolves: $vtk\vtk-config.cmake"
+              $mw = ([Environment]::GetEnvironmentVariable('ONEMILL_MODULEWORKS_DIR','Machine')) -replace '/','\'
+              if (-not (Test-Path (Join-Path $mw 'quickstart\mwSupport.lic'))) {
+                Write-Host "##vso[task.logissue type=warning]mwSupport.lic not found under $mw\quickstart - builds will succeed but ModuleWorks fails at RUNTIME"
               }
               Write-Host ""
-              Write-Host "Inventory complete. Conclusions belong in the run summary, not in this script -"
-              Write-Host "v1 drew them from failed guesses and got them wrong."
-              exit 0
-            displayName: 'Inventory: discover, then report'
+              Write-Host "=== submodule tree ==="
+              Write-Host "  gitlinks checked out: $((git submodule status --recursive | Measure-Object).Count) (expect 26)"
+            displayName: 'Pre-flight: toolchain + preset inputs resolvable'
+
+          - script: |
+              cmake --preset onemill-config-ci-win-msvc-x64-relwithdebinfo
+            displayName: 'CONFIGURE (the real test - find_package must resolve every dependency)'
+
+          - powershell: |
+              # Configure succeeded; prove the cache actually took the intended values rather
+              # than silently falling back to something else.
+              $cache = 'out/build/win-msvc-x64-relwithdebinfo/CMakeCache.txt'
+              if (-not (Test-Path $cache)) { throw "no CMakeCache.txt at $cache" }
+              Write-Host "=== what configure resolved ==="
+              foreach ($k in @('Qt6_DIR','VCPKG_ROOT','VTK_DIR','MODULEWORKS_DIR','INSTALL_DIR',
+                               'VCPKG_TARGET_TRIPLET','CMAKE_BUILD_TYPE','CMAKE_CXX_COMPILER',
+                               'DEPLOY_DIR','DEPLOY_EXE')) {
+                $line = Select-String -Path $cache -Pattern "^$k[:=]" | Select-Object -First 1
+                if ($line) { Write-Host "  $($line.Line)" } else { Write-Host "  $k <absent from cache>" }
+              }
+              Write-Host ""
+              Write-Host "  install targets line from configure output is the dependency-walk check;"
+              Write-Host "  build.ninja present: $(Test-Path 'out/build/win-msvc-x64-relwithdebinfo/build.ninja')"
+            displayName: 'Verify the resolved cache'
+            condition: succeededOrFailed()
 
   - stage: Shutdown
     displayName: 'Stop Instance After Build'
     dependsOn:
       - Warmup
-      - AgentInventory        # was BuildAndTest upstream; that stage was MIRAGE-specific and dropped
+      - Configure             # was BuildAndTest upstream (MIRAGE-specific, dropped), then AgentInventory
     condition: always()  # Always run to stop instance even if build fails
     variables:
       StartedInstanceId: $[ stageDependencies.Warmup.ManageCapacity.outputs['CheckCapacity.StartedInstanceId'] ]
