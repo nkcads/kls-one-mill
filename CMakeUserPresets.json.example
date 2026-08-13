@@ -17,7 +17,8 @@
         "Qt6_DIR": "D:/DevTools/Qt/6.10.2/msvc2022_64/lib/cmake/Qt6",
         "VCPKG_ROOT": "D:/DevTools/vcpkg",
         "VTK_DIR": "D:/DevTools/vtk/install/lib/cmake/vtk-9.5",
-        "MODULEWORKS_DIR": "C:/DATA/install/ModuleWorksSdk"
+        "MODULEWORKS_DIR": "C:/DATA/install/ModuleWorksSdk",
+        "POLYGONICA_DIR": "C:/MachineWorks/Polygonica34"
       }
     },
     {
