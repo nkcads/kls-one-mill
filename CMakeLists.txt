@@ -24,18 +24,46 @@ endif()
 
 set(IGL_WITH_VULKAN OFF CACHE BOOL "" FORCE)
 
-# Set VTK_DIR from env if available
+# VTK_DIR should come from a preset or -D. The environment fallback is kept for existing
+# cmake-gui / plain-cmake workflows but WARNS - see the note on POLYGONICA_DIR in
+# Modules/ModuleMillingKalotte/MillingBackend/CMakeLists.txt for why silence here is the
+# actual defect. The `NOT DEFINED VTK_DIR` guard makes the detection accurate: a preset's
+# cacheVariables are already in the cache by the time this runs, so the fallback is only
+# genuinely used when nothing else supplied a value.
 set(VTK_DIR_DEFAULT "VTK_DIR_NOTFOUND")
-if(DEFINED ENV{VTK_DIR})
+set(_vtk_dir_from_env FALSE)
+if(NOT DEFINED VTK_DIR AND DEFINED ENV{VTK_DIR})
     set(VTK_DIR_DEFAULT "$ENV{VTK_DIR}")
+    set(_vtk_dir_from_env TRUE)
 endif()
 set(VTK_DIR "${VTK_DIR_DEFAULT}" CACHE PATH "Path to vtk lib/cmake/vtk-9.4 directory")
+if(_vtk_dir_from_env)
+    message(WARNING
+        "VTK_DIR was taken from the ENVIRONMENT, not from a preset or -D:\n"
+        "    $ENV{VTK_DIR}\n"
+        "This build depends on per-machine state and will not reproduce on a clean machine or a "
+        "CI agent. Declare VTK_DIR in CMakeUserPresets.json instead - see "
+        "CMakeUserPresets.json.example.")
+endif()
 
 #####VCPKG START
 
-# Set VCPKG_ROOT from env if available
+# VCPKG_ROOT should come from a preset or -D. Environment fallback kept, but it WARNS.
+# Extra reason to be explicit here: VsDevCmd.bat - and therefore .vscode/dev-run.cmd -
+# OVERWRITES VCPKG_ROOT with Visual Studio's own bundled vcpkg, so relying on the environment
+# is doubly fragile. See .vscode/OneMill-Setup-Ledger.md.
+set(_vcpkg_root_from_env FALSE)
 if(NOT DEFINED VCPKG_ROOT AND DEFINED ENV{VCPKG_ROOT})
     set(VCPKG_ROOT "$ENV{VCPKG_ROOT}" CACHE PATH "VCPKG root directory")
+    set(_vcpkg_root_from_env TRUE)
+endif()
+if(_vcpkg_root_from_env)
+    message(WARNING
+        "VCPKG_ROOT was taken from the ENVIRONMENT, not from a preset or -D:\n"
+        "    $ENV{VCPKG_ROOT}\n"
+        "Note that VsDevCmd.bat overwrites VCPKG_ROOT with Visual Studio's bundled vcpkg, so this "
+        "may not even be the vcpkg you intended. Declare VCPKG_ROOT in CMakeUserPresets.json "
+        "instead - see CMakeUserPresets.json.example.")
 endif()
 
 set(VCPKG_ROOT "${VCPKG_ROOT}" CACHE PATH "Path to vcpkg root directory")
