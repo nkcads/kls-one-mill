@@ -107,6 +107,8 @@ build/
 !.vscode/OneMill-Repo-Landscape.md
 !.vscode/OneMill-Setup-Ledger.md
 !.vscode/OneMill-Fleet-Conformance.md
+!.vscode/OneMill-Migration-2026-08.md
+!.vscode/OneMill-Remaining-Tasks.md
 # tasks.json is shared, unlike launch.json: it carries no machine-specific paths
 # (only ${workspaceFolder} and preset names) and it is the supported way to build
 # from the IDE, since the CMake sidebar cannot run the install correctly.
