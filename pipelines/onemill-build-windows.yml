@@ -418,6 +418,31 @@ stages:
               $ppf = Get-ChildItem 'C:\' -Recurse -Filter 'deploy_ppf.exe' -Depth 6 -Force -ErrorAction SilentlyContinue | Select-Object -First 2
               if ($ppf) { $ppf | ForEach-Object { Write-Host "  PPFramework deploy tool: $($_.FullName)" } }
 
+              # Structural check against the known-good dev box layout: the SDK root holds quickstart/,
+              # and quickstart/ holds both a marker DLL and the licence. Catches the classic
+              # double-nesting a ZIP extraction produces (SDK ends up one level too deep).
+              $mwRoot = [Environment]::GetEnvironmentVariable('ONEMILL_MODULEWORKS_DIR','Machine')
+              if ($mwRoot) {
+                $mwRoot = $mwRoot -replace '/','\'
+                Write-Host "  MODULEWORKS_DIR resolves to: $mwRoot  (exists: $(Test-Path $mwRoot))"
+                foreach ($rel in @('quickstart','MachSim','MachineBuilder','PPFramework')) {
+                  Write-Host ("    {0,-16} {1}" -f $rel, $(if (Test-Path (Join-Path $mwRoot $rel)) { 'present' } else { 'MISSING' }))
+                }
+                $qs = Join-Path $mwRoot 'quickstart'
+                if (Test-Path $qs) {
+                  Write-Host ("    marker DLL 5axcore.dll  {0}" -f $(if (Test-Path (Join-Path $qs '5axcore.dll')) { 'present' } else { 'MISSING - extraction may be nested one level too deep' }))
+                  # Licence presence and freshness ONLY. Never echo the contents: a build log is
+                  # readable by anyone with repo access, and a licence key does not belong in one.
+                  $lic = Join-Path $qs 'mwSupport.lic'
+                  if (Test-Path $lic) {
+                    $f = Get-Item $lic
+                    Write-Host ("    mwSupport.lic           present  {0} bytes, modified {1:yyyy-MM-dd}" -f $f.Length, $f.LastWriteTime)
+                  } else {
+                    Write-Host "    mwSupport.lic           MISSING - ModuleWorks will fail at RUNTIME, not at build time"
+                  }
+                }
+              } else { Write-Host "  ONEMILL_MODULEWORKS_DIR not set, cannot do the structural check" }
+
               Section 'ONEMILL_* machine environment variables'
               foreach ($n in @('ONEMILL_QTDIR','ONEMILL_VCPKG_ROOT','ONEMILL_VTK_DIR','ONEMILL_MODULEWORKS_DIR')) {
                 $v = [Environment]::GetEnvironmentVariable($n,'Machine')
