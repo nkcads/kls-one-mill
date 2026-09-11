@@ -93,7 +93,7 @@ find_package(VTK REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(Clipper2 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets Network Svg)
 find_package(Boost REQUIRED COMPONENTS system)
 
 
@@ -114,6 +114,11 @@ add_subdirectory(Updater)
 
 set(MODULE_OUTPUT_FOLDER "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/modulesBert")
 
+# Declares the ModuleWorks::<Group> targets used by ModuleMillingKalotte and
+# ModulePostProcessor below. Included once here (not per-module) because its
+# GLOBAL imported targets need to exist before either module's subdirectory
+# links against them - see the file's own header comment for why.
+include(${CMAKE_SOURCE_DIR}/cmake/ModuleWorksSDK.cmake)
 
 add_subdirectory(Modules)
 
