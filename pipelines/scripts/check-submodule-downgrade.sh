@@ -20,7 +20,7 @@ set -uo pipefail
 
 BASE_DEFAULT="develop"
 TRAILER="Allow-Submodule-Downgrade"
-DEPTH=50    # recent source commits searched for the override trailer
+DEPTH=50    # first rung of the fetch-depth ladder when looking for a merge-base
 MAX_LEVELS=4 # OneMill's real depth is 2; the guard is a backstop, not a bomb
 
 # --- Endpoints: PR uses target/source branches; otherwise current branch vs origin/develop ---
@@ -127,12 +127,37 @@ gitlink_at() { git -C "$1" ls-tree "$2" -- "$3" 2>/dev/null | awk '$2=="commit"{
 # SIGPIPE git log, which fails the script under `set -o pipefail` even on a match.
 has_override() {
   local body esc
-  body="$(git log --format='%B' -n "$DEPTH" "$head_commit" 2>/dev/null)"
+  # base..head, NOT "-n $DEPTH back from the tip" (KOM-16 G5). Counting back from the tip reaches
+  # commits the branch merely inherited from the target, so a trailer written for some earlier,
+  # unrelated downgrade silently excuses this one. Only commits this branch added may count.
+  body="$(git log --format='%B' "${base_commit}..${head_commit}" 2>/dev/null)"
   esc="$(printf '%s' "$1" | sed 's/[][\\.^$*+?(){}|]/\\&/g')"
   grep -iqE "^${TRAILER}:[[:space:]]*${esc}[[:space:]]*$" <<<"$body"
 }
 
 report() {  # $1=display path  $2=kind  $3=base sha  $4=head sha  $5=commits dropped  $6=nested?
+  # A rewrite needs a different remedy from a downgrade, so it gets its own report. The generic one
+  # below says "checkout the base commit", which for a rewrite moves the pointer BACKWARDS - and
+  # after a squash the base commit is frequently on no branch at all, so that advice can manufacture
+  # the very dangling gitlink this guard exists to prevent.
+  if [ "$2" = REWRITTEN ]; then
+    {
+      echo ""
+      echo "  $1 ($5 commit(s) no longer reachable from this pointer):"
+      echo "    branch point: $3"
+      echo "    this branch : $4   <-- REWRITTEN"
+      echo "  The two trees are IDENTICAL: no content changed. The ancestry was cut, which is what"
+      echo "  a squash or rebase merge produces."
+      echo "  Restore the ancestry (copy-paste from the superproject root):"
+      echo "    git -C $1 fetch origin"
+      echo "    git -C $1 checkout $target && git -C $1 merge $3"
+      echo "    # push the submodule FIRST, then bump the gitlink that points at $1"
+      echo "  Intentional? add this trailer to a commit on this branch:"
+      echo "    $TRAILER: $1"
+    } >&2
+    echo "##vso[task.logissue type=error]$1: submodule REWRITTEN - same content, ancestry cut (squash or rebase). Merge $3 back into its $target, or add '$TRAILER: $1' to override."
+    return
+  fi
   {
     echo ""
     echo "  $1 (drops $5 commit(s)):"
@@ -169,7 +194,7 @@ check_level() {
     rm -f "$gm"; return 0            # no submodules at this level
   fi
 
-  local key path name url disp bs hs tmp sub curl_url clone_err kind dropped nested
+  local key path name url disp bs hs tmp sub curl_url clone_err kind dropped nested bt ht
   nested="top"; [ "$level" -gt 1 ] && nested="nested"
 
   while read -r key path; do
@@ -245,7 +270,14 @@ check_level() {
         echo "##vso[task.logissue type=error]$disp: history too shallow to relate $bs and $hs - cannot verify (deepen failed)."
         fail=1; summary+=("X $disp (indeterminate: shallow)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
       else
-        kind=DIVERGED
+        # Identical trees with a cut ancestry is not a divergence, it is a rewrite - what a
+        # squash or rebase merge produces. Saying so turns an unreadable wall of DIVERGED into
+        # one actionable sentence, and it changes the remedy: restoring the old commit is wrong
+        # when no content differs. Both endpoints are local by now, so this costs two rev-parse
+        # calls.
+        bt="$(git -C "$sub" rev-parse "${bs}^{tree}" 2>/dev/null || true)"
+        ht="$(git -C "$sub" rev-parse "${hs}^{tree}" 2>/dev/null || true)"
+        if [ -n "$bt" ] && [ "$bt" = "$ht" ]; then kind=REWRITTEN; else kind=DIVERGED; fi
       fi
       dropped="$(git -C "$sub" rev-list --count "${hs}..${bs}" 2>/dev/null || echo '?')"
       if has_override "$disp"; then

@@ -110,7 +110,7 @@ case_backward() {
 
 case_rewritten() {
   DESC="squash merge: identical trees, ancestry cut"
-  PENDING="G2"; EXPECT_EXIT=1; EXPECT_LINE="^X sub \(REWRITTEN\)$"
+  EXPECT_EXIT=1; EXPECT_LINE="^X sub \(REWRITTEN\)$"
   mk_sub
   git -C "$SUB" checkout -q -b feat
   write_commit "$SUB" file.txt v1 "feature work"
@@ -168,7 +168,7 @@ Allow-Submodule-Downgrade: sub"
 
 case_override_inherited() {
   DESC="override trailer inherited from target history - must NOT apply"
-  PENDING="G5"; EXPECT_EXIT=1; EXPECT_LINE="^X sub \(BACKWARD\)$"
+  EXPECT_EXIT=1; EXPECT_LINE="^X sub \(BACKWARD\)$"
   mk_sub; local c0 c1; c0="$(sha "$SUB" HEAD)"
   write_commit "$SUB" file.txt v1 "c1"; c1="$(sha "$SUB" HEAD)"
   SUBURL="$(publish "$SUB")"
@@ -188,7 +188,7 @@ Allow-Submodule-Downgrade: sub"
 
 case_nested_rewritten() {
   DESC="parent moves forward, nested backend was squashed - the recursion must see it"
-  PENDING="G2"; EXPECT_EXIT=1; EXPECT_LINE="^X sub/inner \(REWRITTEN\)$"
+  EXPECT_EXIT=1; EXPECT_LINE="^X sub/inner \(REWRITTEN\)$"
   local INNER="$W/inner"; new_repo "$INNER" develop
   git -C "$INNER" checkout -q -b feat
   write_commit "$INNER" file.txt v1 "inner feature"
