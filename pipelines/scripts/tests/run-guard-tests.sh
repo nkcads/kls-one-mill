@@ -280,9 +280,47 @@ case_push_to_develop_is_checked() {
   run_guard push
 }
 
+
+case_added_orphan_pin() {
+  DESC="a submodule the branch ADDS, pinned at a commit on no ref - must fail"
+  EXPECT_EXIT=1; EXPECT_LINE="^X sub [(]ORPHANED PIN[)]$"
+  mk_sub
+  write_commit "$SUB" file.txt v1 "c1"
+  git -C "$SUB" checkout -q -b doomed
+  write_commit "$SUB" file.txt v2 "c2 - will be left on no branch"
+  local c1; c1="$(sha "$SUB" HEAD)"
+  SUBURL="$(publish "$SUB")"
+  git -C "$SUB" checkout -q develop
+  git -C "$SUB" push -q origin --delete doomed
+  git -C "$SUB" branch -q -D doomed
+  # develop knows nothing of this submodule; the branch introduces it, so there is no base pin
+  SUPER="$W/super"; new_repo "$SUPER" develop
+  git -C "$SUPER" checkout -q -b feat
+  add_gitmodules "$SUPER" sub "$SUBURL"
+  set_gitlink "$SUPER" sub "$c1"
+  commit_in "$SUPER" "add sub, pinned at a commit held by nothing"
+  SUPERURL="$(publish "$SUPER")"; WORK="$W/work"; clone_super "$SUPERURL" "$WORK"
+  run_guard pr
+}
+
+case_added_clean() {
+  DESC="a submodule the branch adds with a sound pin - accepted, and labelled as added"
+  EXPECT_EXIT=0; EXPECT_LINE="^[+] sub [(]added, pin checked[)]$"
+  mk_sub; local c0; c0="$(sha "$SUB" HEAD)"
+  SUBURL="$(publish "$SUB")"
+  SUPER="$W/super"; new_repo "$SUPER" develop
+  git -C "$SUPER" checkout -q -b feat
+  add_gitmodules "$SUPER" sub "$SUBURL"
+  set_gitlink "$SUPER" sub "$c0"
+  commit_in "$SUPER" "add sub, pinned on its develop"
+  SUPERURL="$(publish "$SUPER")"; WORK="$W/work"; clone_super "$SUPERURL" "$WORK"
+  run_guard pr
+}
+
 CASES=(unchanged forward backward rewritten diverged_content orphan_pin
        override_in_range override_inherited nested_rewritten uninitialised_dir
-       nothing_inspected off_develop_on_push push_to_develop_is_checked)
+       nothing_inspected off_develop_on_push push_to_develop_is_checked
+       added_orphan_pin added_clean)
 
 # ------------------------------------------------------------------ runner
 

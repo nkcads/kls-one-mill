@@ -232,7 +232,7 @@ check_level() {
     rm -f "$gm"; return 0            # no submodules at this level
   fi
 
-  local key path name url disp bs hs tmp sub curl_url clone_err kind dropped nested bt ht refs_known holders
+  local key path name url disp bs hs tmp sub curl_url clone_err kind dropped nested bt ht refs_known holders added
   nested="top"; [ "$level" -gt 1 ] && nested="nested"
 
   while read -r key path; do
@@ -250,13 +250,22 @@ check_level() {
 
     bs="$(gitlink_at "$repo" "$base" "$path")"
     hs="$(gitlink_at "$repo" "$head" "$path")"
-    if [ -z "$bs" ] || [ -z "$hs" ]; then
-      summary+=("? $disp (added or removed)"); continue
+    if [ -z "$hs" ]; then
+      # Declared in .gitmodules but no gitlink at head: nothing to point at, nothing to judge.
+      summary+=("? $disp (declared, no gitlink at head)"); continue
+    fi
+    added=""
+    if [ -z "$bs" ]; then
+      # A submodule this branch ADDS has no base pin, so there is no direction to check - but the
+      # pin itself still has to be sound. Skipping it outright, as this used to, left a new
+      # submodule free to point at an orphaned commit, or off the target branch, unexamined.
+      # Treating the base as equal to the head runs every pin-level check and no comparison.
+      added=1; bs="$hs"
     fi
     # The shortcut is unavailable on a run of the protected branch itself: an UNCHANGED pointer
     # can still be sitting off that branch - ModuleStatistics did, for two weeks - and skipping
     # it skips the whole subtree beneath it too. See G4 below.
-    if [ "$bs" = "$hs" ] && [ "$source" != "$target" ]; then
+    if [ "$bs" = "$hs" ] && [ "$source" != "$target" ] && [ -z "$added" ]; then
       summary+=("= $disp"); continue   # identical pointer => whole subtree identical
     fi
 
@@ -339,16 +348,10 @@ check_level() {
         echo "    git -C $disp push origin $hs:refs/heads/archive/<name>"
         echo "  Then point the gitlink at a commit that is actually on a branch."
       } >&2
-      # GUARD_ORPHAN_SEVERITY=warning turns this into a report-only sweep, so the size of the
-      # existing problem can be measured across all branches before it starts failing builds. In
-      # that mode the ancestry verdict still runs and owns the summary line; only here does the
-      # orphan finding replace it.
-      if [ "${GUARD_ORPHAN_SEVERITY:-error}" = "warning" ]; then
-        echo "##vso[task.logissue type=warning]$disp: pin $hs is reachable from no ref (warn-only sweep)."
-      else
-        echo "##vso[task.logissue type=error]$disp: pin $hs is reachable from no ref."
-        fail=1; summary+=("X $disp (ORPHANED PIN)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
-      fi
+      # No severity switch here, on purpose. A pin that exists on nothing is not a matter of
+      # taste: the superproject is already broken, it simply has not been noticed yet.
+      echo "##vso[task.logissue type=error]$disp: pin $hs is reachable from no ref."
+      fail=1; summary+=("X $disp (ORPHANED PIN)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
     fi
 
     # --- On the protected branch, every pin must be ON it (KOM-16 G4) ---------------------------
@@ -383,7 +386,7 @@ check_level() {
     # Unchanged pointer on a protected-branch run: nothing to classify, but DO descend - a nested
     # pin can sit off-branch while its parent has not moved at all.
     if [ "$bs" = "$hs" ]; then
-      summary+=("= $disp")
+      if [ -n "$added" ]; then summary+=("+ $disp (added, pin checked)"); else summary+=("= $disp"); fi
       check_level "$sub" "$bs" "$hs" "${disp}/" $((level + 1)) </dev/null
       [ -n "$tmp" ] && rm -rf "$tmp"; continue
     fi
@@ -446,7 +449,7 @@ elif [ "${#summary[@]}" -lt "$declared" ]; then
 fi
 
 echo ""
-echo "guard summary  (= unchanged, ^ forward, ? skipped, ! overridden, X FAILED)"
+echo "guard summary  (= unchanged, ^ forward, + added, ? skipped, ! overridden, X FAILED)"
 if [ "${#summary[@]}" -eq 0 ]; then
   echo "  <no submodules found>"
 else

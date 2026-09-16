@@ -48,7 +48,7 @@ tractable** is close to the reverse, so the plan starts with the cheap enabler.
 | **1** | G6 — `GUARD_BASE` / `GUARD_HEAD` replay — **done 2026-09-16** | No behaviour change. The four rows in the ticket are now executable: `0f3b0f8`→`85d99b7` reproduces the incident as 11 × DIVERGED, `85d99b7`→`c84c493` as 4 forward + 4 nested, `85d99b7`→`10ba0f4` as `OK` |
 | **2** | G2 — `REWRITTEN` vs `DIVERGED`, G5 — trailer scope bug — **done 2026-09-16** | The incident replay now reads 11 × `REWRITTEN` instead of 11 × `DIVERGED`, and the remedy printed is the merge that restores ancestry rather than a checkout that would move the pointer backwards |
 | **3** | G7 — empty submodule dir, G8 — never pass having inspected nothing — **done 2026-09-16** | Both found by the suite on its first run, see §3. G7 now probes with `--show-prefix`, which is empty only at a repository root; G8 compares the number of gitlinks inspected against the count declared in the root `.gitmodules` |
-| **4** | G3 — reject pins on no branch — **done 2026-09-16** | `GUARD_ORPHAN_SEVERITY=warning` makes it report-only; run one sweep across all branches in that mode before it is allowed to block |
+| **4** | G3 — reject pins on no ref — **done 2026-09-16** | Always fails, with no severity switch: a pin that exists on nothing means the superproject is already broken, it simply has not been noticed yet |
 | **5** | G1 — real base on `develop` — **done 2026-09-16** | Engages only when the branch point would otherwise be HEAD itself, so a developer's unpushed work still compares against the published tip |
 | **6** | G4 — hard fail for pins off `develop` — **done 2026-09-16** | Checks every pin, changed or not, and descends through unchanged parents. `GeneralUtils/OpenXLSX` is declared in `GUARD_OFF_BRANCH_EXEMPT` in the script |
 
@@ -68,8 +68,12 @@ is expected to fail it today*. The suite therefore stays green while the work is
 landing an item is "delete one `PENDING` line and watch it go green". A `PENDING` case that starts
 passing is reported as **UNEXPECTED PASS** and fails the run, so a marker cannot rot.
 
-Current state: **13 passed, 0 pending, 0 failed** — every item is implemented and each has a case
+Current state: **15 passed, 0 pending, 0 failed** — every item is implemented and each has a case
 standing behind it. From here the suite is a regression net rather than a to-do list.
+
+`GUARD_TEST_SCRIPT` points the suite at any copy of the guard, which is how a new case is shown
+to be worth having: run it against the previous version and watch it fail. `added_orphan_pin` and
+`added_clean` both report `? sub (added or removed)` there, which was the hole they close.
 
 Two things the suite established on its first run, neither of which anyone was looking for:
 
@@ -127,14 +131,18 @@ replaces the other, and A1 has been unanswered since 2026-08-05. Note that a pol
 ADO completion dialog only: a local `git merge --squash` followed by a direct push produces the same
 damage and nothing server-side can refuse it. That half is the guard's job permanently.
 
-## 7. Known and deliberately left open
+## 7. Known limits
 
-A submodule that a branch **adds** or **removes** is reported `? (added or removed)` and never
-examined — there is no base pin to compare against. On a `develop` run that is a real hole: a
-newly added submodule could be pinned at an orphaned commit, or off its own develop, and G3 and
-G4 would both stay silent. Closing it means checking the head pin on its own whenever the base
-is absent, which is a small change but a new failure mode for existing branches, so it wants its
-own warn-only sweep rather than being folded in here.
+A submodule a branch **adds** is now checked: there is no direction to judge, but the pin itself
+still has to be reachable and, on a `develop` run, on the submodule's develop. It is reported
+`+ <path> (added, pin checked)`.
+
+What genuinely cannot be judged is a path **declared in `.gitmodules` with no gitlink at head** —
+there is nothing to point at. That reports `?` and passes.
+
+The clone-free API route for `develop` runs stays an optimisation rather than a need: 26 gitlinks
+in 1.9 s against 40 s for the current walk with local working copies present, and longer in CI,
+where every changed submodule is cloned.
 
 ## 8. Do not change
 
