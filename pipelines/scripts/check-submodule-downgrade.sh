@@ -101,6 +101,22 @@ else
   done
   [ -z "$base_commit" ] && { echo "WARN: no merge-base in history; comparing against target tip"; base_commit="$target_tip"; }
 fi
+# --- Replay overrides (KOM-16 G6) --------------------------------------------------------------
+# Drive the guard over an arbitrary pair of superproject commits, so a historical state or a test
+# fixture can be examined through the same code path CI uses. Both commits must already be present
+# locally: this deliberately fetches nothing of its own.
+#
+# Placed AFTER every resolution path so no branch of the logic can defeat it, and BEFORE the line
+# below so the log always names the commits actually used - an override that does not appear in the
+# output is how a replay gets mistaken for a live verdict.
+#
+# rev-parse --verify rather than plain assignment: a mistyped SHA would otherwise reach gitlink_at,
+# yield an empty pin, and be classified as "added or removed" - a silent wrong answer.
+if [ -n "${GUARD_BASE:-}" ] || [ -n "${GUARD_HEAD:-}" ]; then
+  base_commit="$(git rev-parse --verify "${GUARD_BASE:-$base_commit}^{commit}")" || exit 1
+  head_commit="$(git rev-parse --verify "${GUARD_HEAD:-$head_commit}^{commit}")" || exit 1
+  echo "REPLAY: endpoints overridden by GUARD_BASE/GUARD_HEAD - this is not a live verdict"
+fi
 echo "Submodule guard: source ${head_commit:0:10} vs branch-point ${base_commit:0:10} (target '$target')"
 echo ""
 

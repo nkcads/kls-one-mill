@@ -39,7 +39,7 @@ tractable** is close to the reverse, so the plan starts with the cheap enabler.
 | Step | Items | Why here |
 |---|---|---|
 | **0** | Offline test suite — **done 2026-09-16** | `pipelines/scripts/tests/`. Every later step now has a failing case waiting for it, so "implemented" means something |
-| **1** | G6 — `GUARD_BASE` / `GUARD_HEAD` replay | Two lines, no behaviour change. Lets the suite drive the guard over historical pairs as well as fixtures |
+| **1** | G6 — `GUARD_BASE` / `GUARD_HEAD` replay — **done 2026-09-16** | No behaviour change. The four rows in the ticket are now executable: `0f3b0f8`→`85d99b7` reproduces the incident as 11 × DIVERGED, `85d99b7`→`c84c493` as 4 forward + 4 nested, `85d99b7`→`10ba0f4` as `OK` |
 | **2** | G2 — `REWRITTEN` vs `DIVERGED`, G5 — trailer scope bug | Self-contained, a few lines each, no new failure modes. G5 is a genuine defect independent of everything else |
 | **3** | G7 — empty submodule dir, G8 — never pass having inspected nothing | Both found by the suite on its first run, see §3. Small, and they make every other result trustworthy |
 | **4** | G3 — reject pins on no branch | Run **warn-only across all branches once** before it may block, so the size of the existing problem is known before it starts failing builds |
