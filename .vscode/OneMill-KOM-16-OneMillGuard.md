@@ -27,6 +27,12 @@ up reachable from no branch at all — the §5 stray-gitlink class, exactly as
 | Caught by | a **local** guard run, four days late |
 | Caught by CI | no — and it could not have been |
 
+Replaying the PR that started it, `2bba35e` to `0f3b0f8`, reports four findings today:
+`ModuleStatistics` DIVERGED, and `FileTransferBackend`, `FittingAnalysisBackend` and
+`ModuleUpdater` BACKWARD — the `config/.gitkeep` regression and the dropped SSH-to-HTTPS commit,
+all four of them repaired on 2026-09-15. So the PR-time check had the information. Whether that
+build ran and was completed over, or never ran, is not something this repo can answer.
+
 The last row is the reason this ticket exists. On a push to `develop` the guard compares HEAD against
 itself, so every pointer matches and the run always passes. Three places in these docs cite a green
 guard as evidence of health; on `develop` that evidence is vacuous.
@@ -42,7 +48,7 @@ tractable** is close to the reverse, so the plan starts with the cheap enabler.
 | **1** | G6 — `GUARD_BASE` / `GUARD_HEAD` replay — **done 2026-09-16** | No behaviour change. The four rows in the ticket are now executable: `0f3b0f8`→`85d99b7` reproduces the incident as 11 × DIVERGED, `85d99b7`→`c84c493` as 4 forward + 4 nested, `85d99b7`→`10ba0f4` as `OK` |
 | **2** | G2 — `REWRITTEN` vs `DIVERGED`, G5 — trailer scope bug — **done 2026-09-16** | The incident replay now reads 11 × `REWRITTEN` instead of 11 × `DIVERGED`, and the remedy printed is the merge that restores ancestry rather than a checkout that would move the pointer backwards |
 | **3** | G7 — empty submodule dir, G8 — never pass having inspected nothing — **done 2026-09-16** | Both found by the suite on its first run, see §3. G7 now probes with `--show-prefix`, which is empty only at a repository root; G8 compares the number of gitlinks inspected against the count declared in the root `.gitmodules` |
-| **4** | G3 — reject pins on no branch | Run **warn-only across all branches once** before it may block, so the size of the existing problem is known before it starts failing builds |
+| **4** | G3 — reject pins on no branch — **done 2026-09-16** | `GUARD_ORPHAN_SEVERITY=warning` makes it report-only; run one sweep across all branches in that mode before it is allowed to block |
 | **5** | G1 — real base on `develop` | Changes when the guard runs meaningfully. Needs the Build-API route below, not a marker ref |
 | **6** | G4 — hard fail for pins off `develop` | Depends on G1: without a real base there is no develop run to fail. Needs the exemption below |
 
@@ -62,7 +68,7 @@ is expected to fail it today*. The suite therefore stays green while the work is
 landing an item is "delete one `PENDING` line and watch it go green". A `PENDING` case that starts
 passing is reported as **UNEXPECTED PASS** and fails the run, so a marker cannot rot.
 
-Current state: **10 passed, 3 pending, 0 failed**. The three remaining encode G1, G3 and G4.
+Current state: **11 passed, 2 pending, 0 failed**. The two remaining encode G1 and G4.
 
 Two things the suite established on its first run, neither of which anyone was looking for:
 

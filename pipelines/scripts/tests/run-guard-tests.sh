@@ -135,7 +135,7 @@ case_diverged_content() {
 
 case_orphan_pin() {
   DESC="new pin is forward but lives on no branch - the 2026-09-11 failure"
-  PENDING="G3"; EXPECT_EXIT=1; EXPECT_LINE="^X sub \(ORPHANED PIN\)$"
+  EXPECT_EXIT=1; EXPECT_LINE="^X sub \(ORPHANED PIN\)$"
   mk_sub
   write_commit "$SUB" file.txt v1 "c1"
   local c0; c0="$(sha "$SUB" HEAD)"

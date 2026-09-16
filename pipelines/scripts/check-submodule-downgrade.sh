@@ -194,7 +194,7 @@ check_level() {
     rm -f "$gm"; return 0            # no submodules at this level
   fi
 
-  local key path name url disp bs hs tmp sub curl_url clone_err kind dropped nested bt ht
+  local key path name url disp bs hs tmp sub curl_url clone_err kind dropped nested bt ht refs_known holders
   nested="top"; [ "$level" -gt 1 ] && nested="nested"
 
   while read -r key path; do
@@ -258,11 +258,56 @@ check_level() {
       sub="$tmp"
     fi
     # Both endpoints must be present locally to compare them.
-    git -C "$sub" "${auth[@]}" fetch -q --filter=blob:none origin "$bs" "$hs" 2>/dev/null </dev/null || true
+    # The refspec rides along so G3 below judges reachability against CURRENT server refs. Without
+    # it a colleague's push from five minutes ago looks orphaned in a developer's clone.
+    git -C "$sub" "${auth[@]}" fetch -q --filter=blob:none origin "$bs" "$hs" "+refs/heads/*:refs/remotes/origin/*" 2>/dev/null </dev/null || true
 
     if ! git -C "$sub" cat-file -e "${bs}^{commit}" 2>/dev/null || ! git -C "$sub" cat-file -e "${hs}^{commit}" 2>/dev/null; then
       echo "##vso[task.logissue type=error]$disp: cannot resolve both endpoints ($bs, $hs) in $sub."
       fail=1; summary+=("X $disp (endpoints missing)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
+    fi
+
+    # --- Is the new pin held by any ref at all? (KOM-16 G3) -------------------------------------
+    # Direction is not the only way a pointer goes wrong. On 2026-09-11 all eleven bad pins moved
+    # FORWARD and were waved through, while pointing at commits no ref held - one server GC away
+    # from breaking "git submodule update --init --recursive" permanently, for everyone, on every
+    # superproject commit that references them. Checked here, above the ancestry branch, because
+    # that is precisely the case the ancestry test approves.
+    #
+    # refs/remotes AND refs/tags: a commit held only by a release tag is not a GC candidate either,
+    # and calling it orphaned would be wrong. Local branches are excluded on purpose - what sits in
+    # one developer clone keeps nothing alive on the server.
+    refs_known="$(git -C "$sub" for-each-ref --count=1 --format='x' refs/remotes refs/tags 2>/dev/null | wc -l)"
+    holders="$(git -C "$sub" for-each-ref --count=1 --format='%(refname)' --contains "$hs" refs/remotes refs/tags 2>/dev/null)"
+    # The temp clone is made with --no-tags, so an absent tag would look like an absent commit. Pay
+    # for tags only when the pin already looks orphaned, which is rare.
+    if [ -z "$holders" ] && [ -n "$tmp" ]; then
+      git -C "$sub" "${auth[@]}" fetch -q --tags origin 2>/dev/null </dev/null || true
+      holders="$(git -C "$sub" for-each-ref --count=1 --format='%(refname)' --contains "$hs" refs/remotes refs/tags 2>/dev/null)"
+    fi
+    if [ "$refs_known" -eq 0 ]; then
+      # Proved nothing. Say so and let the ancestry verdict stand on its own, rather than accusing.
+      echo "##vso[task.logissue type=warning]$disp: no refs available, reachability of $hs not verified."
+    elif [ -z "$holders" ]; then
+      {
+        echo ""
+        echo "  $disp: pin $hs is held by NO ref on the server."
+        echo "  This gitlink breaks 'git submodule update --init --recursive' as soon as the server"
+        echo "  prunes the object - for everyone, on every superproject commit that references it."
+        echo "  Rescue it before anything else (copy-paste from the superproject root):"
+        echo "    git -C $disp push origin $hs:refs/heads/archive/<name>"
+        echo "  Then point the gitlink at a commit that is actually on a branch."
+      } >&2
+      # GUARD_ORPHAN_SEVERITY=warning turns this into a report-only sweep, so the size of the
+      # existing problem can be measured across all branches before it starts failing builds. In
+      # that mode the ancestry verdict still runs and owns the summary line; only here does the
+      # orphan finding replace it.
+      if [ "${GUARD_ORPHAN_SEVERITY:-error}" = "warning" ]; then
+        echo "##vso[task.logissue type=warning]$disp: pin $hs is reachable from no ref (warn-only sweep)."
+      else
+        echo "##vso[task.logissue type=error]$disp: pin $hs is reachable from no ref."
+        fail=1; summary+=("X $disp (ORPHANED PIN)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
+      fi
     fi
 
     if git -C "$sub" merge-base --is-ancestor "$bs" "$hs" 2>/dev/null; then
