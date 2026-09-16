@@ -317,10 +317,48 @@ case_added_clean() {
   run_guard pr
 }
 
+
+# The two cases below share one fixture shape, built by this helper: develop gains a pin, then
+# downgrades it, then does something unrelated. HEAD^1 therefore shows the pointer UNCHANGED - the
+# damage is one commit further back. That is the whole reason G1 prefers the last approved commit
+# over the first parent.
+mk_three_commit_develop() {
+  mk_sub; local c0 c1
+  c0="$(sha "$SUB" HEAD)"
+  write_commit "$SUB" file.txt v1 "c1"; c1="$(sha "$SUB" HEAD)"
+  SUBURL="$(publish "$SUB")"
+  SUPER="$W/super"; new_repo "$SUPER" develop
+  add_gitmodules "$SUPER" sub "$SUBURL"
+  set_gitlink "$SUPER" sub "$c1"; commit_in "$SUPER" "pin sub at c1"
+  APPROVED="$(sha "$SUPER" HEAD)"          # what the last green run of this pipeline saw
+  set_gitlink "$SUPER" sub "$c0"; commit_in "$SUPER" "downgrade sub"
+  printf 'later
+' > "$SUPER/later.txt"; git -C "$SUPER" add later.txt
+  commit_in "$SUPER" "unrelated work on top"
+  SUPERURL="$(publish "$SUPER")"; WORK="$W/work"; clone_super "$SUPERURL" "$WORK"
+}
+
+case_develop_uses_last_green_run() {
+  DESC="develop run compares against the last approved commit, not merely the first parent"
+  EXPECT_EXIT=1; EXPECT_LINE="^X sub [(]BACKWARD[)]$"
+  mk_three_commit_develop
+  export GUARD_PREV_COMMIT="$APPROVED"     # stands in for the Build API answer
+  run_guard push
+  unset GUARD_PREV_COMMIT
+}
+
+case_develop_fallback_is_narrower() {
+  DESC="without a predecessor the first-parent fallback sees an unchanged pin - documents the gap"
+  EXPECT_EXIT=0; EXPECT_LINE="^= sub$"
+  mk_three_commit_develop
+  run_guard push
+}
+
 CASES=(unchanged forward backward rewritten diverged_content orphan_pin
        override_in_range override_inherited nested_rewritten uninitialised_dir
        nothing_inspected off_develop_on_push push_to_develop_is_checked
-       added_orphan_pin added_clean)
+       added_orphan_pin added_clean
+       develop_uses_last_green_run develop_fallback_is_narrower)
 
 # ------------------------------------------------------------------ runner
 
