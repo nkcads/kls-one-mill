@@ -207,7 +207,7 @@ case_nested_rewritten() {
 
 case_uninitialised_dir() {
   DESC="empty submodule dir must not pass as a working copy (rev-parse walks up to the parent)"
-  PENDING="G7"; EXPECT_EXIT=0; EXPECT_LINE="^\^ sub \(forward\)$"
+  EXPECT_EXIT=0; EXPECT_LINE="^\^ sub \(forward\)$"
   KEEP_EMPTY_DIRS=1          # this case is ABOUT the empty directory - see run_guard
   mk_sub; local c0 c1; c0="$(sha "$SUB" HEAD)"
   write_commit "$SUB" file.txt v1 "c1"; c1="$(sha "$SUB" HEAD)"
@@ -217,7 +217,7 @@ case_uninitialised_dir() {
 
 case_nothing_inspected() {
   DESC="a run that inspects zero submodules must NOT report success"
-  PENDING="G8"; EXPECT_EXIT=1; EXPECT_LINE=""
+  EXPECT_EXIT=1; EXPECT_LINE=""
   mk_sub; local c0; c0="$(sha "$SUB" HEAD)"
   SUBURL="$(publish "$SUB")"
   SUPER="$W/super"; new_repo "$SUPER" develop

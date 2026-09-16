@@ -233,7 +233,15 @@ check_level() {
     # A non-shallow local working copy is preferred when present: that is the developer case,
     # where it is both correct and faster than a network clone.
     tmp=""; sub=""
-    if git -C "${WORKTREE}/${disp}" rev-parse --git-dir >/dev/null 2>&1 \
+    # --show-prefix, not --git-dir (KOM-16 G7). An UNINITIALISED submodule is an empty directory, and
+    # git answers a question asked inside it by walking UP to the enclosing repository - so --git-dir
+    # succeeded there, and the guard went on to compare the superproject (or the parent submodule)
+    # against itself and report "endpoints missing". --show-prefix is empty ONLY at a repository root
+    # and names the subdirectory otherwise, which is exactly the distinction wanted; it also needs no
+    # path normalisation, since the answer never leaves git.
+    # CI never hit this: its checkout is shallow, so the is-shallow test below failed first and the
+    # clone path was taken. A developer who clones without --recursive hits it immediately.
+    if [ -z "$(git -C "${WORKTREE}/${disp}" rev-parse --show-prefix 2>/dev/null || echo not-a-repo)" ] \
        && [ "$(git -C "${WORKTREE}/${disp}" rev-parse --is-shallow-repository 2>/dev/null)" != "true" ]; then
       sub="${WORKTREE}/${disp}"
     else
@@ -297,6 +305,22 @@ check_level() {
 }
 
 check_level "$(pwd)" "$base_commit" "$head_commit" "" 1
+
+# --- A run that inspected nothing must never report success (KOM-16 G8) -------------------------
+# check_level returns quietly when it cannot read .gitmodules, and every probe under it is written
+# to fail soft. Without this, a walk that never started prints "<no submodules found>", leaves
+# fail=0 and exits green - indistinguishable on the dashboard from having checked all 26 gitlinks
+# and found them sound. That is the worst thing a guard can do, and it is how 2026-09-11 stayed
+# invisible for four days.
+declared="$(git show "${head_commit}:.gitmodules" 2>/dev/null | grep -cE '^[[:space:]]*path[[:space:]]*=' || true)"
+declared="${declared:-0}"
+if [ "$declared" -eq 0 ]; then
+  echo "##vso[task.logissue type=error]no submodule is declared in .gitmodules at ${head_commit:0:10} - refusing to report success on a walk that inspected nothing."
+  fail=1
+elif [ "${#summary[@]}" -lt "$declared" ]; then
+  echo "##vso[task.logissue type=error]inspected ${#summary[@]} gitlink(s) but the root .gitmodules declares $declared - the walk did not complete."
+  fail=1
+fi
 
 echo ""
 echo "guard summary  (= unchanged, ^ forward, ? skipped, ! overridden, X FAILED)"
