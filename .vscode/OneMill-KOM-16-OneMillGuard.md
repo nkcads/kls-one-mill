@@ -71,6 +71,9 @@ passing is reported as **UNEXPECTED PASS** and fails the run, so a marker cannot
 Current state: **15 passed, 0 pending, 0 failed** — every item is implemented and each has a case
 standing behind it. From here the suite is a regression net rather than a to-do list.
 
+`GUARD_PREV_COMMIT` injects the answer the Build API would have given, so G1's validation and use
+of that commit are covered offline; only the HTTP call itself needs an agent.
+
 `GUARD_TEST_SCRIPT` points the suite at any copy of the guard, which is how a new case is shown
 to be worth having: run it against the previous version and watch it fail. `added_orphan_pin` and
 `added_clean` both report `? sub (added or removed)` there, which was the hole they close.

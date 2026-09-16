@@ -110,16 +110,42 @@ if [ "$source" = "HEAD" ] || [ "$source" = "$target" ]; then
     da2=(); mapfile -t da2 < <(depth_args 50)
     git "${auth[@]}" fetch -q ${da2[@]+"${da2[@]}"} origin "$target" 2>/dev/null </dev/null || true
     prev=""
-    # The previous green run of THIS pipeline on THIS branch is the honest baseline: "everything up
-    # to here was already approved". Read-only, and the build identity holds Read - it could not
-    # write a marker ref even if we wanted one (effectiveAllow=34, no GenericContribute).
-    if [ -n "${SYSTEM_ACCESSTOKEN:-}" ] && [ -n "${SYSTEM_DEFINITIONID:-}" ] && command -v curl >/dev/null 2>&1; then
-      prev="$(curl -sf -H "Authorization: Bearer ${SYSTEM_ACCESSTOKEN}" \n        "${SYSTEM_TEAMFOUNDATIONCOLLECTIONURI}${SYSTEM_TEAMPROJECTID}/_apis/build/builds?definitions=${SYSTEM_DEFINITIONID}&branchName=${BUILD_SOURCEBRANCH}&resultFilter=succeeded&statusFilter=completed&queryOrder=finishTimeDescending&\$top=1&api-version=7.1" \n        2>/dev/null | sed -n 's/.*"sourceVersion":"\([0-9a-f]\{40\}\)".*//p' | head -1)"
-      [ -n "$prev" ] && git "${auth[@]}" fetch -q --filter=blob:none origin "$prev" 2>/dev/null </dev/null || true
+    # The previous green run of THIS pipeline on THIS branch is the honest baseline: everything up
+    # to there was already approved. Read-only - the build identity holds Read + CreateTag and could
+    # not write a marker ref even if we wanted one (effectiveAllow=34).
+    #
+    # GUARD_PREV_COMMIT is a test seam: it injects the answer the API would have given, so the
+    # validation and use of that commit are covered by the offline suite. Only the HTTP call itself
+    # stays untestable without an agent.
+    prev="${GUARD_PREV_COMMIT:-}"
+    if [ -z "$prev" ] && [ -n "${SYSTEM_ACCESSTOKEN:-}" ] && [ -n "${SYSTEM_DEFINITIONID:-}" ] && command -v curl >/dev/null 2>&1; then
+      # Built up in pieces, and with no line continuations anywhere: an earlier version of this block
+      # carried a mangled continuation, which made curl fetch nothing, silently, for every run - the
+      # fallback below covered for it and the logs looked merely conservative.
+      api_url="${SYSTEM_TEAMFOUNDATIONCOLLECTIONURI}${SYSTEM_TEAMPROJECTID}/_apis/build/builds"
+      api_q="definitions=${SYSTEM_DEFINITIONID}&branchName=${BUILD_SOURCEBRANCH}"
+      api_q="${api_q}&resultFilter=succeeded&statusFilter=completed&queryOrder=finishTimeDescending"
+      api_q="${api_q}"'&$top=1'"&api-version=7.1"
+      # grep/cut rather than a sed capture: no backslashes to lose, and it fails to the empty string.
+      prev="$(curl -sf -H "Authorization: Bearer ${SYSTEM_ACCESSTOKEN}" "${api_url}?${api_q}" 2>/dev/null | grep -o '"sourceVersion":"[0-9a-f]*"' | head -1 | cut -d'"' -f4)"
+      if [ -z "$prev" ]; then
+        echo "NOTE: the build history query returned no usable commit."
+      fi
     fi
-    if [ -n "$prev" ] && [ "$prev" != "$head_commit" ] \n       && git cat-file -e "${prev}^{commit}" 2>/dev/null \n       && git merge-base --is-ancestor "$prev" "$head_commit" 2>/dev/null; then
+    if [ -n "$prev" ]; then
+      git "${auth[@]}" fetch -q --filter=blob:none origin "$prev" 2>/dev/null </dev/null || true
+    fi
+    prev_ok=""
+    if [ -n "$prev" ] && [ "$prev" != "$head_commit" ]; then
+      if git cat-file -e "${prev}^{commit}" 2>/dev/null; then
+        if git merge-base --is-ancestor "$prev" "$head_commit" 2>/dev/null; then
+          prev_ok=1
+        fi
+      fi
+    fi
+    if [ -n "$prev_ok" ]; then
       base_commit="$prev"
-      echo "NOTE: branch point taken from the last successful run of this pipeline on '$target'."
+      echo "NOTE: branch point taken from the last successful run of this pipeline on '$target' (${prev:0:10})."
     elif git rev-parse -q --verify "${head_commit}^1" >/dev/null 2>&1; then
       base_commit="$(git rev-parse "${head_commit}^1")"
       echo "NOTE: no usable predecessor from the build history; comparing against the first parent."
