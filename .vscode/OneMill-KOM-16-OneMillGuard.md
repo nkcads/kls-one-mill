@@ -49,8 +49,8 @@ tractable** is close to the reverse, so the plan starts with the cheap enabler.
 | **2** | G2 — `REWRITTEN` vs `DIVERGED`, G5 — trailer scope bug — **done 2026-09-16** | The incident replay now reads 11 × `REWRITTEN` instead of 11 × `DIVERGED`, and the remedy printed is the merge that restores ancestry rather than a checkout that would move the pointer backwards |
 | **3** | G7 — empty submodule dir, G8 — never pass having inspected nothing — **done 2026-09-16** | Both found by the suite on its first run, see §3. G7 now probes with `--show-prefix`, which is empty only at a repository root; G8 compares the number of gitlinks inspected against the count declared in the root `.gitmodules` |
 | **4** | G3 — reject pins on no branch — **done 2026-09-16** | `GUARD_ORPHAN_SEVERITY=warning` makes it report-only; run one sweep across all branches in that mode before it is allowed to block |
-| **5** | G1 — real base on `develop` | Changes when the guard runs meaningfully. Needs the Build-API route below, not a marker ref |
-| **6** | G4 — hard fail for pins off `develop` | Depends on G1: without a real base there is no develop run to fail. Needs the exemption below |
+| **5** | G1 — real base on `develop` — **done 2026-09-16** | Engages only when the branch point would otherwise be HEAD itself, so a developer's unpushed work still compares against the published tip |
+| **6** | G4 — hard fail for pins off `develop` — **done 2026-09-16** | Checks every pin, changed or not, and descends through unchanged parents. `GeneralUtils/OpenXLSX` is declared in `GUARD_OFF_BRANCH_EXEMPT` in the script |
 
 Verification is the suite in §3, not the replay table in the ticket. That table stays useful as a
 record of the incident, but it reads live ADO state and one of its rows has already stopped
@@ -68,7 +68,8 @@ is expected to fail it today*. The suite therefore stays green while the work is
 landing an item is "delete one `PENDING` line and watch it go green". A `PENDING` case that starts
 passing is reported as **UNEXPECTED PASS** and fails the run, so a marker cannot rot.
 
-Current state: **11 passed, 2 pending, 0 failed**. The two remaining encode G1 and G4.
+Current state: **13 passed, 0 pending, 0 failed** — every item is implemented and each has a case
+standing behind it. From here the suite is a regression net rather than a to-do list.
 
 Two things the suite established on its first run, neither of which anyone was looking for:
 
@@ -120,7 +121,16 @@ replaces the other, and A1 has been unanswered since 2026-08-05. Note that a pol
 ADO completion dialog only: a local `git merge --squash` followed by a direct push produces the same
 damage and nothing server-side can refuse it. That half is the guard's job permanently.
 
-## 7. Do not change
+## 7. Known and deliberately left open
+
+A submodule that a branch **adds** or **removes** is reported `? (added or removed)` and never
+examined — there is no base pin to compare against. On a `develop` run that is a real hole: a
+newly added submodule could be pinned at an orphaned commit, or off its own develop, and G3 and
+G4 would both stay silent. Closing it means checking the head pin on its own whenever the base
+is absent, which is a small change but a new failure mode for existing branches, so it wants its
+own warn-only sweep rather than being folded in here.
+
+## 8. Do not change
 
 Submodules are deliberately **not** checked out — a `--depth=1` checkout cannot answer ancestry, ADO
 refuses `--deepen`, and `--unshallow` no-ops once a blob-filtered fetch has made the clone partial.

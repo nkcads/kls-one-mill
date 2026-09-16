@@ -234,7 +234,7 @@ case_nothing_inspected() {
 
 case_off_develop_on_push() {
   DESC="on a develop run, a pin that is not on the submodule's develop must fail hard"
-  PENDING="G4"; EXPECT_EXIT=1; EXPECT_LINE="^X sub \(OFF-DEVELOP\)$"
+  EXPECT_EXIT=1; EXPECT_LINE="^X sub \(OFF-DEVELOP\)$"
   mk_sub
   git -C "$SUB" checkout -q -b sidetrack
   write_commit "$SUB" file.txt side "only on sidetrack"
@@ -245,13 +245,17 @@ case_off_develop_on_push() {
   add_gitmodules "$SUPER" sub "$SUBURL"
   set_gitlink "$SUPER" sub "$cs"
   commit_in "$SUPER" "pin sub at a commit that is not on its develop"
+  # One more commit that leaves the pin alone: the pointer must be caught even though THIS push did
+  # not touch it. That is the ModuleStatistics shape - it sat wrong for two weeks without moving.
+  printf 'unrelated\n' > "$SUPER/more.txt"; git -C "$SUPER" add more.txt
+  commit_in "$SUPER" "unrelated work, the pin has not moved"
   SUPERURL="$(publish "$SUPER")"; WORK="$W/work"; clone_super "$SUPERURL" "$WORK"
   run_guard push
 }
 
 case_push_to_develop_is_checked() {
   DESC="a push to develop must be compared against something other than itself"
-  PENDING="G1"; EXPECT_EXIT=1; EXPECT_LINE="^X sub \(BACKWARD\)$"
+  EXPECT_EXIT=1; EXPECT_LINE="^X sub \(BACKWARD\)$"
   mk_sub; local c0 c1; c0="$(sha "$SUB" HEAD)"
   write_commit "$SUB" file.txt v1 "c1"; c1="$(sha "$SUB" HEAD)"
   SUBURL="$(publish "$SUB")"

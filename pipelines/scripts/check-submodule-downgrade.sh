@@ -23,6 +23,13 @@ TRAILER="Allow-Submodule-Downgrade"
 DEPTH=50    # first rung of the fetch-depth ladder when looking for a merge-base
 MAX_LEVELS=4 # OneMill's real depth is 2; the guard is a backstop, not a bomb
 
+# Paths exempt from G4's "the pin must be on the target branch" rule, space separated.
+# GeneralUtils/OpenXLSX is vendored third party: it tracks upstream releases on main and has no
+# develop branch at all, so the rule cannot apply to it. Declared explicitly rather than "skip when
+# the branch happens to be missing", so a first-party repo that LOSES its develop still fails loudly
+# instead of quietly excusing itself.
+GUARD_OFF_BRANCH_EXEMPT="${GUARD_OFF_BRANCH_EXEMPT:-GeneralUtils/OpenXLSX}"
+
 # --- Endpoints: PR uses target/source branches; otherwise current branch vs origin/develop ---
 if [ -n "${SYSTEM_PULLREQUEST_TARGETBRANCH:-}" ]; then
   target="${SYSTEM_PULLREQUEST_TARGETBRANCH#refs/heads/}"
@@ -90,6 +97,37 @@ if [ "$source" = "HEAD" ] || [ "$source" = "$target" ]; then
   target_tip="$(git rev-parse FETCH_HEAD)"
   head_commit="$(git rev-parse HEAD)"
   base_commit="$(git merge-base "$head_commit" "$target_tip" 2>/dev/null || echo "$target_tip")"
+
+  # --- The branch point must not be HEAD itself (KOM-16 G1) -------------------------------------
+  # On a CI run of the target branch, HEAD is the branch tip, so the merge-base above IS HEAD and
+  # every gitlink then compares equal to itself: 26 x "=" and a green run that verified nothing.
+  # That is how the 2026-09-11 state reached develop unremarked. A developer with unpushed commits
+  # is NOT affected - there the merge-base is the published tip, which is exactly what we want - so
+  # this only engages when the comparison would otherwise be empty.
+  if [ "$base_commit" = "$head_commit" ]; then
+    # A shallow CI checkout has no predecessor locally. Deepen first; harmless in a full clone,
+    # where depth_args deliberately emits nothing.
+    da2=(); mapfile -t da2 < <(depth_args 50)
+    git "${auth[@]}" fetch -q ${da2[@]+"${da2[@]}"} origin "$target" 2>/dev/null </dev/null || true
+    prev=""
+    # The previous green run of THIS pipeline on THIS branch is the honest baseline: "everything up
+    # to here was already approved". Read-only, and the build identity holds Read - it could not
+    # write a marker ref even if we wanted one (effectiveAllow=34, no GenericContribute).
+    if [ -n "${SYSTEM_ACCESSTOKEN:-}" ] && [ -n "${SYSTEM_DEFINITIONID:-}" ] && command -v curl >/dev/null 2>&1; then
+      prev="$(curl -sf -H "Authorization: Bearer ${SYSTEM_ACCESSTOKEN}" \n        "${SYSTEM_TEAMFOUNDATIONCOLLECTIONURI}${SYSTEM_TEAMPROJECTID}/_apis/build/builds?definitions=${SYSTEM_DEFINITIONID}&branchName=${BUILD_SOURCEBRANCH}&resultFilter=succeeded&statusFilter=completed&queryOrder=finishTimeDescending&\$top=1&api-version=7.1" \n        2>/dev/null | sed -n 's/.*"sourceVersion":"\([0-9a-f]\{40\}\)".*//p' | head -1)"
+      [ -n "$prev" ] && git "${auth[@]}" fetch -q --filter=blob:none origin "$prev" 2>/dev/null </dev/null || true
+    fi
+    if [ -n "$prev" ] && [ "$prev" != "$head_commit" ] \n       && git cat-file -e "${prev}^{commit}" 2>/dev/null \n       && git merge-base --is-ancestor "$prev" "$head_commit" 2>/dev/null; then
+      base_commit="$prev"
+      echo "NOTE: branch point taken from the last successful run of this pipeline on '$target'."
+    elif git rev-parse -q --verify "${head_commit}^1" >/dev/null 2>&1; then
+      base_commit="$(git rev-parse "${head_commit}^1")"
+      echo "NOTE: no usable predecessor from the build history; comparing against the first parent."
+      echo "      A push of several commits is then only checked from its last one."
+    else
+      echo "##vso[task.logissue type=warning]cannot establish a branch point for '$target': this run compares HEAD with itself and verifies nothing."
+    fi
+  fi
 else
   base_commit=""
   for d in "$DEPTH" 250 2000; do
@@ -215,7 +253,10 @@ check_level() {
     if [ -z "$bs" ] || [ -z "$hs" ]; then
       summary+=("? $disp (added or removed)"); continue
     fi
-    if [ "$bs" = "$hs" ]; then
+    # The shortcut is unavailable on a run of the protected branch itself: an UNCHANGED pointer
+    # can still be sitting off that branch - ModuleStatistics did, for two weeks - and skipping
+    # it skips the whole subtree beneath it too. See G4 below.
+    if [ "$bs" = "$hs" ] && [ "$source" != "$target" ]; then
       summary+=("= $disp"); continue   # identical pointer => whole subtree identical
     fi
 
@@ -308,6 +349,43 @@ check_level() {
         echo "##vso[task.logissue type=error]$disp: pin $hs is reachable from no ref."
         fail=1; summary+=("X $disp (ORPHANED PIN)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
       fi
+    fi
+
+    # --- On the protected branch, every pin must be ON it (KOM-16 G4) ---------------------------
+    # Reachable-from-some-ref (G3) is the right strength for a feature branch, where a submodule PR
+    # may legitimately not have landed yet. It is too weak for develop itself: the pin must be on
+    # the submodule's own develop, or the superproject is publishing a state nobody can reproduce
+    # from the branches. Applies to every pin, changed or not - see the shortcut above.
+    if [ "$source" = "$target" ]; then
+      case " ${GUARD_OFF_BRANCH_EXEMPT:-} " in
+        *" $disp "*)
+          summary+=("? $disp (exempt from '$target' containment)")
+          [ -n "$tmp" ] && rm -rf "$tmp"; continue ;;
+      esac
+      if ! git -C "$sub" rev-parse -q --verify "refs/remotes/origin/${target}" >/dev/null 2>&1; then
+        echo "##vso[task.logissue type=error]$disp: the submodule has no '$target' branch, so its pin cannot be on one. If that is intended, list the path in GUARD_OFF_BRANCH_EXEMPT."
+        fail=1; summary+=("X $disp (no '$target' branch)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
+      fi
+      if ! git -C "$sub" merge-base --is-ancestor "$hs" "refs/remotes/origin/${target}" 2>/dev/null; then
+        {
+          echo ""
+          echo "  $disp: pin $hs is NOT on the submodule's '$target'."
+          echo "  ${target} must only ever point at commits that are on the submodules' ${target}, or"
+          echo "  the state it publishes cannot be reproduced from the branches."
+          echo "  Land the work in the submodule first, then bump the gitlink:"
+          echo "    git -C $disp checkout $target && git -C $disp merge $hs   # then push, then re-pin"
+        } >&2
+        echo "##vso[task.logissue type=error]$disp: pin $hs is not on the submodule's '$target'."
+        fail=1; summary+=("X $disp (OFF-${target^^})"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
+      fi
+    fi
+
+    # Unchanged pointer on a protected-branch run: nothing to classify, but DO descend - a nested
+    # pin can sit off-branch while its parent has not moved at all.
+    if [ "$bs" = "$hs" ]; then
+      summary+=("= $disp")
+      check_level "$sub" "$bs" "$hs" "${disp}/" $((level + 1)) </dev/null
+      [ -n "$tmp" ] && rm -rf "$tmp"; continue
     fi
 
     if git -C "$sub" merge-base --is-ancestor "$bs" "$hs" 2>/dev/null; then
