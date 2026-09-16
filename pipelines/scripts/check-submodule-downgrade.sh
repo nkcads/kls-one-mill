@@ -20,8 +20,15 @@ set -uo pipefail
 
 BASE_DEFAULT="develop"
 TRAILER="Allow-Submodule-Downgrade"
-DEPTH=50    # recent source commits searched for the override trailer
+DEPTH=50    # first rung of the fetch-depth ladder when looking for a merge-base
 MAX_LEVELS=4 # OneMill's real depth is 2; the guard is a backstop, not a bomb
+
+# Paths exempt from G4's "the pin must be on the target branch" rule, space separated.
+# GeneralUtils/OpenXLSX is vendored third party: it tracks upstream releases on main and has no
+# develop branch at all, so the rule cannot apply to it. Declared explicitly rather than "skip when
+# the branch happens to be missing", so a first-party repo that LOSES its develop still fails loudly
+# instead of quietly excusing itself.
+GUARD_OFF_BRANCH_EXEMPT="${GUARD_OFF_BRANCH_EXEMPT:-GeneralUtils/OpenXLSX}"
 
 # --- Endpoints: PR uses target/source branches; otherwise current branch vs origin/develop ---
 if [ -n "${SYSTEM_PULLREQUEST_TARGETBRANCH:-}" ]; then
@@ -90,6 +97,37 @@ if [ "$source" = "HEAD" ] || [ "$source" = "$target" ]; then
   target_tip="$(git rev-parse FETCH_HEAD)"
   head_commit="$(git rev-parse HEAD)"
   base_commit="$(git merge-base "$head_commit" "$target_tip" 2>/dev/null || echo "$target_tip")"
+
+  # --- The branch point must not be HEAD itself (KOM-16 G1) -------------------------------------
+  # On a CI run of the target branch, HEAD is the branch tip, so the merge-base above IS HEAD and
+  # every gitlink then compares equal to itself: 26 x "=" and a green run that verified nothing.
+  # That is how the 2026-09-11 state reached develop unremarked. A developer with unpushed commits
+  # is NOT affected - there the merge-base is the published tip, which is exactly what we want - so
+  # this only engages when the comparison would otherwise be empty.
+  if [ "$base_commit" = "$head_commit" ]; then
+    # A shallow CI checkout has no predecessor locally. Deepen first; harmless in a full clone,
+    # where depth_args deliberately emits nothing.
+    da2=(); mapfile -t da2 < <(depth_args 50)
+    git "${auth[@]}" fetch -q ${da2[@]+"${da2[@]}"} origin "$target" 2>/dev/null </dev/null || true
+    prev=""
+    # The previous green run of THIS pipeline on THIS branch is the honest baseline: "everything up
+    # to here was already approved". Read-only, and the build identity holds Read - it could not
+    # write a marker ref even if we wanted one (effectiveAllow=34, no GenericContribute).
+    if [ -n "${SYSTEM_ACCESSTOKEN:-}" ] && [ -n "${SYSTEM_DEFINITIONID:-}" ] && command -v curl >/dev/null 2>&1; then
+      prev="$(curl -sf -H "Authorization: Bearer ${SYSTEM_ACCESSTOKEN}" \n        "${SYSTEM_TEAMFOUNDATIONCOLLECTIONURI}${SYSTEM_TEAMPROJECTID}/_apis/build/builds?definitions=${SYSTEM_DEFINITIONID}&branchName=${BUILD_SOURCEBRANCH}&resultFilter=succeeded&statusFilter=completed&queryOrder=finishTimeDescending&\$top=1&api-version=7.1" \n        2>/dev/null | sed -n 's/.*"sourceVersion":"\([0-9a-f]\{40\}\)".*//p' | head -1)"
+      [ -n "$prev" ] && git "${auth[@]}" fetch -q --filter=blob:none origin "$prev" 2>/dev/null </dev/null || true
+    fi
+    if [ -n "$prev" ] && [ "$prev" != "$head_commit" ] \n       && git cat-file -e "${prev}^{commit}" 2>/dev/null \n       && git merge-base --is-ancestor "$prev" "$head_commit" 2>/dev/null; then
+      base_commit="$prev"
+      echo "NOTE: branch point taken from the last successful run of this pipeline on '$target'."
+    elif git rev-parse -q --verify "${head_commit}^1" >/dev/null 2>&1; then
+      base_commit="$(git rev-parse "${head_commit}^1")"
+      echo "NOTE: no usable predecessor from the build history; comparing against the first parent."
+      echo "      A push of several commits is then only checked from its last one."
+    else
+      echo "##vso[task.logissue type=warning]cannot establish a branch point for '$target': this run compares HEAD with itself and verifies nothing."
+    fi
+  fi
 else
   base_commit=""
   for d in "$DEPTH" 250 2000; do
@@ -101,6 +139,22 @@ else
   done
   [ -z "$base_commit" ] && { echo "WARN: no merge-base in history; comparing against target tip"; base_commit="$target_tip"; }
 fi
+# --- Replay overrides (KOM-16 G6) --------------------------------------------------------------
+# Drive the guard over an arbitrary pair of superproject commits, so a historical state or a test
+# fixture can be examined through the same code path CI uses. Both commits must already be present
+# locally: this deliberately fetches nothing of its own.
+#
+# Placed AFTER every resolution path so no branch of the logic can defeat it, and BEFORE the line
+# below so the log always names the commits actually used - an override that does not appear in the
+# output is how a replay gets mistaken for a live verdict.
+#
+# rev-parse --verify rather than plain assignment: a mistyped SHA would otherwise reach gitlink_at,
+# yield an empty pin, and be classified as "added or removed" - a silent wrong answer.
+if [ -n "${GUARD_BASE:-}" ] || [ -n "${GUARD_HEAD:-}" ]; then
+  base_commit="$(git rev-parse --verify "${GUARD_BASE:-$base_commit}^{commit}")" || exit 1
+  head_commit="$(git rev-parse --verify "${GUARD_HEAD:-$head_commit}^{commit}")" || exit 1
+  echo "REPLAY: endpoints overridden by GUARD_BASE/GUARD_HEAD - this is not a live verdict"
+fi
 echo "Submodule guard: source ${head_commit:0:10} vs branch-point ${base_commit:0:10} (target '$target')"
 echo ""
 
@@ -111,12 +165,37 @@ gitlink_at() { git -C "$1" ls-tree "$2" -- "$3" 2>/dev/null | awk '$2=="commit"{
 # SIGPIPE git log, which fails the script under `set -o pipefail` even on a match.
 has_override() {
   local body esc
-  body="$(git log --format='%B' -n "$DEPTH" "$head_commit" 2>/dev/null)"
+  # base..head, NOT "-n $DEPTH back from the tip" (KOM-16 G5). Counting back from the tip reaches
+  # commits the branch merely inherited from the target, so a trailer written for some earlier,
+  # unrelated downgrade silently excuses this one. Only commits this branch added may count.
+  body="$(git log --format='%B' "${base_commit}..${head_commit}" 2>/dev/null)"
   esc="$(printf '%s' "$1" | sed 's/[][\\.^$*+?(){}|]/\\&/g')"
   grep -iqE "^${TRAILER}:[[:space:]]*${esc}[[:space:]]*$" <<<"$body"
 }
 
 report() {  # $1=display path  $2=kind  $3=base sha  $4=head sha  $5=commits dropped  $6=nested?
+  # A rewrite needs a different remedy from a downgrade, so it gets its own report. The generic one
+  # below says "checkout the base commit", which for a rewrite moves the pointer BACKWARDS - and
+  # after a squash the base commit is frequently on no branch at all, so that advice can manufacture
+  # the very dangling gitlink this guard exists to prevent.
+  if [ "$2" = REWRITTEN ]; then
+    {
+      echo ""
+      echo "  $1 ($5 commit(s) no longer reachable from this pointer):"
+      echo "    branch point: $3"
+      echo "    this branch : $4   <-- REWRITTEN"
+      echo "  The two trees are IDENTICAL: no content changed. The ancestry was cut, which is what"
+      echo "  a squash or rebase merge produces."
+      echo "  Restore the ancestry (copy-paste from the superproject root):"
+      echo "    git -C $1 fetch origin"
+      echo "    git -C $1 checkout $target && git -C $1 merge $3"
+      echo "    # push the submodule FIRST, then bump the gitlink that points at $1"
+      echo "  Intentional? add this trailer to a commit on this branch:"
+      echo "    $TRAILER: $1"
+    } >&2
+    echo "##vso[task.logissue type=error]$1: submodule REWRITTEN - same content, ancestry cut (squash or rebase). Merge $3 back into its $target, or add '$TRAILER: $1' to override."
+    return
+  fi
   {
     echo ""
     echo "  $1 (drops $5 commit(s)):"
@@ -153,7 +232,7 @@ check_level() {
     rm -f "$gm"; return 0            # no submodules at this level
   fi
 
-  local key path name url disp bs hs tmp sub curl_url clone_err kind dropped nested
+  local key path name url disp bs hs tmp sub curl_url clone_err kind dropped nested bt ht refs_known holders added
   nested="top"; [ "$level" -gt 1 ] && nested="nested"
 
   while read -r key path; do
@@ -171,10 +250,22 @@ check_level() {
 
     bs="$(gitlink_at "$repo" "$base" "$path")"
     hs="$(gitlink_at "$repo" "$head" "$path")"
-    if [ -z "$bs" ] || [ -z "$hs" ]; then
-      summary+=("? $disp (added or removed)"); continue
+    if [ -z "$hs" ]; then
+      # Declared in .gitmodules but no gitlink at head: nothing to point at, nothing to judge.
+      summary+=("? $disp (declared, no gitlink at head)"); continue
     fi
-    if [ "$bs" = "$hs" ]; then
+    added=""
+    if [ -z "$bs" ]; then
+      # A submodule this branch ADDS has no base pin, so there is no direction to check - but the
+      # pin itself still has to be sound. Skipping it outright, as this used to, left a new
+      # submodule free to point at an orphaned commit, or off the target branch, unexamined.
+      # Treating the base as equal to the head runs every pin-level check and no comparison.
+      added=1; bs="$hs"
+    fi
+    # The shortcut is unavailable on a run of the protected branch itself: an UNCHANGED pointer
+    # can still be sitting off that branch - ModuleStatistics did, for two weeks - and skipping
+    # it skips the whole subtree beneath it too. See G4 below.
+    if [ "$bs" = "$hs" ] && [ "$source" != "$target" ] && [ -z "$added" ]; then
       summary+=("= $disp"); continue   # identical pointer => whole subtree identical
     fi
 
@@ -192,7 +283,15 @@ check_level() {
     # A non-shallow local working copy is preferred when present: that is the developer case,
     # where it is both correct and faster than a network clone.
     tmp=""; sub=""
-    if git -C "${WORKTREE}/${disp}" rev-parse --git-dir >/dev/null 2>&1 \
+    # --show-prefix, not --git-dir (KOM-16 G7). An UNINITIALISED submodule is an empty directory, and
+    # git answers a question asked inside it by walking UP to the enclosing repository - so --git-dir
+    # succeeded there, and the guard went on to compare the superproject (or the parent submodule)
+    # against itself and report "endpoints missing". --show-prefix is empty ONLY at a repository root
+    # and names the subdirectory otherwise, which is exactly the distinction wanted; it also needs no
+    # path normalisation, since the answer never leaves git.
+    # CI never hit this: its checkout is shallow, so the is-shallow test below failed first and the
+    # clone path was taken. A developer who clones without --recursive hits it immediately.
+    if [ -z "$(git -C "${WORKTREE}/${disp}" rev-parse --show-prefix 2>/dev/null || echo not-a-repo)" ] \
        && [ "$(git -C "${WORKTREE}/${disp}" rev-parse --is-shallow-repository 2>/dev/null)" != "true" ]; then
       sub="${WORKTREE}/${disp}"
     else
@@ -209,11 +308,87 @@ check_level() {
       sub="$tmp"
     fi
     # Both endpoints must be present locally to compare them.
-    git -C "$sub" "${auth[@]}" fetch -q --filter=blob:none origin "$bs" "$hs" 2>/dev/null </dev/null || true
+    # The refspec rides along so G3 below judges reachability against CURRENT server refs. Without
+    # it a colleague's push from five minutes ago looks orphaned in a developer's clone.
+    git -C "$sub" "${auth[@]}" fetch -q --filter=blob:none origin "$bs" "$hs" "+refs/heads/*:refs/remotes/origin/*" 2>/dev/null </dev/null || true
 
     if ! git -C "$sub" cat-file -e "${bs}^{commit}" 2>/dev/null || ! git -C "$sub" cat-file -e "${hs}^{commit}" 2>/dev/null; then
       echo "##vso[task.logissue type=error]$disp: cannot resolve both endpoints ($bs, $hs) in $sub."
       fail=1; summary+=("X $disp (endpoints missing)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
+    fi
+
+    # --- Is the new pin held by any ref at all? (KOM-16 G3) -------------------------------------
+    # Direction is not the only way a pointer goes wrong. On 2026-09-11 all eleven bad pins moved
+    # FORWARD and were waved through, while pointing at commits no ref held - one server GC away
+    # from breaking "git submodule update --init --recursive" permanently, for everyone, on every
+    # superproject commit that references them. Checked here, above the ancestry branch, because
+    # that is precisely the case the ancestry test approves.
+    #
+    # refs/remotes AND refs/tags: a commit held only by a release tag is not a GC candidate either,
+    # and calling it orphaned would be wrong. Local branches are excluded on purpose - what sits in
+    # one developer clone keeps nothing alive on the server.
+    refs_known="$(git -C "$sub" for-each-ref --count=1 --format='x' refs/remotes refs/tags 2>/dev/null | wc -l)"
+    holders="$(git -C "$sub" for-each-ref --count=1 --format='%(refname)' --contains "$hs" refs/remotes refs/tags 2>/dev/null)"
+    # The temp clone is made with --no-tags, so an absent tag would look like an absent commit. Pay
+    # for tags only when the pin already looks orphaned, which is rare.
+    if [ -z "$holders" ] && [ -n "$tmp" ]; then
+      git -C "$sub" "${auth[@]}" fetch -q --tags origin 2>/dev/null </dev/null || true
+      holders="$(git -C "$sub" for-each-ref --count=1 --format='%(refname)' --contains "$hs" refs/remotes refs/tags 2>/dev/null)"
+    fi
+    if [ "$refs_known" -eq 0 ]; then
+      # Proved nothing. Say so and let the ancestry verdict stand on its own, rather than accusing.
+      echo "##vso[task.logissue type=warning]$disp: no refs available, reachability of $hs not verified."
+    elif [ -z "$holders" ]; then
+      {
+        echo ""
+        echo "  $disp: pin $hs is held by NO ref on the server."
+        echo "  This gitlink breaks 'git submodule update --init --recursive' as soon as the server"
+        echo "  prunes the object - for everyone, on every superproject commit that references it."
+        echo "  Rescue it before anything else (copy-paste from the superproject root):"
+        echo "    git -C $disp push origin $hs:refs/heads/archive/<name>"
+        echo "  Then point the gitlink at a commit that is actually on a branch."
+      } >&2
+      # No severity switch here, on purpose. A pin that exists on nothing is not a matter of
+      # taste: the superproject is already broken, it simply has not been noticed yet.
+      echo "##vso[task.logissue type=error]$disp: pin $hs is reachable from no ref."
+      fail=1; summary+=("X $disp (ORPHANED PIN)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
+    fi
+
+    # --- On the protected branch, every pin must be ON it (KOM-16 G4) ---------------------------
+    # Reachable-from-some-ref (G3) is the right strength for a feature branch, where a submodule PR
+    # may legitimately not have landed yet. It is too weak for develop itself: the pin must be on
+    # the submodule's own develop, or the superproject is publishing a state nobody can reproduce
+    # from the branches. Applies to every pin, changed or not - see the shortcut above.
+    if [ "$source" = "$target" ]; then
+      case " ${GUARD_OFF_BRANCH_EXEMPT:-} " in
+        *" $disp "*)
+          summary+=("? $disp (exempt from '$target' containment)")
+          [ -n "$tmp" ] && rm -rf "$tmp"; continue ;;
+      esac
+      if ! git -C "$sub" rev-parse -q --verify "refs/remotes/origin/${target}" >/dev/null 2>&1; then
+        echo "##vso[task.logissue type=error]$disp: the submodule has no '$target' branch, so its pin cannot be on one. If that is intended, list the path in GUARD_OFF_BRANCH_EXEMPT."
+        fail=1; summary+=("X $disp (no '$target' branch)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
+      fi
+      if ! git -C "$sub" merge-base --is-ancestor "$hs" "refs/remotes/origin/${target}" 2>/dev/null; then
+        {
+          echo ""
+          echo "  $disp: pin $hs is NOT on the submodule's '$target'."
+          echo "  ${target} must only ever point at commits that are on the submodules' ${target}, or"
+          echo "  the state it publishes cannot be reproduced from the branches."
+          echo "  Land the work in the submodule first, then bump the gitlink:"
+          echo "    git -C $disp checkout $target && git -C $disp merge $hs   # then push, then re-pin"
+        } >&2
+        echo "##vso[task.logissue type=error]$disp: pin $hs is not on the submodule's '$target'."
+        fail=1; summary+=("X $disp (OFF-${target^^})"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
+      fi
+    fi
+
+    # Unchanged pointer on a protected-branch run: nothing to classify, but DO descend - a nested
+    # pin can sit off-branch while its parent has not moved at all.
+    if [ "$bs" = "$hs" ]; then
+      if [ -n "$added" ]; then summary+=("+ $disp (added, pin checked)"); else summary+=("= $disp"); fi
+      check_level "$sub" "$bs" "$hs" "${disp}/" $((level + 1)) </dev/null
+      [ -n "$tmp" ] && rm -rf "$tmp"; continue
     fi
 
     if git -C "$sub" merge-base --is-ancestor "$bs" "$hs" 2>/dev/null; then
@@ -229,7 +404,14 @@ check_level() {
         echo "##vso[task.logissue type=error]$disp: history too shallow to relate $bs and $hs - cannot verify (deepen failed)."
         fail=1; summary+=("X $disp (indeterminate: shallow)"); [ -n "$tmp" ] && rm -rf "$tmp"; continue
       else
-        kind=DIVERGED
+        # Identical trees with a cut ancestry is not a divergence, it is a rewrite - what a
+        # squash or rebase merge produces. Saying so turns an unreadable wall of DIVERGED into
+        # one actionable sentence, and it changes the remedy: restoring the old commit is wrong
+        # when no content differs. Both endpoints are local by now, so this costs two rev-parse
+        # calls.
+        bt="$(git -C "$sub" rev-parse "${bs}^{tree}" 2>/dev/null || true)"
+        ht="$(git -C "$sub" rev-parse "${hs}^{tree}" 2>/dev/null || true)"
+        if [ -n "$bt" ] && [ "$bt" = "$ht" ]; then kind=REWRITTEN; else kind=DIVERGED; fi
       fi
       dropped="$(git -C "$sub" rev-list --count "${hs}..${bs}" 2>/dev/null || echo '?')"
       if has_override "$disp"; then
@@ -250,8 +432,24 @@ check_level() {
 
 check_level "$(pwd)" "$base_commit" "$head_commit" "" 1
 
+# --- A run that inspected nothing must never report success (KOM-16 G8) -------------------------
+# check_level returns quietly when it cannot read .gitmodules, and every probe under it is written
+# to fail soft. Without this, a walk that never started prints "<no submodules found>", leaves
+# fail=0 and exits green - indistinguishable on the dashboard from having checked all 26 gitlinks
+# and found them sound. That is the worst thing a guard can do, and it is how 2026-09-11 stayed
+# invisible for four days.
+declared="$(git show "${head_commit}:.gitmodules" 2>/dev/null | grep -cE '^[[:space:]]*path[[:space:]]*=' || true)"
+declared="${declared:-0}"
+if [ "$declared" -eq 0 ]; then
+  echo "##vso[task.logissue type=error]no submodule is declared in .gitmodules at ${head_commit:0:10} - refusing to report success on a walk that inspected nothing."
+  fail=1
+elif [ "${#summary[@]}" -lt "$declared" ]; then
+  echo "##vso[task.logissue type=error]inspected ${#summary[@]} gitlink(s) but the root .gitmodules declares $declared - the walk did not complete."
+  fail=1
+fi
+
 echo ""
-echo "guard summary  (= unchanged, ^ forward, ? skipped, ! overridden, X FAILED)"
+echo "guard summary  (= unchanged, ^ forward, + added, ? skipped, ! overridden, X FAILED)"
 if [ "${#summary[@]}" -eq 0 ]; then
   echo "  <no submodules found>"
 else
