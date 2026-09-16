@@ -80,12 +80,13 @@ steps:
   # detecting anything is caught here rather than by the next incident. See
   # pipelines/scripts/tests/run-guard-tests.sh and .vscode/OneMill-KOM-16-OneMillGuard.md.
   #
-  # continueOnError while this step has not yet run on a hosted agent: the suite is green on a
-  # Windows dev box, and it would be backwards to let an untried test step block real work. Flip it
-  # to blocking (delete the line) once it has passed here once.
+  # Blocking since 2026-09-16, build 1888694: 13/13 on ubuntu-latest (bash 5.2.21, git 2.55.0).
+  # It ran non-blocking first, and that was not ceremony - the first two hosted runs failed all 13
+  # cases because the suite honoured GUARD_SCRIPT, which is defined above as a REPO-RELATIVE path,
+  # while every case runs the guard from a temp fixture directory. The suite was green on Windows
+  # throughout. An untried test step should never be allowed to block real work.
   - bash: bash pipelines/scripts/tests/run-guard-tests.sh
     displayName: 'Self-test: prove the guard still detects what it claims'
-    continueOnError: true
 
   - bash: bash "$(GUARD_SCRIPT)"
     displayName: 'Guard: no submodule gitlink may move backwards'

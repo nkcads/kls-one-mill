@@ -82,9 +82,15 @@ It also demonstrates the blind spot rather than asserting it. `push_to_develop_i
 `source a8759d57 vs branch-point a8759d57` and then `OK`, and `orphan_pin` prints `^ sub (forward)`
 for a pin that exists on no branch anywhere.
 
-The suite runs as a step in `onemill-guard.yml` ahead of the real check, currently with
-`continueOnError: true` because it has not yet run on a hosted Linux agent. Delete that line once it
-has passed there once.
+The suite runs as a **blocking** step in `onemill-guard.yml` ahead of the real check, since build
+1888694 on 2026-09-16 — 13/13 on ubuntu-latest, bash 5.2.21, git 2.55.0.
+
+It ran non-blocking first, and that earned its keep immediately: the first two hosted runs failed
+all thirteen cases with `exit 127`, because the suite honoured `GUARD_SCRIPT` — which the pipeline
+defines as a *repo-relative* path, while every case runs the guard from a temp fixture directory.
+The suite had been green on Windows the whole time. The override is now `GUARD_TEST_SCRIPT` and the
+path is absolutised. Lesson worth keeping: green on one platform says nothing about the other, and
+an untried test step must never be allowed to block real work.
 
 ## 4. Constraints measured 2026-09-15
 
