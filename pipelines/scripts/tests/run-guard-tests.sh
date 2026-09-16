@@ -31,9 +31,16 @@ GUARD="${GUARD_SCRIPT:-$HERE/../check-submodule-downgrade.sh}"
 # shellcheck source=fixture-lib.sh
 . "$HERE/fixture-lib.sh"
 
+printf 'guard under test : %s
+' "$GUARD"
+printf 'bash             : %s
+' "$BASH_VERSION"
+printf 'git              : %s
+' "$(git --version 2>&1)"
+
 ROOT="$(mktemp -d)"
 trap 'rm -rf "$ROOT"' EXIT
-pass=0; pend=0; err=0; results=()
+pass=0; pend=0; err=0; results=(); failed_output=()
 
 # ------------------------------------------------------------------ fixture shorthands
 
@@ -299,6 +306,10 @@ for name in "${want[@]}"; do
   else
     got="$(printf '%s' "$summary" | tr '\n' ';')"
     results+=("FAIL|$name|exit $RC want $EXPECT_EXIT; summary: $got")
+    # A FAIL row that says nothing is useless - keep what the guard actually printed.
+    failed_output+=("$name")
+    printf '%s
+' "$OUT" > "$ROOT/$name.fail.log"
     err=$((err + 1))
   fi
   # Full guard output per case, on request. Useful for PENDING cases too: it is worth checking that
@@ -313,6 +324,13 @@ for r in "${results[@]}"; do
   printf '%-16s %-30s %s\n' "$s" "$n" "$note"
 done
 printf '\n  %d passed, %d pending, %d failed\n\n' "$pass" "$pend" "$err"
+for n in ${failed_output[@]+"${failed_output[@]}"}; do
+  printf '
+----- captured output: %s -----
+' "$n"
+  sed 's/^/  /' "$ROOT/$n.fail.log"
+done
+
 if [ "$err" -eq 0 ]; then
   echo "OK: the guard behaves as specified (pending items excluded)."
 else
