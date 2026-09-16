@@ -26,8 +26,14 @@
 
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GUARD="${GUARD_SCRIPT:-$HERE/../check-submodule-downgrade.sh}"
+# GUARD_TEST_SCRIPT, not GUARD_SCRIPT: onemill-guard.yml already defines GUARD_SCRIPT as a
+# repo-relative path and ADO exports pipeline variables into the environment, so the old name
+# silently inherited it - which is what made the first hosted-agent run report 13 x exit 127.
+GUARD="${GUARD_TEST_SCRIPT:-$HERE/../check-submodule-downgrade.sh}"
 [ -f "$GUARD" ] || { echo "guard script not found: $GUARD" >&2; exit 2; }
+# Absolutise it. Every case runs the guard from inside a temp fixture directory, so a relative
+# path resolves against the repo root at startup and against nothing whatsoever a moment later.
+GUARD="$(cd "$(dirname "$GUARD")" && pwd)/$(basename "$GUARD")"
 # shellcheck source=fixture-lib.sh
 . "$HERE/fixture-lib.sh"
 
