@@ -23,6 +23,10 @@
 #   ONEMILL_VERSION_NUMERIC   2.2.0.60         four fields, each at most 65535
 #   ONEMILL_VERSION_MAJOR, ONEMILL_VERSION_MINOR, ONEMILL_VERSION_PATCH, ONEMILL_VERSION_BUILD
 #   ONEMILL_VERSION_HASH      short commit hash; empty when git is unavailable
+#
+# onemill_add_version_info(<target>...) stamps that version into binaries as a VERSIONINFO
+# resource (cmake/VersionInfo.rc.in) - what Explorer's Details tab shows, and what AppLocker
+# publisher rules read.
 
 set(ONEMILL_VERSION "" CACHE STRING
   "Product version X.Y.Z[.N][-label], e.g. 2.2.0.60-alpha. Empty = derive from git. CI passes its build number.")
@@ -164,3 +168,56 @@ unset(_onemill_version)
 unset(_onemill_version_origin)
 unset(_onemill_hash)
 unset(_onemill_rc)
+
+# Gives every listed executable and shared or module library a VERSIONINFO resource carrying the
+# product version. Anything else - static libraries, custom targets - is skipped, so a caller can
+# pass a whole target walk. The .rc is rewritten only when its content changes, so an unchanged
+# version relinks nothing.
+function(onemill_add_version_info)
+  if(NOT WIN32)
+    return()
+  endif()
+
+  # A suffix (alpha, beta, a branch name, local) marks a build that is not a release.
+  if(ONEMILL_VERSION_FULL MATCHES "-")
+    set(_rc_flags "VS_FF_PRERELEASE")
+  else()
+    set(_rc_flags "0x0L")
+  endif()
+  set(_rc_comments "${ONEMILL_VERSION_FULL}")
+  if(NOT ONEMILL_VERSION_HASH STREQUAL "")
+    string(APPEND _rc_comments " (${ONEMILL_VERSION_HASH})")
+  endif()
+
+  foreach(_target IN LISTS ARGN)
+    get_target_property(_type ${_target} TYPE)
+    if(_type STREQUAL "EXECUTABLE")
+      set(_rc_type "VFT_APP")
+      set(_suffix ".exe")
+    elseif(_type STREQUAL "SHARED_LIBRARY" OR _type STREQUAL "MODULE_LIBRARY")
+      set(_rc_type "VFT_DLL")
+      set(_suffix ".dll")
+    else()
+      continue()
+    endif()
+
+    get_target_property(_rc_name ${_target} OUTPUT_NAME)
+    if(NOT _rc_name)
+      set(_rc_name "${_target}")
+    endif()
+    set(_rc_filename "${_rc_name}${_suffix}")
+
+    if(_target STREQUAL "MainApp")
+      set(_rc_description "KLSOneMill")
+    elseif(_target MATCHES "^Module(.+)$")
+      # Plugin targets are all named Module<Name>; "Module ModuleView" would say it twice.
+      set(_rc_description "KLSOneMill Module ${CMAKE_MATCH_1}")
+    else()
+      set(_rc_description "KLSOneMill ${_target}")
+    endif()
+
+    set(_rc "${CMAKE_BINARY_DIR}/versioninfo/${_target}.rc")
+    configure_file("${CMAKE_SOURCE_DIR}/cmake/VersionInfo.rc.in" "${_rc}" @ONLY)
+    target_sources(${_target} PRIVATE "${_rc}")
+  endforeach()
+endfunction()
