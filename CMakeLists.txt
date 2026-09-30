@@ -122,6 +122,9 @@ include(${CMAKE_SOURCE_DIR}/cmake/ModuleWorksSDK.cmake)
 
 add_subdirectory(Modules)
 
+# The product version every first-party binary carries - see the file's header comment.
+include(${CMAKE_SOURCE_DIR}/cmake/OneMillVersion.cmake)
+
 
 # ModuleWorks setup
 
