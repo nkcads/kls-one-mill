@@ -511,12 +511,30 @@ stages:
                 $v = (Get-Item $p).VersionInfo.ProductVersion
                 if ($v -ne $want) { throw "$e carries version '$v', expected '$want'" }
               }
-              if ($entries.Count -lt 12) { throw "the first-party manifest lists only $($entries.Count) binaries, expected 12" }
+
+              # Modules: what the build produced, what install_full staged and what the manifest lists
+              # must be the same set - compared, not counted, so a module that builds but is never
+              # wired into install_full fails here, and no number has to follow the module count.
+              $built    = @(Get-ChildItem 'out/build/win-msvc-x64-relwithdebinfo/bin/RelWithDebInfo/modulesBert' -Filter *.dll -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
+              $stagedM  = @($dlls | ForEach-Object { $_.Name })
+              $listedM  = @($entries | Where-Object { $_ -like 'modulesBert/*.dll' } | ForEach-Object { $_.Substring('modulesBert/'.Length) })
+              Write-Host ("  modules built / staged / listed: {0} / {1} / {2}" -f $built.Count, $stagedM.Count, $listedM.Count)
+              if ($built.Count -eq 0) { throw "no module DLLs found in the build tree - cannot compare" }
+              $notStaged = @($built | Where-Object { $stagedM -notcontains $_ })
+              $notBuilt  = @($stagedM | Where-Object { $built -notcontains $_ })
+              $notListed = @($stagedM | Where-Object { $listedM -notcontains $_ })
+              $notThere  = @($listedM | Where-Object { $stagedM -notcontains $_ })
+              if ($notStaged) { throw "built but not staged by install_full: $($notStaged -join ', ')" }
+              if ($notBuilt)  { throw "staged but not built in this run: $($notBuilt -join ', ')" }
+              if ($notListed) { throw "staged but missing from the first-party manifest: $($notListed -join ', ')" }
+              if ($notThere)  { throw "listed in the first-party manifest but not staged: $($notThere -join ', ')" }
+              foreach ($exe in 'MainApp.exe', 'Updater.exe') {
+                if ($entries -notcontains $exe) { throw "the first-party manifest does not list $exe" }
+              }
 
               # Hard floors, deliberately generous: catch a grossly short payload without
               # failing on legitimate small drift between toolchains.
               if ($all.Count -lt 6000) { throw "staged tree has only $($all.Count) files - payload looks incomplete" }
-              if ($dlls.Count -lt 10)  { throw "only $($dlls.Count) module DLLs staged, expected 10" }
               Write-Host ""
               Write-Host "  staged tree passes its floors"
             displayName: 'Verify the staged tree is complete (not merely present)'
