@@ -71,7 +71,9 @@ stages:
     jobs:
       - job: ManageCapacity
         pool:
-          vmImage: 'ubuntu-latest'
+          # Pinned, not ubuntu-latest: that label moves to a new Ubuntu on Microsoft's date, and this
+          # job starts a billable instance - an image change should be ours to make and test.
+          vmImage: 'ubuntu-24.04'
         steps:
           - checkout: none
           - task: AWSShellScript@1
@@ -545,7 +547,8 @@ stages:
     jobs:
       - job: StopInstance
         pool:
-          vmImage: 'ubuntu-latest'
+          # Pinned for the same reason as ManageCapacity - and a failure here leaves an instance running.
+          vmImage: 'ubuntu-24.04'
         steps:
           - checkout: none
           - task: AWSShellScript@1
