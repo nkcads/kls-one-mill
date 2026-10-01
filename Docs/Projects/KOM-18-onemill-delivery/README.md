@@ -24,12 +24,12 @@ testers need signed builds.
 
 | What | State |
 | --- | --- |
-| KOM-19 | **V1–V5 implemented and tested on KLSOneMill4** (build, `install_full`, running app): version from git, VERSIONINFO in all 13 binaries, version in `mainAppConfig.json`, first-party manifest. V6 (pipeline) to V8 (merge into KOM-13) open. Local commits only, nothing pushed — [Workplan-Version.md §5](Workplan-Version.md#5-steps-v0v8) |
+| KOM-19 | **V0–V7 done.** Version from git, VERSIONINFO in all 13 binaries, version in `mainAppConfig.json`, first-party manifest — tested on KLSOneMill4 and in pipeline 824 ([run 1900118](https://dev.azure.com/cads-team/KLS%20OneMill/_build/results?buildId=1900118), green, `2.2.0.66-KOM-19-version-scheme`). Branch pushed to `origin/feature/KOM-19-version-scheme`. **Open: V8**, the merge into KOM-13 — [Workplan-Version.md §5](Workplan-Version.md#5-steps-v0v8) |
 | KOM-20 | Branch not created. Blocked on [S4](#shared-items-s1s4) for a real signed run; the pipeline block can be written before that |
-| Tags `v1.0.1` (`a5ca137`) and `v2.1.0` (`43f8ced`) | **Created locally** 2026-09-30, annotated — **not pushed**. Pushing needs Martin's explicit OK at that moment, before V6 |
+| Tags `v1.0.1` (`a5ca137`) and `v2.1.0` (`43f8ced`) | Created 2026-09-30 (annotated), **pushed 2026-10-01** |
 | Variable group `TrustedSigning-Shared` | Request to IT / an IPS Suite admin **sent**, **no answer yet** (as of 2026-09-30) |
 | Questions for Robert | Posted on [KOM-9](https://cads-team.atlassian.net/browse/KOM-9) (comment 92960) on 2026-09-29. RQ9 and RQ3 settled; follow-up posted 2026-09-30 (comment 93179) — see [below](#questions-for-robert-rq1rq9) |
-| Robert's answer — 2026-10-01 | Comment 93339: only skimmed it; asks that the decisions take **FixtureX** into account, which is to come into OneMill as a module. Martin replied (93349): KOM-19 and KOM-20 now; KOM-21 and KOM-22 are ideas still to be discussed in detail. Martin also posted the statistics-format note (93347, [VF13](Workplan-Version.md#1-what-onemill-has-today)). **FixtureX is not yet reflected in any decision here** — it matters for D2 and KOM-22 if it has its own team or release cycle |
+| Robert's answer — 2026-10-01 | Comment 93339: only skimmed it; asks that the decisions take **FixtureX** into account, which is to come into OneMill as a module. Martin replied (93349): KOM-19 and KOM-20 now; KOM-21 and KOM-22 are ideas still to be discussed in detail. Martin also posted the statistics-format note (93347, [VF13](Workplan-Version.md#1-what-onemill-has-today)). **FixtureX is not yet reflected in any decision here** — it matters for D2 and KOM-22 if it has its own team or release cycle. A first survey (2026-10-01) found that `Modules/ModuleFixture` is already the port of FixtureX into OneMill; Martin sees, at first glance, no conflict with the new versioning (KOM-19) or signing (KOM-20) — a ported module gets both automatically |
 | Build and deploy trees of this clone | Wiped 2026-09-30, rebuilt fresh on this branch 2026-09-30 / 10-01 (`MODULEWORKS_DIR` → `ModuleWorksSdk-2026-08-3-0`) |
 
 ## Shared items (S1–S4)
@@ -38,10 +38,10 @@ Things more than one story consumes. Each has one owner story; the others depend
 
 | ID | Item | Owner | Consumed by | State |
 | --- | --- | --- | --- | --- |
-| **S1** | **Version source** — one product version, computed from git locally and taken from `Build.BuildNumber` in CI | KOM-19 | KOM-20 (VERSIONINFO for publisher rules), KOM-21 (MSI `ProductVersion`) | ⬜ |
-| **S2** | **First-party manifest** — the list of binaries we build, generated where `install_full` stages | KOM-19 | KOM-20 (the signing allowlist), KOM-21 (what the installer must find signed) | ⬜ |
-| **S3** | **Pipeline 824 changes** — full fetch + tags, `CreateCadsVersion@3`, `buildSigned`, lane, artifact name | KOM-19 (version half), KOM-20 (signing half) | all | ⬜ |
-| **S4** | **Access and agent** — variable-group share and pipeline authorisation; GitVersion on the EC2 agent; later the .NET SDK for WiX | KOM-20 (share), KOM-19 (GitVersion), KOM-21 (.NET) | all | 🟡 share requested, unanswered |
+| **S1** | **Version source** — one product version, computed from git locally and taken from `Build.BuildNumber` in CI | KOM-19 | KOM-20 (VERSIONINFO for publisher rules), KOM-21 (MSI `ProductVersion`) | ✅ 2026-10-01 — `cmake/OneMillVersion.cmake` |
+| **S2** | **First-party manifest** — the list of binaries we build, generated where `install_full` stages | KOM-19 | KOM-20 (the signing allowlist), KOM-21 (what the installer must find signed) | ✅ 2026-10-01 — `<build>/first-party/<product>.txt` |
+| **S3** | **Pipeline 824 changes** — full fetch + tags, `CreateCadsVersion@3`, `buildSigned`, lane, artifact name | KOM-19 (version half), KOM-20 (signing half) | all | 🟡 version half ✅ 2026-10-01; signing half open |
+| **S4** | **Access and agent** — variable-group share and pipeline authorisation; GitVersion on the EC2 agent; later the .NET SDK for WiX | KOM-20 (share), KOM-19 (GitVersion), KOM-21 (.NET) | all | 🟡 GitVersion on the agent ✅ (run 1900118); share requested, unanswered |
 
 ## Decisions
 
