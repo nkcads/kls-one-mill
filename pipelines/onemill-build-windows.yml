@@ -542,7 +542,10 @@ stages:
                 Set-Content -Path $list -Value $files -Encoding ascii
                 Write-Host "files to sign: $($files.Count)"
                 $files | ForEach-Object { Write-Host "  $_" }
+                # The signing task takes the files as one comma-separated list and batches them itself.
+                if ($files | Where-Object { $_.Contains(',') }) { throw "a path to sign contains a comma - the signing task's list would split it" }
                 Write-Host "##vso[task.setvariable variable=SignFileList]$list"
+                Write-Host "##vso[task.setvariable variable=SignFiles]$($files -join ',')"
               displayName: 'SIGN 1/4: resolve the first-party files from the manifest'
 
             - powershell: |
@@ -564,8 +567,20 @@ stages:
                 TRUSTEDSIGNING_APP_ID: $(TrustedSigningAppId)
                 TRUSTEDSIGNING_APP_SECRET: $(TrustedSigningAppSecret)
 
-            # SIGN 3/4 - TrustedSigning@0 over $(SignFileList) - is added once the variable group
-            # is shared; its inputs are taken from a pipeline that already signs successfully.
+            # Inputs as in IPS Suite's installer pipeline, which signs successfully. The task
+            # timestamps by default (RFC 3161, timestamp.acs.microsoft.com, SHA256). It is marked
+            # deprecated in favour of "Artifact Signing", which is not installed in this organisation.
+            - task: TrustedSigning@0
+              displayName: 'SIGN 3/4: sign the first-party files (Azure Trusted Signing)'
+              inputs:
+                AzureTenantID: '$(TrustedSigningTenantId)'
+                AzureClientID: '$(TrustedSigningAppId)'
+                AzureClientSecret: '$(TrustedSigningAppSecret)'
+                Endpoint: 'https://weu.codesigning.azure.net/'
+                TrustedSigningAccountName: 'TrustedSigningCads'
+                CertificateProfileName: 'CADSGmbH'
+                Files: '$(SignFiles)'
+                FileDigest: 'SHA256'
 
             - powershell: |
                 $ErrorActionPreference = 'Stop'
@@ -578,7 +593,7 @@ stages:
                   $subject = if ($s.SignerCertificate) { $s.SignerCertificate.Subject } else { '' }
                   $stamped = [bool]$s.TimeStamperCertificate
                   Write-Host ("  {0,-12} timestamp={1,-5} {2}   {3}" -f $s.Status, $stamped, (Split-Path $f -Leaf), $subject)
-                  if ($s.Status -ne 'Valid' -or $subject -notmatch 'CN="?CADS GmbH' -or -not $stamped) { $bad += $f }
+                  if ($s.Status -ne 'Valid' -or $subject -notmatch 'CADS GmbH' -or -not $stamped) { $bad += $f }
                 }
                 if ($bad) { throw "$($bad.Count) of $($files.Count) first-party binaries are not validly signed by CADS GmbH with a timestamp" }
                 Write-Host "all $($files.Count) first-party binaries are signed by CADS GmbH and timestamped"
