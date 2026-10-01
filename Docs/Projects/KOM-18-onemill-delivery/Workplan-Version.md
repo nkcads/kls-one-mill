@@ -146,7 +146,7 @@ what he checks.
 
 | From | To |
 | --- | --- |
-| [§3](#3-target-scheme) target scheme + the tag convention | Root `README.md`, a short *Versioning* section — the one thing every contributor needs |
+| [§3](#3-target-scheme) target scheme + the tag convention | Root `README.md`, a short *Versioning* section — the one thing every contributor needs. ✅ **Done 2026-10-01** |
 | `OneMillVersion.cmake` behaviour | Its own header comment |
 | [VF3](#1-what-onemill-has-today) (version in a runtime-written file) and [VQ2](#6-open-points-vq) | A follow-up ticket if VQ2 is taken up; otherwise one comment in `update_version_json()` |
 | [VF7](#1-what-onemill-has-today) (`install_fitting` without `Updater.exe`) | Fixed in the merge or its own ticket |
