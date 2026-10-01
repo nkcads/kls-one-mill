@@ -520,9 +520,20 @@ stages:
               $zip = "out/artifact/$name.zip"
               # bsdtar ships with Windows Server and writes a real zip; Compress-Archive is slow
               # and awkward at this size. -C so the archive root is the install tree itself, not
-              # a nested out/install/... path.
-              tar -a -c -f $zip -C $staged .
+              # a nested out/install/... path. The top-level entries are named one by one rather
+              # than as '.': '.' makes bsdtar store every path as './...', and Windows Explorer's
+              # built-in zip support then shows the archive as empty and extracts nothing
+              # (7-Zip copes, which is why it looked like a user problem).
+              $top = @(Get-ChildItem $staged -Name)
+              tar -a -c -f $zip -C $staged @top
               if ($LASTEXITCODE -ne 0) { throw "zip creation failed ($LASTEXITCODE)" }
+              Add-Type -AssemblyName System.IO.Compression.FileSystem
+              $za = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $zip))
+              $dotted = @($za.Entries | Where-Object { $_.FullName.StartsWith('./') }).Count
+              $entries = $za.Entries.Count
+              $za.Dispose()
+              if ($dotted -gt 0) { throw "$dotted zip entries start with './' - Windows Explorer would show the archive as empty" }
+              Write-Host "zip entries: $entries, none prefixed with './'"
               $z = Get-Item $zip
               Write-Host ("zip: {0} MB" -f [math]::Round($z.Length/1MB,1))
               if ($z.Length -lt 300MB) { throw "zip is only $([math]::Round($z.Length/1MB,1)) MB - suspiciously small" }
