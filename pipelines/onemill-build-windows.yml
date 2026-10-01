@@ -19,7 +19,7 @@
 #
 # The agent was forked from a suite-aws-pool image and then provisioned with the FIVE external
 # dependencies OneMill needs: Qt 6.10.2, the Qt-enabled VTK 9.5 install tree, the licensed
-# ModuleWorks SDK with its mwSupport.lic in quickstart/, vcpkg at the pinned commit with 146
+# ModuleWorks SDK with its mwSupport.lic in bin/ (the 2026.08 layout), vcpkg at the pinned commit with 146
 # x64-windows-static packages, and the Polygonica SDK. Polygonica was missed on the first pass
 # because MillingBackend reads it from $ENV{POLYGONICA_DIR} as a fallback, so it never appeared in
 # CMakeUserPresets.json and no developer had to think about it - a clean agent found it in seconds.
@@ -28,20 +28,21 @@
 # two false negatives from its own arbitrary limits (-Depth 5, then -First 6). Configure replaced
 # it because find_package() resolving is the real question, not whether a file search finds a path.
 #
-# The staged tree is verified against the known-good dev box install (6626 files / 1994 MB / 10
-# module DLLs / 72 files per deps/ / 5991 interpreter files) before publishing. install_full
-# exiting 0 is not sufficient evidence: configure reports 40 install targets here where the dev box
-# reports 41, so a short payload is a live possibility, and an artifact that launches but is missing
-# a module or its config is worse than one that fails loudly in CI.
+# The staged tree is verified before publishing - not against reference numbers from some machine,
+# which drift with every SDK or dependency change, but against what has to be there: both exes,
+# every module DLL, each ModuleWorks deps/ with its licence, the interpreter, the product version,
+# and generous floors that only catch a grossly short payload. install_full exiting 0 is not
+# sufficient evidence: an artifact that launches but is missing a module or its config is worse
+# than one that fails loudly in CI.
 #
 # VERSION: CreateCadsVersion@3 (GitVersion, default configuration - the company scheme every other
 # CADS product uses) sets Build.BuildNumber to the product version, e.g. 2.2.0.60-alpha. It is passed
 # to configure as ONEMILL_VERSION, which stamps it into every first-party binary and into the
 # installed mainAppConfig.json; the verify step checks that all three agree.
 #
-# The zip is named from that version. It contains mwSupport.lic, because install_full stages it from the SDK's quickstart/ into
-# each ModuleWorks deps/ folder - the app does not run without it. Note that this means anyone with
-# project read access can download the licence; Robert's hand-built release zips already worked
+# The zip is named from that version. It contains mwSupport.lic, because the build copies it from
+# the SDK's bin/ into each ModuleWorks deps/ folder and install_full stages those - the app does
+# not run without it. Note that this means anyone with project read access can download the licence; Robert's hand-built release zips already worked
 # this way, so it is the existing distribution posture rather than a new one.
 #
 # NOTE the VsDevCmd step below is REQUIRED, not decorative: the agent runs as a machine account whose
@@ -368,7 +369,7 @@ stages:
               $igl = Join-Path $vc 'installed\x64-windows-static\include\igl'
               if (Test-Path $igl) {
                 $n = @(Get-ChildItem $igl -File).Count
-                Write-Host ("  vcpkg libigl headers: {0} files   (dev box: 922)" -f $n)
+                Write-Host ("  vcpkg libigl headers: {0} files" -f $n)
                 if (-not (Test-Path (Join-Path $igl 'raytri.c'))) {
                   throw ("libigl is missing raytri.c in $igl`n" +
                          "  The vcpkg port does not install it although its own ray_mesh_intersect.cpp " +
@@ -381,8 +382,8 @@ stages:
                 throw "no libigl headers under $igl - is ONEMILL_VCPKG_ROOT correct and the port installed?"
               }
               $mw = ([Environment]::GetEnvironmentVariable('ONEMILL_MODULEWORKS_DIR','Machine')) -replace '/','\'
-              if (-not (Test-Path (Join-Path $mw 'quickstart\mwSupport.lic'))) {
-                Write-Host "##vso[task.logissue type=warning]mwSupport.lic not found under $mw\quickstart - builds will succeed but ModuleWorks fails at RUNTIME"
+              if (-not (Test-Path (Join-Path $mw 'bin\mwSupport.lic'))) {
+                Write-Host "##vso[task.logissue type=warning]mwSupport.lic not found under $mw\bin - builds will succeed but ModuleWorks fails at RUNTIME"
               }
               Write-Host ""
               Write-Host "=== submodule tree ==="
@@ -425,23 +426,21 @@ stages:
               $staged = 'out/install/win-msvc-x64-relwithdebinfo'
               if (-not (Test-Path $staged)) { throw "install_full produced nothing at $staged" }
 
-              # Compare against the known-good local install tree rather than trusting that
-              # install_full exited 0. The configure step reported 40 install targets where the
-              # dev box reports 41, so a silently short payload is a live possibility - and an
+              # Check what has to be there rather than trusting that install_full exited 0 - an
               # artifact that downloads and launches but is missing a module or its config is
               # worse than one that fails loudly here.
-              Write-Host "=== staged tree vs the known-good dev box install ==="
+              Write-Host "=== staged tree ==="
               $all = Get-ChildItem $staged -Recurse -File
               $mb  = [math]::Round(($all | Measure-Object Length -Sum).Sum/1MB,0)
-              Write-Host ("  files            {0,6}   (dev box: 6626)" -f $all.Count)
-              Write-Host ("  size MB          {0,6}   (dev box: 1994)" -f $mb)
+              Write-Host ("  files            {0,6}" -f $all.Count)
+              Write-Host ("  size MB          {0,6}" -f $mb)
 
               $exes = (Get-ChildItem $staged -Filter *.exe).Name
               Write-Host ("  exes             {0}   (expect MainApp.exe, Updater.exe)" -f ($exes -join ', '))
 
               $modDir = Join-Path $staged 'modulesBert'
               $dlls = @(Get-ChildItem $modDir -Filter *.dll -ErrorAction SilentlyContinue)
-              Write-Host ("  module DLLs      {0,6}   (dev box: 10)" -f $dlls.Count)
+              Write-Host ("  module DLLs      {0,6}" -f $dlls.Count)
 
               Write-Host "  deps folders:"
               $depsOk = $true
@@ -451,7 +450,7 @@ stages:
                   $n = @(Get-ChildItem $d -Recurse -File).Count
                   $lic = Join-Path $d 'mwSupport.lic'
                   $licTxt = if (Test-Path $lic) { "$((Get-Item $lic).Length) bytes" } else { 'MISSING' }
-                  Write-Host ("      {0,-22} {1,4} files   mwSupport.lic: {2}   (dev box: 72 files)" -f $m, $n, $licTxt)
+                  Write-Host ("      {0,-22} {1,4} files   mwSupport.lic: {2}" -f $m, $n, $licTxt)
                   if (-not (Test-Path $lic)) { $depsOk = $false }
                 } else { Write-Host ("      {0,-22} MISSING" -f $m); $depsOk = $false }
               }
@@ -459,7 +458,7 @@ stages:
               $ip = Join-Path $modDir 'ModulePostProcessor\interpreter'
               if (Test-Path $ip) {
                 $n = @(Get-ChildItem $ip -Recurse -File).Count
-                Write-Host ("  interpreter      {0,6}   (dev box: 5991)" -f $n)
+                Write-Host ("  interpreter      {0,6}" -f $n)
               } else {
                 Write-Host "  interpreter      ABSENT"
                 Write-Host "##vso[task.logissue type=error]No interpreter/ staged. deploy_ppf.exe must be run ONCE on this agent to create PYPY_SOURCE - see .vscode/OneMill-Setup-Ledger.md fix 8. The PostProcessor module cannot work without it."
@@ -488,7 +487,7 @@ stages:
               $manifest = 'out/build/win-msvc-x64-relwithdebinfo/first-party/KLSOneMill.txt'
               if (-not (Test-Path $manifest)) { throw "no first-party manifest at $manifest" }
               $entries = @(Get-Content $manifest | Where-Object { $_ })
-              Write-Host ("  first-party manifest {0,6}   (dev box: 12)" -f $entries.Count)
+              Write-Host ("  first-party manifest {0,6}" -f $entries.Count)
               foreach ($e in $entries) {
                 $p = Join-Path $staged $e
                 if (-not (Test-Path $p)) { throw "the manifest lists $e, which is not in the staged tree" }
@@ -499,7 +498,7 @@ stages:
 
               # Hard floors, deliberately generous: catch a grossly short payload without
               # failing on legitimate small drift between toolchains.
-              if ($all.Count -lt 6000) { throw "staged tree has only $($all.Count) files, expected ~6626 - payload looks incomplete" }
+              if ($all.Count -lt 6000) { throw "staged tree has only $($all.Count) files - payload looks incomplete" }
               if ($dlls.Count -lt 10)  { throw "only $($dlls.Count) module DLLs staged, expected 10" }
               Write-Host ""
               Write-Host "  staged tree passes its floors"
@@ -523,7 +522,7 @@ stages:
               tar -a -c -f $zip -C $staged .
               if ($LASTEXITCODE -ne 0) { throw "zip creation failed ($LASTEXITCODE)" }
               $z = Get-Item $zip
-              Write-Host ("zip: {0} MB   (dev box tree zips to ~631 MB at 3.16x)" -f [math]::Round($z.Length/1MB,1))
+              Write-Host ("zip: {0} MB" -f [math]::Round($z.Length/1MB,1))
               if ($z.Length -lt 300MB) { throw "zip is only $([math]::Round($z.Length/1MB,1)) MB - suspiciously small" }
               Write-Host "##vso[task.setvariable variable=ArtifactName]$name"
             displayName: 'Package the staged tree as a named zip'
