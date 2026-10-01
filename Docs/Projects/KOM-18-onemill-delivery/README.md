@@ -20,16 +20,17 @@ KOM-18 … KOM-22 and are **not** restated here ([D7](#decisions)).
 `feature/KOM-13-machine-simulation` as soon as it lands, not batched ([D4](#decisions)): KOM-13's internal
 testers need signed builds.
 
-## Current state — 2026-09-30
+## Current state — 2026-10-01
 
 | What | State |
 | --- | --- |
-| KOM-19 | Branch exists, submodules on `develop`'s gitlinks, tree clean. Nothing implemented. Work plan written |
+| KOM-19 | **V1–V5 implemented and tested on KLSOneMill4** (build, `install_full`, running app): version from git, VERSIONINFO in all 13 binaries, version in `mainAppConfig.json`, first-party manifest. V6 (pipeline) to V8 (merge into KOM-13) open. Local commits only, nothing pushed — [Workplan-Version.md §5](Workplan-Version.md#5-steps-v0v8) |
 | KOM-20 | Branch not created. Blocked on [S4](#shared-items-s1s4) for a real signed run; the pipeline block can be written before that |
-| Tags `v1.0.1` (`a5ca137`) and `v2.1.0` (`43f8ced`) | Agreed, **not created**. Pushing needs Martin's explicit OK at that moment |
+| Tags `v1.0.1` (`a5ca137`) and `v2.1.0` (`43f8ced`) | **Created locally** 2026-09-30, annotated — **not pushed**. Pushing needs Martin's explicit OK at that moment, before V6 |
 | Variable group `TrustedSigning-Shared` | Request to IT / an IPS Suite admin **sent**, **no answer yet** (as of 2026-09-30) |
 | Questions for Robert | Posted on [KOM-9](https://cads-team.atlassian.net/browse/KOM-9) (comment 92960) on 2026-09-29. RQ9 and RQ3 settled; follow-up posted 2026-09-30 (comment 93179) — see [below](#questions-for-robert-rq1rq9) |
-| Build and deploy trees of this clone | `D:/BuildDirectory/KLSOneMill4`, `D:/deployData/KLSOneMill4` wiped 2026-09-30; configure fresh for this branch |
+| Robert's answer — 2026-10-01 | Comment 93339: only skimmed it; asks that the decisions take **FixtureX** into account, which is to come into OneMill as a module. Martin replied (93349): KOM-19 and KOM-20 now; KOM-21 and KOM-22 are ideas still to be discussed in detail. Martin also posted the statistics-format note (93347, [VF13](Workplan-Version.md#1-what-onemill-has-today)). **FixtureX is not yet reflected in any decision here** — it matters for D2 and KOM-22 if it has its own team or release cycle |
+| Build and deploy trees of this clone | Wiped 2026-09-30, rebuilt fresh on this branch 2026-09-30 / 10-01 (`MODULEWORKS_DIR` → `ModuleWorksSdk-2026-08-3-0`) |
 
 ## Shared items (S1–S4)
 
