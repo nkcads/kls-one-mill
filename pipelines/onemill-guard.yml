@@ -51,7 +51,9 @@ pr:
       - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  # Pinned, not ubuntu-latest: that label moves to a new Ubuntu on Microsoft's date, and a guard
+  # that starts failing for an image change it did not ask for blocks every push it protects.
+  vmImage: 'ubuntu-24.04'
 
 variables:
   - name: GUARD_SCRIPT
