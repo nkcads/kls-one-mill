@@ -1,8 +1,8 @@
 # Code signing — work plan (KOM-20)
 
-Last updated: **2026-09-30**
-Status: **Nothing implemented. Branch `feature/KOM-20-code-signing` not yet created** — it branches from
-`feature/KOM-19-version-scheme`, because the allowlist is KOM-19's manifest ([S2](README.md#shared-items-s1s4)).
+Last updated: **2026-10-01**
+Status: **Nothing implemented.** Branch `feature/KOM-20-code-signing` created 2026-10-01 from `develop` @ `4243a27`,
+which contains KOM-19 and with it the allowlist, KOM-19's first-party manifest ([S2](README.md#shared-items-s1s4)).
 
 > Scope and acceptance criteria are in **[KOM-20](https://cads-team.atlassian.net/browse/KOM-20)**
 > ([D7](README.md#decisions)). This plan owns the signing half of **[S3](README.md#shared-items-s1s4)** and the
