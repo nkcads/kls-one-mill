@@ -57,6 +57,16 @@
 trigger: none
 pr: none
 
+# SIGNING: off by default. A signed run takes the Trusted Signing credentials from the shared
+# variable group, signs exactly the binaries the first-party manifest lists - never a wildcard - and
+# fails unless each one is then signed by CADS GmbH with a timestamp. Unsigned runs never reference
+# the variable group, so they work without access to it, and their steps are unchanged.
+parameters:
+  - name: buildSigned
+    displayName: 'Sign the first-party binaries (Azure Trusted Signing)'
+    type: boolean
+    default: false
+
 variables:
   CANDIDATE_AGENTS: 'i-0acdb789bdfe09eac'
   MAX_CONCURRENT_INSTANCES: 1        # limited by the org's parallel-job allocation
@@ -293,6 +303,11 @@ stages:
         timeoutInMinutes: 150
         pool:
           name: '$(SELF_HOSTED_POOL)'
+        # Only a signed run may reference the group - it is shared from project IPS Suite, and an
+        # unauthorised reference would stop every run at queue time, signed or not.
+        ${{ if eq(parameters.buildSigned, true) }}:
+          variables:
+            - group: TrustedSigning-Shared
         steps:
           # Configure walks add_subdirectory() into all 26 submodules, so the whole tree is
           # required - unlike the guard, which deliberately checks out none of them.
@@ -506,14 +521,77 @@ stages:
               Write-Host "  staged tree passes its floors"
             displayName: 'Verify the staged tree is complete (not merely present)'
 
+          # Signing, in the company's order: resolve the files, validate the credentials, sign,
+          # verify. Present only in a signed run.
+          - ${{ if eq(parameters.buildSigned, true) }}:
+            - powershell: |
+                $ErrorActionPreference = 'Stop'
+                # The allowlist is the first-party manifest install_full wrote - exactly our own
+                # binaries, as staged. Third-party DLLs never pass through it.
+                $staged   = (Resolve-Path 'out/install/win-msvc-x64-relwithdebinfo').Path
+                $manifest = 'out/build/win-msvc-x64-relwithdebinfo/first-party/KLSOneMill.txt'
+                if (-not (Test-Path $manifest)) { throw "no first-party manifest at $manifest - nothing to sign" }
+                $entries = @(Get-Content $manifest | Where-Object { $_ })
+                if ($entries.Count -eq 0) { throw "the first-party manifest is empty - nothing to sign" }
+                $files = foreach ($e in $entries) {
+                  $p = Join-Path $staged $e
+                  if (-not (Test-Path -LiteralPath $p)) { throw "the manifest lists $e, which is not in the staged tree" }
+                  (Resolve-Path -LiteralPath $p).Path
+                }
+                $list = Join-Path '$(Agent.TempDirectory)' 'onemill-sign-files.txt'
+                Set-Content -Path $list -Value $files -Encoding ascii
+                Write-Host "files to sign: $($files.Count)"
+                $files | ForEach-Object { Write-Host "  $_" }
+                Write-Host "##vso[task.setvariable variable=SignFileList]$list"
+              displayName: 'SIGN 1/4: resolve the first-party files from the manifest'
+
+            - powershell: |
+                $ErrorActionPreference = 'Stop'
+                # An undefined pipeline variable is passed on as its literal macro text, so that
+                # counts as missing too. Values are never printed.
+                $missing = @()
+                foreach ($n in 'TRUSTEDSIGNING_TENANT_ID', 'TRUSTEDSIGNING_APP_ID', 'TRUSTEDSIGNING_APP_SECRET') {
+                  $v = [Environment]::GetEnvironmentVariable($n)
+                  if ([string]::IsNullOrWhiteSpace($v) -or $v.StartsWith('$(')) { $missing += $n }
+                }
+                if ($missing) {
+                  throw "Trusted Signing credentials missing: $($missing -join ', ') - is the variable group TrustedSigning-Shared shared with this project and authorised for this pipeline?"
+                }
+                Write-Host "Trusted Signing credentials present"
+              displayName: 'SIGN 2/4: validate the signing credentials'
+              env:
+                TRUSTEDSIGNING_TENANT_ID: $(TrustedSigningTenantId)
+                TRUSTEDSIGNING_APP_ID: $(TrustedSigningAppId)
+                TRUSTEDSIGNING_APP_SECRET: $(TrustedSigningAppSecret)
+
+            # SIGN 3/4 - TrustedSigning@0 over $(SignFileList) - is added once the variable group
+            # is shared; its inputs are taken from a pipeline that already signs successfully.
+
+            - powershell: |
+                $ErrorActionPreference = 'Stop'
+                # Certificates live about three days, so a signature without a timestamp would stop
+                # verifying within days. The publisher is what allow rules match on.
+                $files = @(Get-Content '$(SignFileList)')
+                $bad = @()
+                foreach ($f in $files) {
+                  $s = Get-AuthenticodeSignature -LiteralPath $f
+                  $subject = if ($s.SignerCertificate) { $s.SignerCertificate.Subject } else { '' }
+                  $stamped = [bool]$s.TimeStamperCertificate
+                  Write-Host ("  {0,-12} timestamp={1,-5} {2}   {3}" -f $s.Status, $stamped, (Split-Path $f -Leaf), $subject)
+                  if ($s.Status -ne 'Valid' -or $subject -notmatch 'CN="?CADS GmbH' -or -not $stamped) { $bad += $f }
+                }
+                if ($bad) { throw "$($bad.Count) of $($files.Count) first-party binaries are not validly signed by CADS GmbH with a timestamp" }
+                Write-Host "all $($files.Count) first-party binaries are signed by CADS GmbH and timestamped"
+              displayName: 'SIGN 4/4: every first-party binary is signed by CADS GmbH, with a timestamp'
+
           - powershell: |
               $ErrorActionPreference = 'Stop'
               $staged = 'out/install/win-msvc-x64-relwithdebinfo'
 
               # Named from the product version, which the verify step has just checked against
               # MainApp.exe and mainAppConfig.json. It carries its own build identity - the commit
-              # count - so two artifacts are never ambiguous.
-              $name = "KLSOneMill-$(Build.BuildNumber)-relwithdebinfo"
+              # count - so two artifacts are never ambiguous; a signed one says so.
+              $name = "KLSOneMill-$(Build.BuildNumber)-relwithdebinfo${{ iif(eq(parameters.buildSigned, true), '-signed', '') }}"
               Write-Host "artifact name: $name"
 
               New-Item -ItemType Directory -Force 'out/artifact' | Out-Null

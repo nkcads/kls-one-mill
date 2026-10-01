@@ -63,13 +63,13 @@ not written from the task documentation.
 | ID | Step | Exit criterion | Status |
 | --- | --- | --- | --- |
 | **SG0** | **Access** ([S4](README.md#shared-items-s1s4)) — `TrustedSigning-Shared` shared with project KLS OneMill and authorised for pipeline 824 | The group appears in KLS OneMill's library and 824 may use it | 🟡 **request sent to IT, no answer yet** (2026-09-30) |
-| **SG1** | **`buildSigned` parameter**, default `false`, following IPS | An unsigned run is byte-for-byte the pipeline it was | ⬜ |
-| **SG2** | **Resolve files + validate secrets** | A signed run with an empty manifest or an unset secret fails with a message naming it | ⬜ needs KOM-19 [V5](Workplan-Version.md#5-steps-v0v8) |
-| **SG3** | **Sign** with `TrustedSigning@0` | The run log lists exactly the manifest's files, nothing else | ⬜ needs SG0 |
-| **SG4** | **Verify** — any unsigned first-party binary fails the build; `MainApp.exe` must be signed by *CADS GmbH* and timestamped | A deliberately skipped file fails the run | ⬜ |
-| **SG5** | **Artifact identity** — a signed artifact is distinguishable from an unsigned one by name | Name carries the version from KOM-19 and a signed marker | ⬜ |
+| **SG1** | **`buildSigned` parameter**, default `false`, following IPS | An unsigned run is byte-for-byte the pipeline it was | 🟡 **implemented 2026-10-01, not yet run.** The variable group is referenced only inside `${{ if eq(parameters.buildSigned, true) }}` at job level, so an unsigned run never needs access to it. Pipeline preview (expansion only): the unsigned expansion differs from `develop` only by the parameter declaration and the artifact-name line, whose `iif` yields an empty string |
+| **SG2** | **Resolve files + validate secrets** | A signed run with an empty manifest or an unset secret fails with a message naming it | 🟡 **implemented 2026-10-01, not yet run** — `SIGN 1/4` resolves the manifest against the staged tree and fails on an empty or missing manifest or a listed file that is absent; `SIGN 2/4` fails naming each missing credential (an undefined variable arrives as its literal macro text and counts as missing) |
+| **SG3** | **Sign** with `TrustedSigning@0` | The run log lists exactly the manifest's files, nothing else | ⬜ needs SG0, and the task inputs from a pipeline that already signs (IPS Suite installer CI, definition 695). A placeholder comment marks the slot between `SIGN 2/4` and `SIGN 4/4` |
+| **SG4** | **Verify** — any unsigned first-party binary fails the build; `MainApp.exe` must be signed by *CADS GmbH* and timestamped | A deliberately skipped file fails the run | 🟡 **implemented 2026-10-01, not yet run** — `SIGN 4/4` checks every manifest file: status `Valid`, signer subject `CN=CADS GmbH`, timestamp present. **The subject is an assumption** until a CADS Trusted Signing signature has been read (none installed on this PC) |
+| **SG5** | **Artifact identity** — a signed artifact is distinguishable from an unsigned one by name | Name carries the version from KOM-19 and a signed marker | 🟡 **implemented 2026-10-01** — `KLSOneMill-<version>-relwithdebinfo-signed.zip` in a signed run, unchanged otherwise |
 | **SG6** | **Field test at KLS Martin** — a colleague starts a signed build on a managed machine; the error before and after is recorded here verbatim ([KQ1](#5-questions-for-kls-martin-it-kq)) | OneMill starts, every module loads | ⬜ |
-| **SG7** | **KLSOneAnalyse** — the same block for its deployment, once CI builds it. Depends on [VF7](Workplan-Version.md#1-what-onemill-has-today) (`install_fitting` looks broken on `develop`) | A signed KLSOneAnalyse artifact | ⬜ |
+| **SG7** | **KLSOneAnalyse** — the same block for its deployment, once CI builds it. Depends on [VF7](Workplan-Version.md#1-what-onemill-has-today) (`install_fitting` broken on `develop`; already fixed on KOM-13, arrives with V8) | A signed KLSOneAnalyse artifact | ⬜ |
 
 ## 5. Questions for KLS Martin IT (KQ)
 
