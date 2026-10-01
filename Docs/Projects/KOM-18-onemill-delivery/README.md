@@ -71,6 +71,7 @@ Posted on KOM-9 on 2026-09-29. Status as of 2026-09-30.
 | **RQ6** | Plans to ship single modules? Which, how today? | KOM-22 | ⬜ open — D2 makes independent module delivery questionable |
 | **RQ7** | OK with a versioned IID? | KOM-22 | ⬜ open — worthwhile regardless of KOM-22: it turns a crash into a clean refusal |
 | **RQ8** | A concrete case for different ModuleWorks versions per module? Aware of one-DLL-per-name? | open task | ⬜ open — moot under D2 in addition to being impossible in one process |
+| **RQ10** | What are the nine `releaseNotes/moduleInfo.json` files for (`"View" 1.0`, Milling/PostProcessor `2.2.0`)? They ship but nothing reads them. Can they be deleted? Posted by Martin 2026-10-01, comment 93491 | V7 follow-up | ⬜ open — until answered they stay, [V7](Workplan-Version.md#5-steps-v0v8) |
 
 ## Conventions that matter
 
