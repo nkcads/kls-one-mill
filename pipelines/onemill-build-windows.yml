@@ -57,10 +57,11 @@
 trigger: none
 pr: none
 
-# SIGNING: off by default. A signed run takes the Trusted Signing credentials from the shared
-# variable group, signs exactly the binaries the first-party manifest lists - never a wildcard - and
-# fails unless each one is then signed by CADS GmbH with a timestamp. Unsigned runs never reference
-# the variable group, so they work without access to it, and their steps are unchanged.
+# SIGNING: off by default - a signed run is a delivery. It takes the Trusted Signing credentials from
+# the variable group, signs exactly the binaries the first-party manifest lists - never a wildcard -
+# with signtool and the Artifact Signing plug-in installed on the agent, and fails unless each one is
+# then signed by CADS GmbH with a timestamp. Unsigned runs never reference the variable group, so they
+# work without access to it, and their steps are unchanged.
 parameters:
   - name: buildSigned
     displayName: 'Sign the first-party binaries (Azure Trusted Signing)'
@@ -560,10 +561,7 @@ stages:
                 Set-Content -Path $list -Value $files -Encoding ascii
                 Write-Host "files to sign: $($files.Count)"
                 $files | ForEach-Object { Write-Host "  $_" }
-                # The signing task takes the files as one comma-separated list and batches them itself.
-                if ($files | Where-Object { $_.Contains(',') }) { throw "a path to sign contains a comma - the signing task's list would split it" }
                 Write-Host "##vso[task.setvariable variable=SignFileList]$list"
-                Write-Host "##vso[task.setvariable variable=SignFiles]$($files -join ',')"
               displayName: 'SIGN 1/4: resolve the first-party files from the manifest'
 
             - powershell: |
@@ -579,26 +577,63 @@ stages:
                   throw "Trusted Signing credentials missing: $($missing -join ', ') - is the variable group TrustedSigning-Shared shared with this project and authorised for this pipeline?"
                 }
                 Write-Host "Trusted Signing credentials present"
-              displayName: 'SIGN 2/4: validate the signing credentials'
+
+                # The signing tools are installed on the agent once, not fetched at run time: the
+                # Windows SDK's signtool and Microsoft's Artifact Signing client (the signtool
+                # plug-in, Azure.CodeSigning.Dlib.dll). Both are declared by machine variables, like
+                # the build's five ONEMILL_* inputs, so a rebuilt agent that lacks them fails here.
+                $fix = 'Install the Artifact Signing Client Tools on the agent and set ONEMILL_SIGNTOOL / ONEMILL_ARTIFACTSIGNING_DLIB at machine scope - see Docs/Projects/KOM-18-onemill-delivery/Workplan-Signing.md'
+                $signtool = [Environment]::GetEnvironmentVariable('ONEMILL_SIGNTOOL', 'Machine')
+                $dlib     = [Environment]::GetEnvironmentVariable('ONEMILL_ARTIFACTSIGNING_DLIB', 'Machine')
+                if (-not $signtool -or -not (Test-Path -LiteralPath $signtool)) { throw "signtool.exe not found (ONEMILL_SIGNTOOL='$signtool'). $fix" }
+                if (-not $dlib -or -not (Test-Path -LiteralPath $dlib)) { throw "Azure.CodeSigning.Dlib.dll not found (ONEMILL_ARTIFACTSIGNING_DLIB='$dlib'). $fix" }
+                # The plug-in needs a Windows SDK signtool of at least 10.0.22621 and does not work
+                # with the 10.0.20348 SDK; it runs on .NET 8 or later (its runtimeconfig rolls forward).
+                $sv = [version]((Get-Item -LiteralPath $signtool).VersionInfo.ProductVersion)
+                if ($sv -lt [version]'10.0.22621.0' -or $sv.Build -eq 20348) { throw "signtool.exe $sv is not supported by the Artifact Signing plug-in (needs 10.0.22621 or later, not 20348)" }
+                $net = @(Get-ChildItem 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App' -Directory -ErrorAction SilentlyContinue |
+                         Where-Object { $_.Name -match '^\d+\.\d+\.\d+$' -and [version]$_.Name -ge [version]'8.0.0' })
+                if (-not $net) { throw "no .NET runtime 8 or later under C:\Program Files\dotnet - the Artifact Signing plug-in needs one" }
+                Write-Host ("signtool  {0}  {1}" -f $sv, $signtool)
+                Write-Host ("plug-in   {0}  {1}" -f (Get-Item -LiteralPath $dlib).VersionInfo.FileVersion, $dlib)
+                Write-Host (".NET      {0}" -f (($net | ForEach-Object { $_.Name }) -join ', '))
+                Write-Host "##vso[task.setvariable variable=SignToolPath]$signtool"
+                Write-Host "##vso[task.setvariable variable=SignDlibPath]$dlib"
+              displayName: 'SIGN 2/4: validate the signing credentials and tools'
               env:
                 TRUSTEDSIGNING_TENANT_ID: $(TrustedSigningTenantId)
                 TRUSTEDSIGNING_APP_ID: $(TrustedSigningAppId)
                 TRUSTEDSIGNING_APP_SECRET: $(TrustedSigningAppSecret)
 
-            # Inputs as in IPS Suite's installer pipeline, which signs successfully. The task
-            # timestamps by default (RFC 3161, timestamp.acs.microsoft.com, SHA256). It is marked
-            # deprecated in favour of "Artifact Signing", which is not installed in this organisation.
-            - task: TrustedSigning@0
-              displayName: 'SIGN 3/4: sign the first-party files (Azure Trusted Signing)'
-              inputs:
-                AzureTenantID: '$(TrustedSigningTenantId)'
-                AzureClientID: '$(TrustedSigningAppId)'
-                AzureClientSecret: '$(TrustedSigningAppSecret)'
-                Endpoint: 'https://weu.codesigning.azure.net/'
-                TrustedSigningAccountName: 'TrustedSigningCads'
-                CertificateProfileName: 'CADSGmbH'
-                Files: '$(SignFiles)'
-                FileDigest: 'SHA256'
+            # signtool with the Artifact Signing plug-in - the same command line the signing task of
+            # IPS Suite's installer pipeline runs, without the task: that task installs its tools at
+            # run time and is deprecated. The plug-in authenticates through DefaultAzureCredential;
+            # metadata.json leaves it only the service principal from the environment.
+            - powershell: |
+                $ErrorActionPreference = 'Stop'
+                $files = @(Get-Content '$(SignFileList)')
+                $meta  = Join-Path '$(Agent.TempDirectory)' 'onemill-sign-metadata.json'
+                [ordered]@{
+                  Endpoint               = 'https://weu.codesigning.azure.net/'
+                  CodeSigningAccountName = 'TrustedSigningCads'
+                  CertificateProfileName = 'CADSGmbH'
+                  CorrelationId          = 'onemill-$(Build.BuildNumber)'
+                  ExcludeCredentials     = @('ManagedIdentityCredential', 'WorkloadIdentityCredential',
+                                             'SharedTokenCacheCredential', 'VisualStudioCredential',
+                                             'VisualStudioCodeCredential', 'AzureCliCredential',
+                                             'AzurePowerShellCredential', 'AzureDeveloperCliCredential',
+                                             'InteractiveBrowserCredential')
+                } | ConvertTo-Json | Set-Content -Path $meta -Encoding ascii
+                Write-Host "signing $($files.Count) files"
+                & '$(SignToolPath)' sign /v /debug /fd SHA256 /tr 'http://timestamp.acs.microsoft.com' /td SHA256 /dlib '$(SignDlibPath)' /dmdf $meta @files
+                $rc = $LASTEXITCODE
+                Remove-Item -LiteralPath $meta -ErrorAction SilentlyContinue
+                if ($rc -ne 0) { throw "signtool failed with exit code $rc" }
+              displayName: 'SIGN 3/4: sign the first-party files (signtool + Artifact Signing)'
+              env:
+                AZURE_TENANT_ID: $(TrustedSigningTenantId)
+                AZURE_CLIENT_ID: $(TrustedSigningAppId)
+                AZURE_CLIENT_SECRET: $(TrustedSigningAppSecret)
 
             - powershell: |
                 $ErrorActionPreference = 'Stop'
