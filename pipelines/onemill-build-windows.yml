@@ -57,6 +57,17 @@
 trigger: none
 pr: none
 
+# SIGNING: off by default - a signed run is a delivery. It takes the Trusted Signing credentials from
+# the variable group, signs exactly the binaries the first-party manifest lists - never a wildcard -
+# with signtool and the Artifact Signing plug-in installed on the agent, and fails unless each one is
+# then signed by CADS GmbH with a timestamp. Unsigned runs never reference the variable group, so they
+# work without access to it, and their steps are unchanged.
+parameters:
+  - name: buildSigned
+    displayName: 'Sign the first-party binaries (Azure Trusted Signing)'
+    type: boolean
+    default: false
+
 variables:
   CANDIDATE_AGENTS: 'i-0acdb789bdfe09eac'
   MAX_CONCURRENT_INSTANCES: 1        # limited by the org's parallel-job allocation
@@ -293,6 +304,11 @@ stages:
         timeoutInMinutes: 150
         pool:
           name: '$(SELF_HOSTED_POOL)'
+        # Only a signed run may reference the group - it is shared from project IPS Suite, and an
+        # unauthorised reference would stop every run at queue time, signed or not.
+        ${{ if eq(parameters.buildSigned, true) }}:
+          variables:
+            - group: TrustedSigning-Shared
         steps:
           # Configure walks add_subdirectory() into all 26 submodules, so the whole tree is
           # required - unlike the guard, which deliberately checks out none of them.
@@ -496,15 +512,145 @@ stages:
                 $v = (Get-Item $p).VersionInfo.ProductVersion
                 if ($v -ne $want) { throw "$e carries version '$v', expected '$want'" }
               }
-              if ($entries.Count -lt 12) { throw "the first-party manifest lists only $($entries.Count) binaries, expected 12" }
+
+              # Modules: what the build produced, what install_full staged and what the manifest lists
+              # must be the same set - compared, not counted, so a module that builds but is never
+              # wired into install_full fails here, and no number has to follow the module count.
+              $built    = @(Get-ChildItem 'out/build/win-msvc-x64-relwithdebinfo/bin/RelWithDebInfo/modulesBert' -Filter *.dll -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
+              $stagedM  = @($dlls | ForEach-Object { $_.Name })
+              $listedM  = @($entries | Where-Object { $_ -like 'modulesBert/*.dll' } | ForEach-Object { $_.Substring('modulesBert/'.Length) })
+              Write-Host ("  modules built / staged / listed: {0} / {1} / {2}" -f $built.Count, $stagedM.Count, $listedM.Count)
+              if ($built.Count -eq 0) { throw "no module DLLs found in the build tree - cannot compare" }
+              $notStaged = @($built | Where-Object { $stagedM -notcontains $_ })
+              $notBuilt  = @($stagedM | Where-Object { $built -notcontains $_ })
+              $notListed = @($stagedM | Where-Object { $listedM -notcontains $_ })
+              $notThere  = @($listedM | Where-Object { $stagedM -notcontains $_ })
+              if ($notStaged) { throw "built but not staged by install_full: $($notStaged -join ', ')" }
+              if ($notBuilt)  { throw "staged but not built in this run: $($notBuilt -join ', ')" }
+              if ($notListed) { throw "staged but missing from the first-party manifest: $($notListed -join ', ')" }
+              if ($notThere)  { throw "listed in the first-party manifest but not staged: $($notThere -join ', ')" }
+              foreach ($exe in 'MainApp.exe', 'Updater.exe') {
+                if ($entries -notcontains $exe) { throw "the first-party manifest does not list $exe" }
+              }
 
               # Hard floors, deliberately generous: catch a grossly short payload without
               # failing on legitimate small drift between toolchains.
               if ($all.Count -lt 6000) { throw "staged tree has only $($all.Count) files - payload looks incomplete" }
-              if ($dlls.Count -lt 10)  { throw "only $($dlls.Count) module DLLs staged, expected 10" }
               Write-Host ""
               Write-Host "  staged tree passes its floors"
             displayName: 'Verify the staged tree is complete (not merely present)'
+
+          # Signing, in the company's order: resolve the files, validate the credentials, sign,
+          # verify. Present only in a signed run.
+          - ${{ if eq(parameters.buildSigned, true) }}:
+            - powershell: |
+                $ErrorActionPreference = 'Stop'
+                # The allowlist is the first-party manifest install_full wrote - exactly our own
+                # binaries, as staged. Third-party DLLs never pass through it.
+                $staged   = (Resolve-Path 'out/install/win-msvc-x64-relwithdebinfo').Path
+                $manifest = 'out/build/win-msvc-x64-relwithdebinfo/first-party/KLSOneMill.txt'
+                if (-not (Test-Path $manifest)) { throw "no first-party manifest at $manifest - nothing to sign" }
+                $entries = @(Get-Content $manifest | Where-Object { $_ })
+                if ($entries.Count -eq 0) { throw "the first-party manifest is empty - nothing to sign" }
+                $files = foreach ($e in $entries) {
+                  $p = Join-Path $staged $e
+                  if (-not (Test-Path -LiteralPath $p)) { throw "the manifest lists $e, which is not in the staged tree" }
+                  (Resolve-Path -LiteralPath $p).Path
+                }
+                $list = Join-Path '$(Agent.TempDirectory)' 'onemill-sign-files.txt'
+                Set-Content -Path $list -Value $files -Encoding ascii
+                Write-Host "files to sign: $($files.Count)"
+                $files | ForEach-Object { Write-Host "  $_" }
+                Write-Host "##vso[task.setvariable variable=SignFileList]$list"
+              displayName: 'SIGN 1/4: resolve the first-party files from the manifest'
+
+            - powershell: |
+                $ErrorActionPreference = 'Stop'
+                # An undefined pipeline variable is passed on as its literal macro text, so that
+                # counts as missing too. Values are never printed.
+                $missing = @()
+                foreach ($n in 'TRUSTEDSIGNING_TENANT_ID', 'TRUSTEDSIGNING_APP_ID', 'TRUSTEDSIGNING_APP_SECRET') {
+                  $v = [Environment]::GetEnvironmentVariable($n)
+                  if ([string]::IsNullOrWhiteSpace($v) -or $v.StartsWith('$(')) { $missing += $n }
+                }
+                if ($missing) {
+                  throw "Trusted Signing credentials missing: $($missing -join ', ') - is the variable group TrustedSigning-Shared shared with this project and authorised for this pipeline?"
+                }
+                Write-Host "Trusted Signing credentials present"
+
+                # The signing tools are installed on the agent once, not fetched at run time: the
+                # Windows SDK's signtool and Microsoft's Artifact Signing client (the signtool
+                # plug-in, Azure.CodeSigning.Dlib.dll). Both are declared by machine variables, like
+                # the build's five ONEMILL_* inputs, so a rebuilt agent that lacks them fails here.
+                $fix = 'Install the Artifact Signing Client Tools on the agent and set ONEMILL_SIGNTOOL / ONEMILL_ARTIFACTSIGNING_DLIB at machine scope - see Docs/Projects/KOM-18-onemill-delivery/Workplan-Signing.md'
+                $signtool = [Environment]::GetEnvironmentVariable('ONEMILL_SIGNTOOL', 'Machine')
+                $dlib     = [Environment]::GetEnvironmentVariable('ONEMILL_ARTIFACTSIGNING_DLIB', 'Machine')
+                if (-not $signtool -or -not (Test-Path -LiteralPath $signtool)) { throw "signtool.exe not found (ONEMILL_SIGNTOOL='$signtool'). $fix" }
+                if (-not $dlib -or -not (Test-Path -LiteralPath $dlib)) { throw "Azure.CodeSigning.Dlib.dll not found (ONEMILL_ARTIFACTSIGNING_DLIB='$dlib'). $fix" }
+                # The plug-in needs a Windows SDK signtool of at least 10.0.22621 and does not work
+                # with the 10.0.20348 SDK; it runs on .NET 8 or later (its runtimeconfig rolls forward).
+                $sv = [version]((Get-Item -LiteralPath $signtool).VersionInfo.ProductVersion)
+                if ($sv -lt [version]'10.0.22621.0' -or $sv.Build -eq 20348) { throw "signtool.exe $sv is not supported by the Artifact Signing plug-in (needs 10.0.22621 or later, not 20348)" }
+                $net = @(Get-ChildItem 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App' -Directory -ErrorAction SilentlyContinue |
+                         Where-Object { $_.Name -match '^\d+\.\d+\.\d+$' -and [version]$_.Name -ge [version]'8.0.0' })
+                if (-not $net) { throw "no .NET runtime 8 or later under C:\Program Files\dotnet - the Artifact Signing plug-in needs one" }
+                Write-Host ("signtool  {0}  {1}" -f $sv, $signtool)
+                Write-Host ("plug-in   {0}  {1}" -f (Get-Item -LiteralPath $dlib).VersionInfo.FileVersion, $dlib)
+                Write-Host (".NET      {0}" -f (($net | ForEach-Object { $_.Name }) -join ', '))
+                Write-Host "##vso[task.setvariable variable=SignToolPath]$signtool"
+                Write-Host "##vso[task.setvariable variable=SignDlibPath]$dlib"
+              displayName: 'SIGN 2/4: validate the signing credentials and tools'
+              env:
+                TRUSTEDSIGNING_TENANT_ID: $(TrustedSigningTenantId)
+                TRUSTEDSIGNING_APP_ID: $(TrustedSigningAppId)
+                TRUSTEDSIGNING_APP_SECRET: $(TrustedSigningAppSecret)
+
+            # signtool with the Artifact Signing plug-in - the same command line the signing task of
+            # IPS Suite's installer pipeline runs, without the task: that task installs its tools at
+            # run time and is deprecated. The plug-in authenticates through DefaultAzureCredential;
+            # metadata.json leaves it only the service principal from the environment.
+            - powershell: |
+                $ErrorActionPreference = 'Stop'
+                $files = @(Get-Content '$(SignFileList)')
+                $meta  = Join-Path '$(Agent.TempDirectory)' 'onemill-sign-metadata.json'
+                [ordered]@{
+                  Endpoint               = 'https://weu.codesigning.azure.net/'
+                  CodeSigningAccountName = 'TrustedSigningCads'
+                  CertificateProfileName = 'CADSGmbH'
+                  CorrelationId          = 'onemill-$(Build.BuildNumber)'
+                  ExcludeCredentials     = @('ManagedIdentityCredential', 'WorkloadIdentityCredential',
+                                             'SharedTokenCacheCredential', 'VisualStudioCredential',
+                                             'VisualStudioCodeCredential', 'AzureCliCredential',
+                                             'AzurePowerShellCredential', 'AzureDeveloperCliCredential',
+                                             'InteractiveBrowserCredential')
+                } | ConvertTo-Json | Set-Content -Path $meta -Encoding ascii
+                Write-Host "signing $($files.Count) files"
+                & '$(SignToolPath)' sign /v /debug /fd SHA256 /tr 'http://timestamp.acs.microsoft.com' /td SHA256 /dlib '$(SignDlibPath)' /dmdf $meta @files
+                $rc = $LASTEXITCODE
+                Remove-Item -LiteralPath $meta -ErrorAction SilentlyContinue
+                if ($rc -ne 0) { throw "signtool failed with exit code $rc" }
+              displayName: 'SIGN 3/4: sign the first-party files (signtool + Artifact Signing)'
+              env:
+                AZURE_TENANT_ID: $(TrustedSigningTenantId)
+                AZURE_CLIENT_ID: $(TrustedSigningAppId)
+                AZURE_CLIENT_SECRET: $(TrustedSigningAppSecret)
+
+            - powershell: |
+                $ErrorActionPreference = 'Stop'
+                # Certificates live about three days, so a signature without a timestamp would stop
+                # verifying within days. The publisher is what allow rules match on.
+                $files = @(Get-Content '$(SignFileList)')
+                $bad = @()
+                foreach ($f in $files) {
+                  $s = Get-AuthenticodeSignature -LiteralPath $f
+                  $subject = if ($s.SignerCertificate) { $s.SignerCertificate.Subject } else { '' }
+                  $stamped = [bool]$s.TimeStamperCertificate
+                  Write-Host ("  {0,-12} timestamp={1,-5} {2}   {3}" -f $s.Status, $stamped, (Split-Path $f -Leaf), $subject)
+                  if ($s.Status -ne 'Valid' -or $subject -notmatch 'CADS GmbH' -or -not $stamped) { $bad += $f }
+                }
+                if ($bad) { throw "$($bad.Count) of $($files.Count) first-party binaries are not validly signed by CADS GmbH with a timestamp" }
+                Write-Host "all $($files.Count) first-party binaries are signed by CADS GmbH and timestamped"
+              displayName: 'SIGN 4/4: every first-party binary is signed by CADS GmbH, with a timestamp'
 
           - powershell: |
               $ErrorActionPreference = 'Stop'
@@ -512,8 +658,8 @@ stages:
 
               # Named from the product version, which the verify step has just checked against
               # MainApp.exe and mainAppConfig.json. It carries its own build identity - the commit
-              # count - so two artifacts are never ambiguous.
-              $name = "KLSOneMill-$(Build.BuildNumber)-relwithdebinfo"
+              # count - so two artifacts are never ambiguous; a signed one says so.
+              $name = "KLSOneMill-$(Build.BuildNumber)-relwithdebinfo${{ iif(eq(parameters.buildSigned, true), '-signed', '') }}"
               Write-Host "artifact name: $name"
 
               New-Item -ItemType Directory -Force 'out/artifact' | Out-Null

@@ -11,8 +11,8 @@ KOM-18 … KOM-22 and are **not** restated here ([D7](#decisions)).
 
 | Story | What | When | Branch | Work plan |
 | --- | --- | --- | --- | --- |
-| [KOM-19](https://cads-team.atlassian.net/browse/KOM-19) | Product version: company scheme, stamped into every first-party binary | **now** | `feature/KOM-19-version-scheme` (from `develop` @ `3d14ab2`, no upstream) | [Workplan-Version.md](Workplan-Version.md) |
-| [KOM-20](https://cads-team.atlassian.net/browse/KOM-20) | Sign the first-party binaries with Azure Trusted Signing | **now** | `feature/KOM-20-code-signing` (from KOM-19's branch) — not yet created | [Workplan-Signing.md](Workplan-Signing.md) |
+| [KOM-19](https://cads-team.atlassian.net/browse/KOM-19) | Product version: company scheme, stamped into every first-party binary | ✅ **done** 2026-10-01 | merged into `develop` (PR 34582, `4243a27`) and into KOM-13 (`77c3f33`) | [Workplan-Version.md](Workplan-Version.md) |
+| [KOM-20](https://cads-team.atlassian.net/browse/KOM-20) | Sign the first-party binaries with Azure Trusted Signing | **now** | `feature/KOM-20-code-signing`, from `develop` @ `4243a27` (contains KOM-19), no upstream | [Workplan-Signing.md](Workplan-Signing.md) |
 | [KOM-21](https://cads-team.atlassian.net/browse/KOM-21) | WiX 6 MSI for KLSOneMill and KLSOneAnalyse | later | — | [Workplan-Installer.md](Workplan-Installer.md) (parked) |
 | [KOM-22](https://cads-team.atlassian.net/browse/KOM-22) | Separately deliverable modules | follow-up, no date — questioned by [D2](#decisions) | — | [Workplan-Installer.md §4](Workplan-Installer.md#4-module-delivery-i1i4) |
 
@@ -24,8 +24,8 @@ testers need signed builds.
 
 | What | State |
 | --- | --- |
-| KOM-19 | **V0–V7 done.** Version from git, VERSIONINFO in all 13 binaries, version in `mainAppConfig.json`, first-party manifest — tested on KLSOneMill4 and in pipeline 824 ([run 1900118](https://dev.azure.com/cads-team/KLS%20OneMill/_build/results?buildId=1900118), green, `2.2.0.66-KOM-19-version-scheme`). Branch pushed to `origin/feature/KOM-19-version-scheme`. **Open: V8**, the merge into KOM-13 — [Workplan-Version.md §5](Workplan-Version.md#5-steps-v0v8) |
-| KOM-20 | Branch not created. Blocked on [S4](#shared-items-s1s4) for a real signed run; the pipeline block can be written before that |
+| KOM-19 | **V0–V7 done.** Version from git, VERSIONINFO in all 13 binaries, version in `mainAppConfig.json`, first-party manifest — tested on KLSOneMill4 and in pipeline 824 ([run 1900118](https://dev.azure.com/cads-team/KLS%20OneMill/_build/results?buildId=1900118), green, `2.2.0.66-KOM-19-version-scheme`). Merged into `develop` (PR 34582, `4243a27`); the [first run on develop](https://dev.azure.com/cads-team/KLS%20OneMill/_build/results?buildId=1900282) is green as `2.2.0.74-alpha`. V8 done: in KOM-13 as `77c3f33`, [run 1900336](https://dev.azure.com/cads-team/KLS%20OneMill/_build/results?buildId=1900336) green as `2.2.0.199-KOM-13-machine-simulation`. **KOM-19 closed** — [Workplan-Version.md §5](Workplan-Version.md#5-steps-v0v8) |
+| KOM-20 | SG0–SG5 implemented on `feature/KOM-20-code-signing`; variable group 157 in this project (SG0). First signed run pending — [Workplan-Signing.md §4](Workplan-Signing.md#4-steps-sg0sg7) |
 | Tags `v1.0.1` (`a5ca137`) and `v2.1.0` (`43f8ced`) | Created 2026-09-30 (annotated), **pushed 2026-10-01** |
 | Variable group `TrustedSigning-Shared` | Request to IT / an IPS Suite admin **sent**, **no answer yet** (as of 2026-09-30) |
 | Questions for Robert | Posted on [KOM-9](https://cads-team.atlassian.net/browse/KOM-9) (comment 92960) on 2026-09-29. RQ9 and RQ3 settled; follow-up posted 2026-09-30 (comment 93179) — see [below](#questions-for-robert-rq1rq9) |
@@ -41,7 +41,7 @@ Things more than one story consumes. Each has one owner story; the others depend
 | **S1** | **Version source** — one product version, computed from git locally and taken from `Build.BuildNumber` in CI | KOM-19 | KOM-20 (VERSIONINFO for publisher rules), KOM-21 (MSI `ProductVersion`) | ✅ 2026-10-01 — `cmake/OneMillVersion.cmake` |
 | **S2** | **First-party manifest** — the list of binaries we build, generated where `install_full` stages | KOM-19 | KOM-20 (the signing allowlist), KOM-21 (what the installer must find signed) | ✅ 2026-10-01 — `<build>/first-party/<product>.txt` |
 | **S3** | **Pipeline 824 changes** — full fetch + tags, `CreateCadsVersion@3`, `buildSigned`, lane, artifact name | KOM-19 (version half), KOM-20 (signing half) | all | 🟡 version half ✅ 2026-10-01; signing half open |
-| **S4** | **Access and agent** — variable-group share and pipeline authorisation; GitVersion on the EC2 agent; later the .NET SDK for WiX | KOM-20 (share), KOM-19 (GitVersion), KOM-21 (.NET) | all | 🟡 GitVersion on the agent ✅ (run 1900118); share requested, unanswered |
+| **S4** | **Access and agent** — variable-group share and pipeline authorisation; GitVersion on the EC2 agent; later the .NET SDK for WiX | KOM-20 (share), KOM-19 (GitVersion), KOM-21 (.NET) | all | 🟡 GitVersion on the agent ✅ (run 1900118); variable group 157 ✅ (2026-10-01); .NET SDK for WiX open |
 
 ## Decisions
 
