@@ -4,9 +4,9 @@
 # adapted from ips-suite2/pipelines/build-validation-windows.yaml). Two of that file's three stages
 # are kept VERBATIM because they are correct and hard-won:
 #
-#   Warmup   - checks how many candidate EC2 instances are already running, waits while none is free
-#              (up to CAPACITY_WAIT_MINUTES - the instance is shared with KLSOneMillWeb's pipeline),
-#              starts one and publishes its id so Shutdown can stop exactly that one
+#   Warmup   - waits until no earlier run of this pipeline or of KLSOneMillWeb's (they share the
+#              instance, INSTANCE_PIPELINES) is queued or running, up to CAPACITY_WAIT_MINUTES, then
+#              starts a free instance and publishes its id so Shutdown can stop exactly that one
 #   Shutdown - stops the instance this run started; `condition: always()` so a failed build still
 #              releases it, and it handles the pending-instance case a cancelled Warmup leaves behind
 #
@@ -72,7 +72,8 @@ parameters:
 variables:
   CANDIDATE_AGENTS: 'i-0acdb789bdfe09eac'
   MAX_CONCURRENT_INSTANCES: 1        # limited by the org's parallel-job allocation
-  CAPACITY_WAIT_MINUTES: 170         # how long Warmup waits for a free instance; longer than a whole build
+  CAPACITY_WAIT_MINUTES: 170         # how long Warmup waits for earlier runs; longer than a whole build
+  INSTANCE_PIPELINES: '824,855'      # the pipelines that use the instance: this one and KLSOneMillWeb
   AWS_SERVICE_CONNECTION: 'OneMill Staging AWS Credentials'
   SELF_HOSTED_POOL: 'onemill-aws-windows-pool'
   QT_VERSION: 6.10.2
@@ -83,7 +84,7 @@ stages:
     displayName: 'Manage Windows Instance Capacity'
     jobs:
       - job: ManageCapacity
-        # The wait for a free instance (CAPACITY_WAIT_MINUTES) plus the start of the instance.
+        # The wait for earlier runs (CAPACITY_WAIT_MINUTES) plus the start of the instance.
         timeoutInMinutes: 190
         pool:
           # Pinned, not ubuntu-latest: that label moves to a new Ubuntu on Microsoft's date, and this
@@ -91,6 +92,42 @@ stages:
           vmImage: 'ubuntu-24.04'
         steps:
           - checkout: none
+          - bash: |
+              set -euo pipefail
+              # The instance is shared by the desktop and the web pipeline (INSTANCE_PIPELINES), and
+              # one push can start several runs (a merge into main and its tag). Wait here until no
+              # run of those pipelines that was queued before this one is still queued or running,
+              # so the runs take the instance in the order they were queued. The wait is on the
+              # Azure DevOps side because the AWS task's role session lasts only 15 minutes - too
+              # short to wait out a build. This step holds no instance, so cancelling it needs no
+              # cleanup. If the runs cannot be listed, it warns and does not wait.
+              URL="$(System.CollectionUri)$(System.TeamProjectId)/_apis/build/builds?definitions=$(INSTANCE_PIPELINES)&statusFilter=inProgress,notStarted&api-version=7.1"
+              DEADLINE=$((SECONDS + $(CAPACITY_WAIT_MINUTES) * 60))
+
+              while true; do
+                  if ! BODY=$(curl -sS --fail-with-body -H "Authorization: Bearer $SYSTEM_ACCESSTOKEN" "$URL" 2>&1) ||
+                     ! EARLIER=$(echo "$BODY" | jq -r --argjson me "$(Build.BuildId)" \
+                         '[.value[] | select(.id < $me) | "\(.definition.name) \(.buildNumber)"] | join(", ")' 2>&1); then
+                      echo "##vso[task.logissue type=warning]Could not list the runs that share the instance, not waiting for them: ${BODY:0:300}"
+                      exit 0
+                  fi
+
+                  if [ -z "$EARLIER" ]; then
+                      echo "✅ No earlier run holds or waits for the instance"
+                      exit 0
+                  fi
+
+                  if [ "$SECONDS" -ge "$DEADLINE" ]; then
+                      echo "❌ ERROR: Earlier runs still hold the instance after $(CAPACITY_WAIT_MINUTES) minutes: $EARLIER"
+                      exit 1
+                  fi
+
+                  echo "⏳ Waiting for earlier runs: $EARLIER - checking again in 60 s"
+                  sleep 60
+              done
+            displayName: 'Wait for Earlier Runs That Share the Instance'
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
           - task: AWSShellScript@1
             name: CheckCapacity
             displayName: 'Check Capacity and Start Instance if Needed'
@@ -157,12 +194,11 @@ stages:
                   echo "##vso[task.setvariable variable=StartedAgentName;isOutput=true]$agent_name"
                 }
                 
-                # Wait for a free instance instead of failing at once. The instance is shared by
-                # the desktop and the web pipeline, and one push can start several runs (a merge
-                # into main and its tag). A run waiting here holds no instance, so cancelling it
-                # needs no cleanup. It gives up after CAPACITY_WAIT_MINUTES, which is longer than
-                # a whole desktop build (its build job's timeout is 150 minutes).
-                DEADLINE=$((SECONDS + $(CAPACITY_WAIT_MINUTES) * 60))
+                # The step before waited for the earlier runs. What is left is short: an instance
+                # still stopping after an earlier run's Shutdown, or a claim lost to a run queued at
+                # the same moment. Re-check every 60 s for at most 10 minutes - this task's AWS role
+                # session lasts 15. A run waiting here holds no instance.
+                DEADLINE=$((SECONDS + 10 * 60))
                 CLAIMED_INSTANCE=""
 
                 while true; do
@@ -174,10 +210,13 @@ stages:
                     for instance_id in "${INSTANCES[@]}"; do
                         instance_id=$(echo "$instance_id" | tr -d ' ')
 
-                        STATE=$(aws ec2 describe-instances \
+                        if ! STATE=$(aws ec2 describe-instances \
                             --instance-ids "$instance_id" \
                             --query 'Reservations[0].Instances[0].State.Name' \
-                            --output text 2>/dev/null || echo "not-found")
+                            --output text 2>&1); then
+                            echo "❌ ERROR: Could not read the state of $instance_id: $STATE"
+                            exit 1
+                        fi
 
                         echo "Instance $instance_id: $STATE"
 
@@ -225,7 +264,7 @@ stages:
                     fi
 
                     if [ "$SECONDS" -ge "$DEADLINE" ]; then
-                        echo "❌ ERROR: No instance became free within $(CAPACITY_WAIT_MINUTES) minutes"
+                        echo "❌ ERROR: No instance became free within 10 minutes"
                         exit 1
                     fi
 
