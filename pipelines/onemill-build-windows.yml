@@ -4,8 +4,9 @@
 # adapted from ips-suite2/pipelines/build-validation-windows.yaml). Two of that file's three stages
 # are kept VERBATIM because they are correct and hard-won:
 #
-#   Warmup   - checks how many candidate EC2 instances are already running, starts one if there is
-#              capacity, and publishes its id so Shutdown can stop exactly that one
+#   Warmup   - checks how many candidate EC2 instances are already running, waits while none is free
+#              (up to CAPACITY_WAIT_MINUTES - the instance is shared with KLSOneMillWeb's pipeline),
+#              starts one and publishes its id so Shutdown can stop exactly that one
 #   Shutdown - stops the instance this run started; `condition: always()` so a failed build still
 #              releases it, and it handles the pending-instance case a cancelled Warmup leaves behind
 #
@@ -71,6 +72,7 @@ parameters:
 variables:
   CANDIDATE_AGENTS: 'i-0acdb789bdfe09eac'
   MAX_CONCURRENT_INSTANCES: 1        # limited by the org's parallel-job allocation
+  CAPACITY_WAIT_MINUTES: 170         # how long Warmup waits for a free instance; longer than a whole build
   AWS_SERVICE_CONNECTION: 'OneMill Staging AWS Credentials'
   SELF_HOSTED_POOL: 'onemill-aws-windows-pool'
   QT_VERSION: 6.10.2
@@ -81,6 +83,8 @@ stages:
     displayName: 'Manage Windows Instance Capacity'
     jobs:
       - job: ManageCapacity
+        # The wait for a free instance (CAPACITY_WAIT_MINUTES) plus the start of the instance.
+        timeoutInMinutes: 190
         pool:
           # Pinned, not ubuntu-latest: that label moves to a new Ubuntu on Microsoft's date, and this
           # job starts a billable instance - an image change should be ours to make and test.
@@ -153,144 +157,81 @@ stages:
                   echo "##vso[task.setvariable variable=StartedAgentName;isOutput=true]$agent_name"
                 }
                 
-                # Check current state of all instances
-                RUNNING_COUNT=0
-                STOPPED_INSTANCES=()
-                STOPPING_INSTANCES=()
-                
-                for instance_id in "${INSTANCES[@]}"; do
-                    instance_id=$(echo "$instance_id" | tr -d ' ')
-                    
-                    STATE=$(aws ec2 describe-instances \
-                        --instance-ids "$instance_id" \
-                        --query 'Reservations[0].Instances[0].State.Name' \
-                        --output text 2>/dev/null || echo "not-found")
-                    
-                    echo "Instance $instance_id: $STATE"
-                    
-                    if [ "$STATE" = "running" ] || [ "$STATE" = "pending" ]; then
-                        RUNNING_COUNT=$((RUNNING_COUNT + 1))
-                    elif [ "$STATE" = "stopped" ]; then
-                        STOPPED_INSTANCES+=("$instance_id")
-                    elif [ "$STATE" = "stopping" ]; then
-                        STOPPING_INSTANCES+=("$instance_id")
+                # Wait for a free instance instead of failing at once. The instance is shared by
+                # the desktop and the web pipeline, and one push can start several runs (a merge
+                # into main and its tag). A run waiting here holds no instance, so cancelling it
+                # needs no cleanup. It gives up after CAPACITY_WAIT_MINUTES, which is longer than
+                # a whole desktop build (its build job's timeout is 150 minutes).
+                DEADLINE=$((SECONDS + $(CAPACITY_WAIT_MINUTES) * 60))
+                CLAIMED_INSTANCE=""
+
+                while true; do
+                    # Check current state of all instances
+                    RUNNING_COUNT=0
+                    STOPPED_INSTANCES=()
+                    STOPPING_INSTANCES=()
+
+                    for instance_id in "${INSTANCES[@]}"; do
+                        instance_id=$(echo "$instance_id" | tr -d ' ')
+
+                        STATE=$(aws ec2 describe-instances \
+                            --instance-ids "$instance_id" \
+                            --query 'Reservations[0].Instances[0].State.Name' \
+                            --output text 2>/dev/null || echo "not-found")
+
+                        echo "Instance $instance_id: $STATE"
+
+                        if [ "$STATE" = "running" ] || [ "$STATE" = "pending" ]; then
+                            RUNNING_COUNT=$((RUNNING_COUNT + 1))
+                        elif [ "$STATE" = "stopped" ]; then
+                            STOPPED_INSTANCES+=("$instance_id")
+                        elif [ "$STATE" = "stopping" ]; then
+                            STOPPING_INSTANCES+=("$instance_id")
+                        fi
+                    done
+
+                    echo "Currently running/starting: $RUNNING_COUNT instances"
+                    echo "Available stopped instances: ${#STOPPED_INSTANCES[@]}"
+                    echo "Currently stopping instances: ${#STOPPING_INSTANCES[@]}"
+
+                    # No candidate in a usable state (wrong id, terminated): waiting cannot help.
+                    if [ $((RUNNING_COUNT + ${#STOPPED_INSTANCES[@]} + ${#STOPPING_INSTANCES[@]})) -eq 0 ]; then
+                        echo "❌ ERROR: No usable instance among the candidates: ${INSTANCES[*]}"
+                        exit 1
                     fi
-                done
-                
-                echo "Currently running/starting: $RUNNING_COUNT instances"
-                echo "Available stopped instances: ${#STOPPED_INSTANCES[@]}"
-                echo "Currently stopping instances: ${#STOPPING_INSTANCES[@]}"
 
-                if [ "$RUNNING_COUNT" -ge "$MAX_INSTANCES" ]; then
-                    echo "❌ ERROR: Capacity limit reached: $RUNNING_COUNT of $MAX_INSTANCES instances are already running or starting."
-                    exit 1
-                fi
+                    if [ "$RUNNING_COUNT" -lt "$MAX_INSTANCES" ]; then
+                        # Try every stopped instance: a lost claim race just means another pipeline
+                        # took that one, the next candidate is usually still free.
+                        for INSTANCE_TO_START in "${STOPPED_INSTANCES[@]}"; do
+                            echo "🚀 Starting stopped instance: $INSTANCE_TO_START"
 
-                # Decision logic: prioritize stopped instances, then handle stopping instances
-                if [ ${#STOPPED_INSTANCES[@]} -gt 0 ]; then
-                    # Try every stopped instance: a lost claim race just means another pipeline
-                    # took that one, the next candidate is usually still free.
-                    for INSTANCE_TO_START in "${STOPPED_INSTANCES[@]}"; do
-                        echo "🚀 Starting stopped instance: $INSTANCE_TO_START"
+                            if start_and_claim_instance "$INSTANCE_TO_START"; then
+                                aws ec2 wait instance-running --instance-ids "$INSTANCE_TO_START"
+                                aws ec2 wait instance-status-ok --instance-ids "$INSTANCE_TO_START"
+                                echo "✅ Instance $INSTANCE_TO_START is ready"
 
-                        if start_and_claim_instance "$INSTANCE_TO_START"; then
-                            aws ec2 wait instance-running --instance-ids "$INSTANCE_TO_START"
-                            aws ec2 wait instance-status-ok --instance-ids "$INSTANCE_TO_START"
-                            echo "✅ Instance $INSTANCE_TO_START is ready"
+                                publish_started_instance "$INSTANCE_TO_START"
+                                CLAIMED_INSTANCE=1
+                                break
+                            fi
 
-                            publish_started_instance "$INSTANCE_TO_START"
-                            CLAIMED_INSTANCE=1
+                            echo "⚠️  Lost $INSTANCE_TO_START to a concurrent run, trying next stopped instance..."
+                        done
+
+                        if [ -n "$CLAIMED_INSTANCE" ]; then
                             break
                         fi
+                    fi
 
-                        echo "⚠️  Lost $INSTANCE_TO_START to a concurrent run, trying next stopped instance..."
-                    done
-
-                    if [ -z "$CLAIMED_INSTANCE" ]; then
-                        echo "❌ ERROR: All stopped instances were claimed by concurrent runs"
+                    if [ "$SECONDS" -ge "$DEADLINE" ]; then
+                        echo "❌ ERROR: No instance became free within $(CAPACITY_WAIT_MINUTES) minutes"
                         exit 1
                     fi
-                    
-                elif [ ${#STOPPING_INSTANCES[@]} -gt 0 ]; then
-                    # No stopped instances, but stopping instances available - wait for one
-                    echo "⏳ No stopped instances available, but found stopping instances: ${STOPPING_INSTANCES[*]}"
-                    echo "Waiting for a stopping instance to become available..."
-                    
-                    max_wait=120
-                    waited=0
 
-                    while [ ${#STOPPING_INSTANCES[@]} -gt 0 ] && [ $waited -lt $max_wait ]; do
-                        sleep 15
-                        waited=$((waited + 15))
-                        STILL_STOPPING=()
-                        NEWLY_STOPPED=()
-                        
-                        for instance_id in "${STOPPING_INSTANCES[@]}"; do
-                            STATE=$(aws ec2 describe-instances \
-                                --instance-ids "$instance_id" \
-                                --query 'Reservations[0].Instances[0].State.Name' \
-                                --output text 2>/dev/null || echo "not-found")
-                            
-                            if [ "$STATE" = "stopping" ]; then
-                                STILL_STOPPING+=("$instance_id")
-                            elif [ "$STATE" = "stopped" ]; then
-                                echo "✅ Instance $instance_id finished stopping"
-                                NEWLY_STOPPED+=("$instance_id")
-                            fi
-                        done
-                        
-                        # If any instance became available, start it immediately
-                        if [ ${#NEWLY_STOPPED[@]} -gt 0 ]; then
-                            INSTANCE_TO_START="${NEWLY_STOPPED[0]}"
-                            
-                            # Double-check the instance is still stopped (race condition protection)
-                            CURRENT_STATE=$(aws ec2 describe-instances \
-                                --instance-ids "$INSTANCE_TO_START" \
-                                --query 'Reservations[0].Instances[0].State.Name' \
-                                --output text 2>/dev/null || echo "not-found")
-                            
-                            if [ "$CURRENT_STATE" = "stopped" ]; then
-                                echo "🚀 Starting newly available instance: $INSTANCE_TO_START"
-                                
-                                # Try to start the instance - may fail if another pipeline grabbed it
-                                if start_and_claim_instance "$INSTANCE_TO_START"; then
-                                    aws ec2 wait instance-running --instance-ids "$INSTANCE_TO_START"
-                                    aws ec2 wait instance-status-ok --instance-ids "$INSTANCE_TO_START"
-                                    echo "✅ Instance $INSTANCE_TO_START is ready"
-                                    
-                                    publish_started_instance "$INSTANCE_TO_START"
-                                    CLAIMED_INSTANCE=1
-                                    break
-                                else
-                                    echo "⚠️  Failed to start $INSTANCE_TO_START (likely race condition), continuing search..."
-                                fi
-                            else
-                                echo "⚠️  Instance $INSTANCE_TO_START is no longer stopped ($CURRENT_STATE), continuing search..."
-                            fi
-                        fi
-                        
-                        STOPPING_INSTANCES=("${STILL_STOPPING[@]}")
-                        
-                        if [ ${#STOPPING_INSTANCES[@]} -gt 0 ]; then
-                            echo "Still waiting for: ${STOPPING_INSTANCES[*]} ($waited/$max_wait seconds)"
-                        fi
-                    done
-
-                    # Check the claim flag, NOT the remaining-stopping list: a successful claim
-                    # breaks out of the loop with other instances possibly still stopping, and a
-                    # lost race can drain the list without any claim.
-                    if [ -z "$CLAIMED_INSTANCE" ]; then
-                        echo "❌ ERROR: No instance could be claimed within ${max_wait}s"
-                        exit 1
-                    fi
-                else
-                    # No stopped or stopping instances available
-                    echo "❌ ERROR: No available instances found!"
-                    echo "   - Stopped instances: ${#STOPPED_INSTANCES[@]}"
-                    echo "   - Stopping instances: ${#STOPPING_INSTANCES[@]}"
-                    echo "   - Running instances: $RUNNING_COUNT"
-                    exit 1
-                fi
+                    echo "⏳ No free instance yet (another run holds it, or it is still stopping) - checking again in 60 s"
+                    sleep 60
+                done
 
 
 
