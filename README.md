@@ -369,7 +369,7 @@ one.
 - **Local builds** compute it at configure time ([cmake/OneMillVersion.cmake](cmake/OneMillVersion.cmake)),
   so reconfigure to pick up new commits. If configure stops with *no tag of the form vX.Y.Z*, run
   `git fetch --tags`.
-- **CI** passes the build number from `CreateCadsVersion@3` as `-DONEMILL_VERSION=...`. The same
+- **CI** passes the build number from `CreateCadsVersion@4` as `-DONEMILL_VERSION=...`. The same
   works locally; the value stays in the cache until cleared with `-DONEMILL_VERSION=`.
 - **Releases** branch off `develop` as `release/vX.Y.Z`; the released commit gets an annotated tag
   `vX.Y.Z`. The old `Version_*`, `release/*` and `frozen/*` tags are history — no new ones.
