@@ -36,7 +36,7 @@
 # sufficient evidence: an artifact that launches but is missing a module or its config is worse
 # than one that fails loudly in CI.
 #
-# VERSION: CreateCadsVersion@3 (GitVersion, default configuration - the company scheme every other
+# VERSION: CreateCadsVersion@4 (GitVersion, default configuration - the company scheme every other
 # CADS product uses) sets Build.BuildNumber to the product version, e.g. 2.2.0.60-alpha. It is passed
 # to configure as ONEMILL_VERSION, which stamps it into every first-party binary and into the
 # installed mainAppConfig.json; the verify step checks that all three agree.
@@ -301,13 +301,13 @@ stages:
             persistCredentials: true
             displayName: 'Checkout superproject + all submodules'
 
-          # Sets Build.BuildNumber to the product version. The task also stamps every .csproj and
-          # pom.xml it finds; OneMill has none, and the pattern is deliberately one that matches
-          # nothing, as CaseDesigner does.
-          - task: CreateCadsVersion@3
+          # Sets Build.BuildNumber to the product version. The task can also stamp .csproj and
+          # pom.xml files; OneMill has none, so patchprojectfiles: false skips that search entirely.
+          # v4 runs on Node 24 - v3 declared only Node 10/16, which the agent drops on 2026-11-24.
+          - task: CreateCadsVersion@4
             displayName: 'VERSION (CreateCadsVersion - GitVersion, company scheme)'
             inputs:
-              csprojfilepathpattern: 'onemill-has-no-csproj/**/*.csproj'
+              patchprojectfiles: false
 
           # WHY THIS STEP EXISTS: the inventory established that the agent's PATH is bare -
           # cmake and ninja live only under VS's Common7\IDE\CommonExtensions and are NOT on
