@@ -118,6 +118,9 @@ set(MODULE_OUTPUT_FOLDER "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/modulesBert")
 # ModulePostProcessor below. Included once here (not per-module) because its
 # GLOBAL imported targets need to exist before either module's subdirectory
 # links against them - see the file's own header comment for why.
+# SharedDeps.cmake first: ModuleWorksSDK.cmake declares the shared "ModuleWorks" runtime
+# package (modulesBert/shared/ModuleWorks) through it.
+include(${CMAKE_SOURCE_DIR}/cmake/SharedDeps.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/ModuleWorksSDK.cmake)
 
 add_subdirectory(Modules)
@@ -231,8 +234,10 @@ add_custom_target(deploy
 # Configure via cmake -D or cmake-gui:
 #   INSTALL_DIR               — destination root directory
 #   INSTALL_MOD_<NAME>        — ON/OFF per module
-#   INSTALL_MOD_MILLING_DEPS  — include ModuleWorks fw DLLs for MillingKalotte
-#   INSTALL_MOD_PP_DEPS       — include ModuleWorks fw + PyPy for PostProcessor
+#   INSTALL_SHARED_DEPS       — include modulesBert/shared/<Package> for every package an
+#                               installed module uses (e.g. ModuleWorks) - derived from
+#                               onemill_module_uses_shared(), see cmake/SharedDeps.cmake
+#   INSTALL_MOD_PP_DEPS       — include the PyPy interpreter for PostProcessor
 
 set(INSTALL_DIR "D:/deployData/KLSOneMill" CACHE PATH "Install destination directory")
 
@@ -247,8 +252,11 @@ option(INSTALL_MOD_FILETRANSFER  "Install ModuleFileTransfer"    ON)
 option(INSTALL_MOD_FITTING       "Install ModuleFittingAnalysis" ON)
 option(INSTALL_MOD_UPDATER       "Install ModuleUpdater"         ON)
 
-option(INSTALL_MOD_MILLING_DEPS  "Install ModuleMillingKalotte MW framework DLLs" ON)
-option(INSTALL_MOD_PP_DEPS       "Install ModulePostProcessor MW framework + PyPy" ON)
+option(INSTALL_SHARED_DEPS       "Install shared dependency packages (modulesBert/shared/*) used by installed modules" ON)
+option(INSTALL_MOD_PP_DEPS       "Install ModulePostProcessor PyPy interpreter" ON)
+
+# Package -> using-modules table for the install script (@ONEMILL_SHARED_PACKAGE_TABLE@).
+onemill_shared_package_install_table(ONEMILL_SHARED_PACKAGE_TABLE)
 
 set(INSTALL_APP_NAME "" CACHE STRING "Override applicationName written to mainAppConfig.json (empty = leave unchanged)")
 
@@ -312,8 +320,9 @@ set(INSTALL_MOD_FIXTURE       OFF)
 set(INSTALL_MOD_FILETRANSFER  OFF)
 set(INSTALL_MOD_FITTING       ON)
 set(INSTALL_MOD_UPDATER       OFF)
-set(INSTALL_MOD_MILLING_DEPS  OFF)
 set(INSTALL_MOD_PP_DEPS       OFF)
+# INSTALL_SHARED_DEPS stays as configured: packages are installed only for modules that are
+# installed, and none of the three modules above uses one today.
 
 configure_file(
   "${CMAKE_SOURCE_DIR}/cmake/install_app.cmake.in"

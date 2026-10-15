@@ -27,8 +27,12 @@ set(_EN_FILETRANSFER  @INSTALL_MOD_FILETRANSFER@)
 set(_EN_FITTING       @INSTALL_MOD_FITTING@)
 set(_EN_UPDATER       @INSTALL_MOD_UPDATER@)
 
-set(_EN_MILLING_DEPS  @INSTALL_MOD_MILLING_DEPS@)
+set(_EN_SHARED_DEPS   @INSTALL_SHARED_DEPS@)
 set(_EN_PP_DEPS       @INSTALL_MOD_PP_DEPS@)
+
+# Shared dependency packages and the modules using them (cmake/SharedDeps.cmake):
+#   _SHARED_PACKAGES, _SHARED_PACKAGE_USERS_<Package>
+@ONEMILL_SHARED_PACKAGE_TABLE@
 
 # ---- Helpers ----
 
@@ -45,6 +49,10 @@ function(copy_module_dll MOD_NAME)
     file(COPY "${_src}" DESTINATION "${_INST_MODULES}")
     record_first_party("modulesBert/${MOD_NAME}.dll")
     message(STATUS "  + ${MOD_NAME}.dll")
+    # Remembered for the shared-package step at the end, and the module's private deps/
+    # are (re)installed right here - every installed module gets them, if it has any.
+    set_property(GLOBAL APPEND PROPERTY _INSTALLED_MODULES "${MOD_NAME}")
+    copy_module_private_deps("${MOD_NAME}")
   else()
     # Fail fast: a module enabled for install but absent from the build output
     # would otherwise ship as a silently incomplete package (exit code 0).
@@ -82,6 +90,43 @@ function(copy_module_release_notes MOD_NAME)
   endif()
 endfunction()
 
+# Private <Module>/deps (optional - most modules have none). The installed copy is always
+# replaced, not merged: an install from before the shared-deps move still holds a full
+# ModuleWorks copy in ModuleMillingKalotte/deps and ModulePostProcessor/deps, which would now
+# duplicate shared/ModuleWorks (undefined DLL resolution, see MainApp ModuleDllSearchPaths).
+function(copy_module_private_deps MOD_NAME)
+  set(_src "${_BUILD_MODULES}/${MOD_NAME}/deps")
+  set(_dst "${_INST_MODULES}/${MOD_NAME}")
+  if(EXISTS "${_dst}/deps")
+    file(REMOVE_RECURSE "${_dst}/deps")
+  endif()
+  if(EXISTS "${_src}")
+    file(MAKE_DIRECTORY "${_dst}")
+    file(COPY "${_src}" DESTINATION "${_dst}")
+    message(STATUS "  + ${MOD_NAME}/deps")
+  endif()
+endfunction()
+
+# modulesBert/shared/<Package> - replaced as a whole, like a module's deps/.
+function(copy_shared_package PACKAGE)
+  set(_src "${_BUILD_MODULES}/shared/${PACKAGE}")
+  set(_dst "${_INST_MODULES}/shared/${PACKAGE}")
+  if(NOT EXISTS "${_src}")
+    message(FATAL_ERROR
+      "Install aborted: shared dependency package '${PACKAGE}' is missing.
+"
+      "  expected: ${_src}
+"
+      "  Build the 'all' target before installing (target SharedDeps_${PACKAGE}).")
+  endif()
+  if(EXISTS "${_dst}")
+    file(REMOVE_RECURSE "${_dst}")
+  endif()
+  file(MAKE_DIRECTORY "${_INST_MODULES}/shared")
+  file(COPY "${_src}" DESTINATION "${_INST_MODULES}/shared")
+  message(STATUS "  + shared/${PACKAGE}")
+endfunction()
+
 function(copy_module_subdir MOD_NAME SUBDIR)
   set(_src "${_BUILD_MODULES}/${MOD_NAME}/${SUBDIR}")
   set(_dst "${_INST_MODULES}/${MOD_NAME}")
@@ -91,13 +136,11 @@ function(copy_module_subdir MOD_NAME SUBDIR)
     message(STATUS "  + ${MOD_NAME}/${SUBDIR}")
   else()
     # Fail fast with a remediation specific to the payload that is missing.
-    # This subdir was explicitly requested (INSTALL_MOD_*_DEPS), so its absence
+    # This subdir was explicitly requested (INSTALL_MOD_PP_DEPS), so its absence
     # means the package cannot work - the PostProcessor interpreter gap shipped
     # unnoticed for weeks precisely because this was only a warning.
     if(SUBDIR STREQUAL "interpreter")
       set(_hint "The PyPy interpreter was never staged. Run deploy_ppf.exe once in\n      <MODULEWORKS_DIR>/PPFramework/PPFramework, then rebuild:\n        deploy_ppf.exe --no-Config.GUI --Config.OFFLINE --Config.PYPY_TO_INSTALL PyPy310 --Config.DEFAULT_INSTALL_DIR .")
-    elseif(SUBDIR STREQUAL "deps")
-      set(_hint "The ModuleWorks runtime DLLs were not staged. Check MODULEWORKS_DIR and build the 'all' target.")
     else()
       set(_hint "Build the 'all' target before installing.")
     endif()
@@ -321,9 +364,6 @@ if(_EN_MILLING)
   copy_module_dll("ModuleMillingKalotte")
   copy_module_config("ModuleMillingKalotte")
   copy_module_release_notes("ModuleMillingKalotte")
-  if(_EN_MILLING_DEPS)
-    copy_module_subdir("ModuleMillingKalotte" "deps")
-  endif()
 else()
   message(STATUS "  - ModuleMillingKalotte (disabled)")
 endif()
@@ -333,7 +373,6 @@ if(_EN_PP)
   copy_module_config("ModulePostProcessor")
   copy_module_release_notes("ModulePostProcessor")
   if(_EN_PP_DEPS)
-    copy_module_subdir("ModulePostProcessor" "deps")
     copy_module_subdir("ModulePostProcessor" "interpreter")
   endif()
 else()
@@ -387,6 +426,27 @@ if(_EN_UPDATER)
 else()
   message(STATUS "  - ModuleUpdater (disabled)")
 endif()
+
+# ---- Shared dependency packages ----
+# Installed when at least one installed module uses the package - derived, no per-module option.
+get_property(_installed_modules GLOBAL PROPERTY _INSTALLED_MODULES)
+message(STATUS "Shared dependency packages:")
+foreach(_pkg IN LISTS _SHARED_PACKAGES)
+  set(_needed FALSE)
+  foreach(_user IN LISTS _SHARED_PACKAGE_USERS_${_pkg})
+    if(_user IN_LIST _installed_modules)
+      set(_needed TRUE)
+    endif()
+  endforeach()
+
+  if(NOT _needed)
+    message(STATUS "  - shared/${_pkg} (no installed module uses it)")
+  elseif(NOT _EN_SHARED_DEPS)
+    message(STATUS "  - shared/${_pkg} (INSTALL_SHARED_DEPS=OFF)")
+  else()
+    copy_shared_package("${_pkg}")
+  endif()
+endforeach()
 
 file(STRINGS "${_MANIFEST}" _first_party)
 list(LENGTH _first_party _first_party_count)
