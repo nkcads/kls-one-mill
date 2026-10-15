@@ -125,6 +125,9 @@ include(${CMAKE_SOURCE_DIR}/cmake/ModuleWorksSDK.cmake)
 
 add_subdirectory(Modules)
 
+# The product version every first-party binary carries - see the file's header comment.
+include(${CMAKE_SOURCE_DIR}/cmake/OneMillVersion.cmake)
+
 
 # ModuleWorks setup
 
@@ -449,3 +452,7 @@ if(_onemill_install_deps)
   list(LENGTH _onemill_install_deps _onemill_dep_count)
   message(STATUS "install targets depend on ${_onemill_dep_count} build targets")
 endif()
+
+# The same walk names every first-party binary, so it also decides which ones carry the
+# product version resource - see cmake/OneMillVersion.cmake.
+onemill_add_version_info(${_onemill_install_deps})

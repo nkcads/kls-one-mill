@@ -233,8 +233,8 @@ do nothing.
 **Recommendation for the edit-build-debug loop: use the build tree.** It is the only thing Visual
 Studio can debug at all, so both IDEs then behave identically, and it avoids `install_full`'s cost —
 `install_app.cmake` uses plain `file(COPY …)` rather than copy-if-different and re-runs `windeployqt`
-every time, so each install unconditionally rewrites a ~1.8 GB tree. It also bumps the title-bar
-version counter on every run (see the ledger).
+every time, so each install unconditionally rewrites a ~1.8 GB tree. The version it writes is the
+product version.
 
 **Use `install_full` when the install tree is the point:** verifying the shipped layout, checking the
 Qt/VTK staging, handing a build to someone, or testing the app as deployed. It depends on every
@@ -347,6 +347,34 @@ matters: the per-module `add_custom_target(... ALL)` steps copy `config/`, `rele
 ModuleWorks `deps/` folders into `bin/<config>/modulesBert/`, and Ninja does not track those as
 outputs, so they would survive. A half-clean that leaves stale plugin data behind is worse than
 none — it produces bugs that look like code bugs.
+
+## Versioning
+
+OneMill follows the CADS version scheme, the same as IPS Suite, CaseDesigner and PDS: **one product
+version for every first-party binary**, computed by GitVersion from the nearest `vX.Y.Z` tag.
+
+| Branch | Version |
+| --- | --- |
+| `develop` | `2.2.0.<n>-alpha` |
+| `feature/<name>` | `2.2.0.<n>-<name>` |
+| `release/vX.Y.Z`, `hotfix/vX.Y.Z` | `X.Y.Z.<n>-beta` |
+| `main`, tagged `vX.Y.Z` | `X.Y.Z.<n>` |
+
+`<n>` counts the commits since the tag; on `develop` and feature branches the minor is the tag's plus
+one.
+
+- **Where it shows:** the version resource of `MainApp.exe`, `Updater.exe` and every module DLL
+  (Explorer → Properties → Details), the installed `config/mainAppConfig.json`, the title bar, and
+  the name of the CI artifact.
+- **Local builds** compute it at configure time ([cmake/OneMillVersion.cmake](cmake/OneMillVersion.cmake)),
+  so reconfigure to pick up new commits. If configure stops with *no tag of the form vX.Y.Z*, run
+  `git fetch --tags`.
+- **CI** passes the build number from `CreateCadsVersion@4` as `-DONEMILL_VERSION=...`. The same
+  works locally; the value stays in the cache until cleared with `-DONEMILL_VERSION=`.
+- **Releases** branch off `develop` as `release/vX.Y.Z`; the released commit gets an annotated tag
+  `vX.Y.Z`. The old `Version_*`, `release/*` and `frozen/*` tags are history — no new ones.
+- **First-party manifest:** every install writes `<build>/first-party/<product>.txt`, the list of
+  our own binaries. Code signing works from it.
 
 ## Adding a module
 

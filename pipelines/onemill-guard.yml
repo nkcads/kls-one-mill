@@ -51,7 +51,9 @@ pr:
       - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  # Pinned, not ubuntu-latest: that label moves to a new Ubuntu on Microsoft's date, and a guard
+  # that starts failing for an image change it did not ask for blocks every push it protects.
+  vmImage: 'ubuntu-24.04'
 
 variables:
   - name: GUARD_SCRIPT
@@ -74,6 +76,19 @@ steps:
       echo "submodule working copies present: $(git submodule status --recursive 2>/dev/null | wc -l)"
       test -f "$(GUARD_SCRIPT)" || { echo "##vso[task.logissue type=error]Guard script missing: $(GUARD_SCRIPT)"; exit 1; }
     displayName: 'Sanity: repo layout and script present'
+
+  # Self-test BEFORE the real check. The suite builds throwaway repositories under a temp dir and
+  # runs the guard against them - offline, no credentials, seconds - so a guard that has stopped
+  # detecting anything is caught here rather than by the next incident. See
+  # pipelines/scripts/tests/run-guard-tests.sh and .vscode/OneMill-KOM-16-OneMillGuard.md.
+  #
+  # Blocking since 2026-09-16, build 1888694: 13/13 on ubuntu-latest (bash 5.2.21, git 2.55.0).
+  # It ran non-blocking first, and that was not ceremony - the first two hosted runs failed all 13
+  # cases because the suite honoured GUARD_SCRIPT, which is defined above as a REPO-RELATIVE path,
+  # while every case runs the guard from a temp fixture directory. The suite was green on Windows
+  # throughout. An untried test step should never be allowed to block real work.
+  - bash: bash pipelines/scripts/tests/run-guard-tests.sh
+    displayName: 'Self-test: prove the guard still detects what it claims'
 
   - bash: bash "$(GUARD_SCRIPT)"
     displayName: 'Guard: no submodule gitlink may move backwards'

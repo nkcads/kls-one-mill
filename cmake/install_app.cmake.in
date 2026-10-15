@@ -13,6 +13,8 @@ cmake_minimum_required(VERSION 3.16)
 set(_INSTALL_DIR       "@INSTALL_DIR@")
 set(_WINDEPLOYQT       "@WINDEPLOYQT_EXECUTABLE@")
 set(_APP_NAME          "@INSTALL_APP_NAME@")
+set(_VERSION           "@ONEMILL_VERSION_FULL@")
+set(_BUILD_ROOT        "@CMAKE_BINARY_DIR@")
 
 set(_EN_VIEW          @INSTALL_MOD_VIEW@)
 set(_EN_OVERLAY       @INSTALL_MOD_OVERLAY@)
@@ -34,10 +36,18 @@ set(_EN_PP_DEPS       @INSTALL_MOD_PP_DEPS@)
 
 # ---- Helpers ----
 
+# Adds one of our own binaries, relative to the install root, to the first-party manifest - the
+# list signing and the installer work from. Recorded where the file is staged, so the list cannot
+# drift from what the tree actually contains; third-party binaries never pass through here.
+function(record_first_party REL_PATH)
+  file(APPEND "${_MANIFEST}" "${REL_PATH}\n")
+endfunction()
+
 function(copy_module_dll MOD_NAME)
   set(_src "${_BUILD_MODULES}/${MOD_NAME}.dll")
   if(EXISTS "${_src}")
     file(COPY "${_src}" DESTINATION "${_INST_MODULES}")
+    record_first_party("modulesBert/${MOD_NAME}.dll")
     message(STATUS "  + ${MOD_NAME}.dll")
     # Remembered for the shared-package step at the end, and the module's private deps/
     # are (re)installed right here - every installed module gets them, if it has any.
@@ -152,32 +162,18 @@ function(update_version_json)
     file(READ "${_cfg_path}" _json)
   endif()
   if(_json STREQUAL "")
-    set(_json "{\n    \"applicationName\": \"KLSOneMill\",\n    \"showTimestamp\": true,\n    \"version\": \"1.0.0\"\n}\n")
+    set(_json "{\n    \"applicationName\": \"KLSOneMill\",\n    \"showTimestamp\": true,\n    \"version\": \"${_VERSION}\"\n}\n")
   endif()
 
-  # Extract version value
-  string(REGEX MATCH "\"version\"[ \t]*:[ \t]*\"([^\"]+)\"" _m "${_json}")
+  # The product version the binaries carry, not a per-tree counter: two trees installed from
+  # the same commit must say the same thing. The title bar and every module read it from here.
+  string(REGEX MATCH "\"version\"[ \t]*:[ \t]*\"([^\"]*)\"" _m "${_json}")
+  if(_m STREQUAL "")
+    message(FATAL_ERROR
+      "Install aborted: ${_cfg_path} has no \"version\" entry, so the installed version cannot be set.")
+  endif()
   set(_ver "${CMAKE_MATCH_1}")
-
-  if(_ver STREQUAL "")
-    message(WARNING "Cannot parse version — writing config unchanged")
-    file(WRITE "${_cfg_path}" "${_json}")
-    return()
-  endif()
-
-  # Increment the last integer component in the version string
-  # e.g. "2.0.0 - DEV 0.5" → last number is 5 → "2.0.0 - DEV 0.6"
-  string(REGEX MATCH "^(.*[^0-9])([0-9]+)([^0-9]*)$" _lm "${_ver}")
-  if(CMAKE_MATCH_2 STREQUAL "")
-    # Pure integer version like "5"
-    math(EXPR _new_ver "${_ver} + 1")
-  else()
-    set(_prefix  "${CMAKE_MATCH_1}")
-    set(_num     "${CMAKE_MATCH_2}")
-    set(_suffix  "${CMAKE_MATCH_3}")
-    math(EXPR _new_num "${_num} + 1")
-    set(_new_ver "${_prefix}${_new_num}${_suffix}")
-  endif()
+  set(_new_ver "${_VERSION}")
 
   string(REGEX REPLACE
     "(\"version\"[ \t]*:[ \t]*\")([^\"]*)(\")"
@@ -207,6 +203,17 @@ endif()
 set(_BUILD_MODULES "${BUILD_DIR}/modulesBert")
 set(_INST_MODULES  "${_INSTALL_DIR}/modulesBert")
 
+# One manifest per product, in the build tree so it never ships, rewritten on every run so a
+# module that was switched off drops out of it.
+if("${_APP_NAME}" STREQUAL "")
+  set(_product "KLSOneMill")
+else()
+  set(_product "${_APP_NAME}")
+endif()
+set(_MANIFEST "${_BUILD_ROOT}/first-party/${_product}.txt")
+file(MAKE_DIRECTORY "${_BUILD_ROOT}/first-party")
+file(WRITE "${_MANIFEST}" "")
+
 message(STATUS "")
 message(STATUS "=== KLSOneMill install [${INSTALL_MODE}] ===")
 message(STATUS "Destination : ${_INSTALL_DIR}")
@@ -224,10 +231,12 @@ if(INSTALL_MODE STREQUAL "full")
   # 1) Copy exe
   file(COPY "${APP_EXE}" DESTINATION "${_INSTALL_DIR}")
   get_filename_component(_exe_name "${APP_EXE}" NAME)
+  record_first_party("${_exe_name}")
   message(STATUS "[+] ${_exe_name}")
 
   if(DEFINED UPDATER_EXE AND EXISTS "${UPDATER_EXE}")
     file(COPY "${UPDATER_EXE}" DESTINATION "${_INSTALL_DIR}")
+    record_first_party("Updater.exe")
     message(STATUS "[+] Updater.exe")
   else()
     message(FATAL_ERROR
@@ -294,6 +303,8 @@ elseif(INSTALL_MODE STREQUAL "plugins")
     else()
       message(STATUS "[ ] ${_exe_name} (up to date)")
     endif()
+    # Part of the tree either way - the manifest lists what is installed, not what was copied.
+    record_first_party("${_exe_name}")
   endif()
 
   # Copy Updater.exe if the build output is newer than the installed copy
@@ -313,6 +324,7 @@ elseif(INSTALL_MODE STREQUAL "plugins")
     else()
       message(STATUS "[ ] Updater.exe (up to date)")
     endif()
+    record_first_party("Updater.exe")
   endif()
 else()
   message(FATAL_ERROR "Unknown INSTALL_MODE '${INSTALL_MODE}'. Use 'full' or 'plugins'.")
@@ -435,6 +447,11 @@ foreach(_pkg IN LISTS _SHARED_PACKAGES)
     copy_shared_package("${_pkg}")
   endif()
 endforeach()
+
+file(STRINGS "${_MANIFEST}" _first_party)
+list(LENGTH _first_party _first_party_count)
+message(STATUS "")
+message(STATUS "First-party manifest: ${_MANIFEST} (${_first_party_count} binaries)")
 
 message(STATUS "")
 message(STATUS "=== Done ===")
