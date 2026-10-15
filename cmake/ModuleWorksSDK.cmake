@@ -110,34 +110,15 @@ _moduleworks_add_target(PPConverter LIBS MWPPConverter.lib DEPENDS PPInterface M
 _moduleworks_add_target(5axui)
 
 # --- Runtime DLL / license staging ------------------------------------------
-# Copies every ModuleWorks runtime DLL (+ the license) into a module's own
-# deps/ folder. Trimming this to only the DLLs a given module's linked .lib
-# subset transitively needs isn't reliably derivable from the SDK alone (only
-# ModuleWorks knows the full runtime dependency graph), so every module that
-# links any ModuleWorks::* target still gets the full set, same as before.
+# Every ModuleWorks runtime DLL (+ the license, which ModuleWorks looks up next to its own
+# DLLs) is staged ONCE as the shared dependency package "ModuleWorks" -
+# modulesBert/shared/ModuleWorks/ - see cmake/SharedDeps.cmake. Modules opt in via
+# onemill_module_uses_shared(... PACKAGES ModuleWorks) plus "sharedDeps": ["ModuleWorks"] in
+# their plugin metadata JSON (currently ModuleMillingKalotte and ModulePostProcessor).
 #
-# Stamped rather than a bare add_custom_target(... ALL) (which has no OUTPUT, so it's always
-# considered out of date and re-copies ~90 DLLs on every single build, done or not) - same
-# pattern as ModulePostProcessorWidget/CMakeLists.txt's PyPy interpreter copy: the stamp lives
-# in bin/$<CONFIG> itself (MODULE_OUTPUT_FOLDER's parent, alongside MainApp.exe), findable at a
-# glance and named after the copy target (MWCopyKalotte.stamp, MWCopyPP.stamp - matches what
-# Visual Studio's Output window already calls these targets), and DEPENDS on the actual DLL list
-# so an in-place SDK update (any DLL's mtime changing) re-triggers the copy on its own - the
-# PyPy stamp only depends on one file (pypy3.exe) since that copy's source tree isn't glob'd
-# ahead of time the way this one already is. install_full/deploy never sweeps bin/$<CONFIG>
-# wholesale (see cmake/install_app.cmake.in), so a loose stamp file there is never picked up.
-function(moduleworks_copy_runtime target_name output_dir)
-    file(GLOB _mw_dlls "${MODULEWORKS_DLL_DIR}/*.dll")
-    list(APPEND _mw_dlls "${MODULEWORKS_LICENSE_FILE}")
-    set(_stamp "${MODULE_OUTPUT_FOLDER}/../${target_name}.stamp")
-    add_custom_command(
-        OUTPUT "${_stamp}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${output_dir}/deps"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_mw_dlls} "${output_dir}/deps"
-        COMMAND ${CMAKE_COMMAND} -E touch "${_stamp}"
-        DEPENDS ${_mw_dlls}
-        COMMENT "Copying all ModuleWorks DLLs to ${output_dir}/deps"
-        VERBATIM
-    )
-    add_custom_target(${target_name} ALL DEPENDS "${_stamp}")
-endfunction()
+# Formerly moduleworks_copy_runtime() copied the full set into EACH such module's own deps/
+# folder. Trimming the set to only the DLLs the linked .lib subset transitively needs still
+# isn't reliably derivable from the SDK alone (only ModuleWorks knows the full runtime
+# dependency graph), so the package still holds the full set.
+file(GLOB _mw_dlls "${MODULEWORKS_DLL_DIR}/*.dll")
+onemill_shared_package(ModuleWorks FILES ${_mw_dlls} "${MODULEWORKS_LICENSE_FILE}")
