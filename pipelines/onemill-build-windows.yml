@@ -31,7 +31,7 @@
 #
 # The staged tree is verified before publishing - not against reference numbers from some machine,
 # which drift with every SDK or dependency change, but against what has to be there: both exes,
-# every module DLL, each ModuleWorks deps/ with its licence, the interpreter, the product version,
+# every module DLL, the shared ModuleWorks package with its licence, the interpreter, the product version,
 # and generous floors that only catch a grossly short payload. install_full exiting 0 is not
 # sufficient evidence: an artifact that launches but is missing a module or its config is worse
 # than one that fails loudly in CI.
@@ -42,7 +42,7 @@
 # installed mainAppConfig.json; the verify step checks that all three agree.
 #
 # The zip is named from that version. It contains mwSupport.lic, because the build copies it from
-# the SDK's bin/ into each ModuleWorks deps/ folder and install_full stages those - the app does
+# the SDK's bin/ into modulesBert/shared/ModuleWorks and install_full stages that - the app does
 # not run without it. Note that this means anyone with project read access can download the licence; Robert's hand-built release zips already worked
 # this way, so it is the existing distribution posture rather than a new one.
 #
@@ -417,7 +417,7 @@ stages:
 
           - script: |
               cmake --build --preset onemill-install-target-ci-win-msvc-x64-relwithdebinfo
-            displayName: 'INSTALL (install_full - stages app, modules, deps, interpreter)'
+            displayName: 'INSTALL (install_full - stages app, modules, shared deps, interpreter)'
 
           - powershell: |
               $ErrorActionPreference = 'Stop'
@@ -440,18 +440,36 @@ stages:
               $dlls = @(Get-ChildItem $modDir -Filter *.dll -ErrorAction SilentlyContinue)
               Write-Host ("  module DLLs      {0,6}" -f $dlls.Count)
 
-              Write-Host "  deps folders:"
-              $depsOk = $true
-              foreach ($m in @('ModuleMillingKalotte','ModulePostProcessor')) {
-                $d = Join-Path $modDir "$m\deps"
-                if (Test-Path $d) {
-                  $n = @(Get-ChildItem $d -Recurse -File).Count
-                  $lic = Join-Path $d 'mwSupport.lic'
-                  $licTxt = if (Test-Path $lic) { "$((Get-Item $lic).Length) bytes" } else { 'MISSING' }
-                  Write-Host ("      {0,-22} {1,4} files   mwSupport.lic: {2}" -f $m, $n, $licTxt)
-                  if (-not (Test-Path $lic)) { $depsOk = $false }
-                } else { Write-Host ("      {0,-22} MISSING" -f $m); $depsOk = $false }
-              }
+              # ModuleWorks is staged ONCE, as the shared package modulesBert/shared/ModuleWorks
+              # (cmake/SharedDeps.cmake): every DLL in the SDK's bin/ plus the licence. Compared with
+              # the SDK this build was configured against rather than counted, so an SDK update
+              # needs no edit here.
+              $shared = Join-Path $modDir 'shared\ModuleWorks'
+              if (-not (Test-Path $shared)) { throw "modulesBert/shared/ModuleWorks is missing - the ModuleWorks modules would not load" }
+              $mwLine = Select-String -Path 'out/build/win-msvc-x64-relwithdebinfo/CMakeCache.txt' -Pattern '^MODULEWORKS_DIR:[^=]*=(.+)$' | Select-Object -First 1
+              if (-not $mwLine) { throw "MODULEWORKS_DIR is absent from CMakeCache.txt - cannot compare shared/ModuleWorks with the SDK" }
+              $sdkBin     = Join-Path $mwLine.Matches[0].Groups[1].Value 'bin'
+              $sdkDlls    = @(Get-ChildItem $sdkBin -File | Where-Object { $_.Extension -eq '.dll' } | ForEach-Object { $_.Name })
+              $sharedDlls = @(Get-ChildItem $shared -File | Where-Object { $_.Extension -eq '.dll' } | ForEach-Object { $_.Name })
+              $lic = Join-Path $shared 'mwSupport.lic'
+              $licTxt = if (Test-Path $lic) { "$((Get-Item $lic).Length) bytes" } else { 'MISSING' }
+              Write-Host ("  shared/ModuleWorks {0} of {1} SDK DLLs   mwSupport.lic: {2}" -f $sharedDlls.Count, $sdkDlls.Count, $licTxt)
+              if ($sdkDlls.Count -eq 0) { throw "no DLLs found in the SDK's bin/ ($sdkBin) - cannot compare" }
+              $notShared = @($sdkDlls | Where-Object { $sharedDlls -notcontains $_ })
+              if ($notShared) { throw "SDK DLLs missing from shared/ModuleWorks: $($notShared -join ', ')" }
+              if (-not (Test-Path $lic)) { throw "mwSupport.lic is missing from shared/ModuleWorks - the artifact would not run" }
+
+              # One DLL name in exactly one folder: a module deps/ still holding a ModuleWorks DLL - a
+              # stale copy from the old per-module layout - gives Windows two candidates and an
+              # undefined choice between them.
+              $dupes = @(Get-ChildItem $modDir -Directory | ForEach-Object {
+                $deps = Join-Path $_.FullName 'deps'
+                $mod  = $_.Name
+                if (Test-Path $deps) {
+                  Get-ChildItem $deps -File | Where-Object { $sharedDlls -contains $_.Name } | ForEach-Object { "$mod/deps/$($_.Name)" }
+                }
+              })
+              if ($dupes) { throw "ModuleWorks DLLs also staged in a module deps/ (stale per-module copies): $($dupes -join ', ')" }
 
               $ip = Join-Path $modDir 'ModulePostProcessor\interpreter'
               if (Test-Path $ip) {
@@ -462,8 +480,6 @@ stages:
                 Write-Host "##vso[task.logissue type=error]No interpreter/ staged. deploy_ppf.exe must be run ONCE on this agent to create PYPY_SOURCE - see .vscode/OneMill-Setup-Ledger.md fix 8. The PostProcessor module cannot work without it."
                 throw "interpreter/ missing from the staged tree"
               }
-
-              if (-not $depsOk) { throw "a ModuleWorks deps/ folder or its mwSupport.lic is missing - the artifact would not run" }
 
               # One product version everywhere: the build number, every first-party binary and the
               # installed config must agree - and the first-party manifest, the list signing will work

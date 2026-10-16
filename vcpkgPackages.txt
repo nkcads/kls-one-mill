@@ -38,8 +38,7 @@
 #   eigen3           5.0.1         <Eigen/...> in 94 files across MeshUtils, ModuleUtils,
 #                                  PostProcessorBackend, FittingAnalysisBackend, MillingBackend
 #   flann            2022-10-28
-#   inja             3.5.0#1       header-only, ModuleFixture NC templates (added 2026-10-12;
-#                                  version = the port at the pin commit, not yet re-verified on CI)
+#   inja             3.5.0#1       header-only, ModuleFixture NC templates (added 2026-10-12)
 #   libigl           2.6.0#2
 #   libzippp         7.1-1.10.1
 #   nlohmann-json    3.12.0#2
