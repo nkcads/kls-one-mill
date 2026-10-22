@@ -1,0 +1,227 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "bom-ref": "overlay:onemill",
+      "type": "application",
+      "name": "KLS OneMill SBOM overlay",
+      "description": "HAND-MAINTAINED fragment merged by vcpkg_to_cyclonedx.py --overlay. It holds only what tooling cannot derive: the commercial SDKs (ModuleWorks, Polygonica) and their bundled PyPy runtime, plus the security-relevant third-party libraries VTK vendors inside its own tree (invisible to vcpkg AND to Syft, because this VTK is a prebuilt external install and its ThirdParty libs are statically linked). This file is reviewed like code. Only `components` and `dependencies` are read by the script; the rest makes it validate standalone. IMPORTANT: the VTK third-party entries are parented under bom-ref 'ext:vtk@9.5' - keep that version in sync with what --cmake-cache derives (the vtk-9.5 suffix of VTK_DIR), and always run the generator WITH --cmake-cache so that node exists."
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "ext:moduleworks-sdk",
+      "type": "library",
+      "name": "ModuleWorks SDK",
+      "version": "2026.08",
+      "supplier": { "name": "ModuleWorks GmbH", "url": ["https://www.moduleworks.com"] },
+      "scope": "required",
+      "licenses": [{ "license": { "name": "ModuleWorks commercial (proprietary)", "acknowledgement": "declared" } }],
+      "purl": "pkg:generic/moduleworks-sdk@2026.08",
+      "externalReferences": [{ "type": "website", "url": "https://www.moduleworks.com" }],
+      "properties": [
+        { "name": "cads:source", "value": "external-toolchain (MODULEWORKS_DIR)" },
+        { "name": "cads:commercial", "value": "true" },
+        { "name": "cads:vulnSource", "value": "vendor-advisory (no public CPE/purl)" },
+        { "name": "cads:verify", "value": "Confirm exact SDK build; repo pins the 2026.08 bin/ layout with mwSupport.lic." }
+      ]
+    },
+    {
+      "bom-ref": "ext:pypy",
+      "type": "application",
+      "name": "PyPy",
+      "version": "",
+      "supplier": { "name": "The PyPy Team", "url": ["https://www.pypy.org"] },
+      "scope": "required",
+      "licenses": [{ "license": { "id": "MIT", "acknowledgement": "declared" } }],
+      "purl": "pkg:generic/pypy@3.10",
+      "externalReferences": [{ "type": "website", "url": "https://www.pypy.org" }],
+      "properties": [
+        { "name": "cads:source", "value": "ModuleWorks PPFramework (deploy_ppf.exe, PyPy310)" },
+        { "name": "cads:pythonCompat", "value": "3.10" },
+        { "name": "cads:verify", "value": "Fill the PyPy runtime version (e.g. 7.3.x) from the deployed interpreter, then set version + cpe." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:pypy:pypy:{version}:*:*:*:*:*:*:*" }
+      ]
+    },
+    {
+      "bom-ref": "ext:polygonica",
+      "type": "library",
+      "name": "Polygonica",
+      "version": "",
+      "supplier": { "name": "MachineWorks Ltd.", "url": ["https://www.polygonica.com"] },
+      "scope": "required",
+      "licenses": [{ "license": { "name": "Polygonica commercial (proprietary)", "acknowledgement": "declared" } }],
+      "purl": "pkg:generic/polygonica",
+      "externalReferences": [{ "type": "website", "url": "https://www.polygonica.com" }],
+      "properties": [
+        { "name": "cads:source", "value": "external-toolchain (POLYGONICA_DIR, MillingBackend)" },
+        { "name": "cads:commercial", "value": "true" },
+        { "name": "cads:vulnSource", "value": "vendor-advisory (no public CPE/purl)" },
+        { "name": "cads:verify", "value": "Fill the Polygonica SDK version; repo uses the msoft143/dds_ build (pg.lib)." }
+      ]
+    },
+
+    { "bom-ref": "vtk-thirdparty:zlib", "type": "library", "name": "zlib", "version": "",
+      "scope": "required", "supplier": { "name": "zlib" },
+      "purl": "pkg:github/madler/zlib",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/madler/zlib" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm this VTK build bundles zlib and set its version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:zlib:zlib:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:libpng", "type": "library", "name": "libpng", "version": "",
+      "scope": "required", "supplier": { "name": "PNG Development Group" },
+      "purl": "pkg:github/pnggroup/libpng",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/pnggroup/libpng" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:libpng:libpng:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:libjpeg-turbo", "type": "library", "name": "libjpeg-turbo", "version": "",
+      "scope": "required", "supplier": { "name": "libjpeg-turbo" },
+      "purl": "pkg:github/libjpeg-turbo/libjpeg-turbo",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/libjpeg-turbo/libjpeg-turbo" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:libjpeg-turbo:libjpeg-turbo:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:libtiff", "type": "library", "name": "libtiff", "version": "",
+      "scope": "required", "supplier": { "name": "libtiff" },
+      "purl": "pkg:github/libsdl-org/libtiff",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/libsdl-org/libtiff" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:libtiff:libtiff:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:freetype", "type": "library", "name": "freetype", "version": "",
+      "scope": "required", "supplier": { "name": "The FreeType Project" },
+      "purl": "pkg:github/freetype/freetype",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/freetype/freetype" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:freetype:freetype:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:expat", "type": "library", "name": "expat", "version": "",
+      "scope": "required", "supplier": { "name": "The Expat Project" },
+      "purl": "pkg:github/libexpat/libexpat",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/libexpat/libexpat" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:libexpat_project:libexpat:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:libxml2", "type": "library", "name": "libxml2", "version": "",
+      "scope": "required", "supplier": { "name": "GNOME / xmlsoft" },
+      "purl": "pkg:github/GNOME/libxml2",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/GNOME/libxml2" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:xmlsoft:libxml2:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:hdf5", "type": "library", "name": "hdf5", "version": "",
+      "scope": "required", "supplier": { "name": "The HDF Group" },
+      "purl": "pkg:github/HDFGroup/hdf5",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/HDFGroup/hdf5" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence (large module; often enabled) + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:hdfgroup:hdf5:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:netcdf", "type": "library", "name": "netcdf", "version": "",
+      "scope": "required", "supplier": { "name": "Unidata" },
+      "purl": "pkg:github/Unidata/netcdf-c",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/Unidata/netcdf-c" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:unidata:netcdf:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:sqlite3", "type": "library", "name": "sqlite", "version": "",
+      "scope": "required", "supplier": { "name": "SQLite Consortium" },
+      "purl": "pkg:generic/sqlite",
+      "externalReferences": [{ "type": "website", "url": "https://www.sqlite.org" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:sqlite:sqlite:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:libproj", "type": "library", "name": "proj", "version": "",
+      "scope": "required", "supplier": { "name": "OSGeo" },
+      "purl": "pkg:github/OSGeo/PROJ",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/OSGeo/PROJ" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:osgeo:proj:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:lz4", "type": "library", "name": "lz4", "version": "",
+      "scope": "required", "supplier": { "name": "lz4" },
+      "purl": "pkg:github/lz4/lz4",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/lz4/lz4" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:lz4_project:lz4:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:liblzma", "type": "library", "name": "liblzma", "version": "",
+      "scope": "required", "supplier": { "name": "The Tukaani Project" },
+      "purl": "pkg:github/tukaani-project/xz",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/tukaani-project/xz" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty" },
+        { "name": "cads:verify", "value": "Confirm presence + version. (CVE-2024-3094 relevance: pin exact version.)" },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:tukaani:xz:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:theora", "type": "library", "name": "libtheora", "version": "",
+      "scope": "required", "supplier": { "name": "Xiph.Org Foundation" },
+      "purl": "pkg:generic/theora",
+      "externalReferences": [{ "type": "website", "url": "https://www.theora.org" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty (ogg/theora, if video enabled)" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:xiph.org:libtheora:{version}:*:*:*:*:*:*:*" }
+      ] },
+    { "bom-ref": "vtk-thirdparty:ogg", "type": "library", "name": "libogg", "version": "",
+      "scope": "required", "supplier": { "name": "Xiph.Org Foundation" },
+      "purl": "pkg:generic/ogg",
+      "externalReferences": [{ "type": "website", "url": "https://www.xiph.org/ogg" }],
+      "properties": [
+        { "name": "cads:source", "value": "VTK vendored ThirdParty (ogg/theora, if video enabled)" },
+        { "name": "cads:verify", "value": "Confirm presence + version." },
+        { "name": "cads:cpeTemplate", "value": "cpe:2.3:a:xiph.org:libogg:{version}:*:*:*:*:*:*:*" }
+      ] }
+  ],
+  "dependencies": [
+    { "ref": "ext:moduleworks-sdk", "dependsOn": ["ext:pypy"] },
+    { "ref": "ext:polygonica", "dependsOn": [] },
+    {
+      "ref": "ext:vtk@9.5",
+      "dependsOn": [
+        "vtk-thirdparty:zlib",
+        "vtk-thirdparty:libpng",
+        "vtk-thirdparty:libjpeg-turbo",
+        "vtk-thirdparty:libtiff",
+        "vtk-thirdparty:freetype",
+        "vtk-thirdparty:expat",
+        "vtk-thirdparty:libxml2",
+        "vtk-thirdparty:hdf5",
+        "vtk-thirdparty:netcdf",
+        "vtk-thirdparty:sqlite3",
+        "vtk-thirdparty:libproj",
+        "vtk-thirdparty:lz4",
+        "vtk-thirdparty:liblzma",
+        "vtk-thirdparty:theora",
+        "vtk-thirdparty:ogg"
+      ]
+    }
+  ]
+}

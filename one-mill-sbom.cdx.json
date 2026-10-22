@@ -1,0 +1,388 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "serialNumber": "urn:uuid:7c2f1b9a-4d6e-4c2a-9f1b-8e3d5a7c0b42",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-10-22T00:00:00+00:00",
+    "lifecycles": [
+      {
+        "phase": "build"
+      }
+    ],
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "group": "anthropic",
+          "name": "Claude Code",
+          "description": "SBOM assembled from vcpkgPackages.txt (pinned vcpkg commit), CMakeLists.txt find_package() calls, .gitmodules and README prerequisites. Component versions are the vcpkg-resolved versions verified 2026-07-29; external toolchain versions (Qt, VTK) are the pinned prerequisite versions."
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "app:kls-onemill",
+      "type": "application",
+      "group": "at.cads",
+      "name": "KLS OneMill",
+      "version": "2.2.0-beta220",
+      "description": "KLS OneMill — C++/Qt desktop application (MainApp + plugin module DLLs) for milling/fitting workflows. Live branch version/Beta220.",
+      "properties": [
+        {
+          "name": "cads:branch",
+          "value": "version/Beta220"
+        },
+        {
+          "name": "cads:buildSystem",
+          "value": "CMake + Ninja, MSVC 2022, VS 18"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "pkg:generic/boost-asio@1.91.0",
+      "type": "library",
+      "name": "boost-asio",
+      "version": "1.91.0",
+      "description": "Boost.Asio — networking/async I/O (FileTransferBackend, FileTransferClient).",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "BSL-1.0" } }],
+      "purl": "pkg:generic/boost-asio@1.91.0",
+      "externalReferences": [{ "type": "website", "url": "https://www.boost.org/doc/libs/release/doc/html/boost_asio.html" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "boost-asio" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/boost-geometry@1.91.0",
+      "type": "library",
+      "name": "boost-geometry",
+      "version": "1.91.0",
+      "description": "Boost.Geometry (MillingBackend, MillingKalotteWidget).",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "BSL-1.0" } }],
+      "purl": "pkg:generic/boost-geometry@1.91.0",
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "boost-geometry" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/boost-system@1.91.0",
+      "type": "library",
+      "name": "boost-system",
+      "version": "1.91.0",
+      "description": "Boost.System — find_package(Boost COMPONENTS system).",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "BSL-1.0" } }],
+      "purl": "pkg:generic/boost-system@1.91.0",
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "boost-system" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/clipper2@2.0.1",
+      "type": "library",
+      "name": "clipper2",
+      "version": "2.0.1",
+      "description": "Clipper2 — polygon clipping/offsetting.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "BSL-1.0" } }],
+      "purl": "pkg:generic/clipper2@2.0.1",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/AngusJohnson/Clipper2" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "clipper2" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/cpr@1.14.2",
+      "type": "library",
+      "name": "cpr",
+      "version": "1.14.2",
+      "description": "C++ Requests — HTTP client (wraps libcurl).",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "MIT" } }],
+      "purl": "pkg:generic/cpr@1.14.2",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/libcpr/cpr" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "cpr" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/eigen3@5.0.1",
+      "type": "library",
+      "name": "eigen3",
+      "version": "5.0.1",
+      "description": "Eigen — linear algebra; included in 94 files across MeshUtils, ModuleUtils, PostProcessorBackend, FittingAnalysisBackend, MillingBackend.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "MPL-2.0" } }],
+      "purl": "pkg:generic/eigen3@5.0.1",
+      "externalReferences": [{ "type": "website", "url": "https://eigen.tuxfamily.org" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "eigen3" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/flann@2022-10-28",
+      "type": "library",
+      "name": "flann",
+      "version": "2022-10-28",
+      "description": "FLANN — fast approximate nearest neighbours.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "BSD-3-Clause" } }],
+      "purl": "pkg:generic/flann@2022-10-28",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/flann-lib/flann" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "flann" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/inja@3.5.0",
+      "type": "library",
+      "name": "inja",
+      "version": "3.5.0",
+      "description": "Inja — header-only template engine; ModuleFixture NC templates.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "MIT" } }],
+      "purl": "pkg:generic/inja@3.5.0",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/pantor/inja" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "inja" },
+        { "name": "vcpkg:portVersion", "value": "3.5.0#1" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/libigl@2.6.0",
+      "type": "library",
+      "name": "libigl",
+      "version": "2.6.0",
+      "description": "libigl — geometry processing (igl::ray_mesh_intersect used by EigenGeometry.cpp). Requires post-install fix: raytri.c must be copied into the installed igl include dir (port packaging bug).",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "MPL-2.0" } }],
+      "purl": "pkg:generic/libigl@2.6.0",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/libigl/libigl" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "libigl" },
+        { "name": "vcpkg:portVersion", "value": "2.6.0#2" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/libzippp@7.1-1.10.1",
+      "type": "library",
+      "name": "libzippp",
+      "version": "7.1-1.10.1",
+      "description": "libzippp — C++ wrapper over libzip (bundles libzip 1.10.1).",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "BSD-3-Clause" } }],
+      "purl": "pkg:generic/libzippp@7.1-1.10.1",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/ctabin/libzippp" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "libzippp" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/nlohmann-json@3.12.0",
+      "type": "library",
+      "name": "nlohmann-json",
+      "version": "3.12.0",
+      "description": "nlohmann/json — JSON for Modern C++.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "MIT" } }],
+      "purl": "pkg:generic/nlohmann-json@3.12.0",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/nlohmann/json" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "nlohmann-json" },
+        { "name": "vcpkg:portVersion", "value": "3.12.0#2" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/opencv4@4.12.0",
+      "type": "library",
+      "name": "opencv4",
+      "version": "4.12.0",
+      "description": "OpenCV (metaport 'opencv' pulls opencv4 with features calib3d, core, directml, dnn, dshow, fs, gapi, highgui, intrinsics, jpeg, msmf, png, quirc, thread, tiff, webp, win32ui).",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }],
+      "purl": "pkg:generic/opencv4@4.12.0",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/opencv/opencv" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "opencv (opencv4 4.12.0#7)" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/pugixml@1.16",
+      "type": "library",
+      "name": "pugixml",
+      "version": "1.16",
+      "description": "pugixml — lightweight XML parser.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "MIT" } }],
+      "purl": "pkg:generic/pugixml@1.16",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/zeux/pugixml" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "pugixml" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/spdlog@1.17.0",
+      "type": "library",
+      "name": "spdlog",
+      "version": "1.17.0",
+      "description": "spdlog — fast C++ logging (features core, fmt, tz-offset).",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "MIT" } }],
+      "purl": "pkg:generic/spdlog@1.17.0",
+      "externalReferences": [{ "type": "vcs", "url": "https://github.com/gabime/spdlog" }],
+      "properties": [
+        { "name": "cads:source", "value": "vcpkg" },
+        { "name": "vcpkg:port", "value": "spdlog" },
+        { "name": "vcpkg:portVersion", "value": "1.17.0#1" },
+        { "name": "vcpkg:triplet", "value": "x64-windows-static" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/qt@6.10.2",
+      "type": "framework",
+      "name": "Qt",
+      "version": "6.10.2",
+      "description": "Qt 6 (msvc2022_64) — Core, Gui, Widgets, OpenGL, OpenGLWidgets, Network, Svg. External toolchain, located via Qt6_DIR; not fetched by the build.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "LGPL-3.0-only" } }],
+      "purl": "pkg:generic/qt@6.10.2",
+      "externalReferences": [{ "type": "website", "url": "https://www.qt.io" }],
+      "properties": [
+        { "name": "cads:source", "value": "external-toolchain" },
+        { "name": "cads:note", "value": "Dual-licensed (LGPL-3.0 or commercial Qt); confirm which license the deployed build uses." }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/vtk@9.5",
+      "type": "library",
+      "name": "VTK",
+      "version": "9.5",
+      "description": "Visualization Toolkit, built with Qt support. External toolchain, located via VTK_DIR; not fetched by the build.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "BSD-3-Clause" } }],
+      "purl": "pkg:generic/vtk@9.5",
+      "externalReferences": [{ "type": "website", "url": "https://vtk.org" }],
+      "properties": [
+        { "name": "cads:source", "value": "external-toolchain" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/moduleworks-sdk",
+      "type": "library",
+      "name": "ModuleWorks SDK",
+      "description": "ModuleWorks CAM/toolpath SDK (MODULEWORKS_DIR); requires a valid mwSupport.lic. Proprietary commercial component. Also supplies the PostProcessor PyPy runtime.",
+      "scope": "required",
+      "licenses": [{ "license": { "name": "ModuleWorks commercial (proprietary)" } }],
+      "purl": "pkg:generic/moduleworks-sdk",
+      "externalReferences": [{ "type": "website", "url": "https://www.moduleworks.com" }],
+      "properties": [
+        { "name": "cads:source", "value": "external-toolchain" },
+        { "name": "cads:commercial", "value": "true" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/polygonica",
+      "type": "library",
+      "name": "Polygonica",
+      "description": "Polygonica geometry/mesh SDK (POLYGONICA_DIR, used by MillingBackend). Proprietary commercial component.",
+      "scope": "required",
+      "licenses": [{ "license": { "name": "Polygonica commercial (proprietary)" } }],
+      "purl": "pkg:generic/polygonica",
+      "externalReferences": [{ "type": "website", "url": "https://www.polygonica.com" }],
+      "properties": [
+        { "name": "cads:source", "value": "external-toolchain" },
+        { "name": "cads:commercial", "value": "true" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/pypy@3.10",
+      "type": "application",
+      "name": "PyPy",
+      "version": "PyPy310",
+      "description": "PyPy 3.10 interpreter deployed via ModuleWorks PPFramework (deploy_ppf.exe); runtime for the PostProcessor.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "MIT" } }],
+      "purl": "pkg:generic/pypy@3.10",
+      "externalReferences": [{ "type": "website", "url": "https://www.pypy.org" }],
+      "properties": [
+        { "name": "cads:source", "value": "moduleworks-ppframework" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:generic/openxlsx",
+      "type": "library",
+      "name": "OpenXLSX",
+      "description": "OpenXLSX — read/write of .xlsx files. Vendored as a CADS-forked git submodule (om_OpenXLSX); bundles its own zip/XML backends.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "BSD-3-Clause" } }],
+      "purl": "pkg:generic/openxlsx",
+      "externalReferences": [
+        { "type": "vcs", "url": "https://github.com/troldal/OpenXLSX" },
+        { "type": "distribution", "url": "https://dev.azure.com/cads-team/KLS%20OneMill/_git/om_OpenXLSX" }
+      ],
+      "properties": [
+        { "name": "cads:source", "value": "git-submodule (CADS fork)" }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "app:kls-onemill",
+      "dependsOn": [
+        "pkg:generic/boost-asio@1.91.0",
+        "pkg:generic/boost-geometry@1.91.0",
+        "pkg:generic/boost-system@1.91.0",
+        "pkg:generic/clipper2@2.0.1",
+        "pkg:generic/cpr@1.14.2",
+        "pkg:generic/eigen3@5.0.1",
+        "pkg:generic/flann@2022-10-28",
+        "pkg:generic/inja@3.5.0",
+        "pkg:generic/libigl@2.6.0",
+        "pkg:generic/libzippp@7.1-1.10.1",
+        "pkg:generic/nlohmann-json@3.12.0",
+        "pkg:generic/opencv4@4.12.0",
+        "pkg:generic/pugixml@1.16",
+        "pkg:generic/spdlog@1.17.0",
+        "pkg:generic/qt@6.10.2",
+        "pkg:generic/vtk@9.5",
+        "pkg:generic/moduleworks-sdk",
+        "pkg:generic/polygonica",
+        "pkg:generic/openxlsx"
+      ]
+    },
+    {
+      "ref": "pkg:generic/moduleworks-sdk",
+      "dependsOn": ["pkg:generic/pypy@3.10"]
+    }
+  ]
+}
