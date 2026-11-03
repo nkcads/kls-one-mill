@@ -1,0 +1,22 @@
+# Direct vcpkg dependencies (vcpkgPackages.txt, verified against find_package()/#include)
+boost-asio 1.91.0
+boost-geometry 1.91.0
+boost-system 1.91.0
+clipper2 2.0.1
+cpr 1.14.2
+eigen3 5.0.1
+flann 2022-10-28
+inja 3.5.0#1
+libigl 2.6.0#2
+libzippp 7.1-1.10.1
+nlohmann-json 3.12.0#2
+opencv 4.12.0
+pugixml 1.16
+spdlog 1.17.0#1
+
+# Direct non-vcpkg dependencies (external toolchain / submodule)
+OpenXLSX
+Qt 6.10.2
+VTK 9.5
+ModuleWorks SDK 2026.08
+Polygonica
