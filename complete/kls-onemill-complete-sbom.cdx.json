@@ -1,0 +1,7690 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:d8847543-bd48-47a9-ac70-28e941c45f31",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-11-03T07:00:21+00:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "gen_complete_sbom.py"
+        },
+        {
+          "type": "application",
+          "name": "vcpkg",
+          "version": "2026-07-13"
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "app:kls-onemill",
+      "type": "application",
+      "name": "KLS OneMill",
+      "description": "Dependency graph resolved by vcpkg (classic mode) at commit b81cab76a175645e047601da8f982ad86bff1cc3, triplet x64-windows-static."
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "vcpkg:abseil",
+      "type": "library",
+      "name": "abseil",
+      "version": "20260107.1",
+      "scope": "required",
+      "purl": "pkg:generic/abseil@20260107.1",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "3"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Abseil is an open-source collection of C++ library code designed to augment the C++ standard library. The Abseil library code is collected from Google's own C++ code base, has been extensively tested and used in production, and is the same code we depend on in our daily coding lives. In some cases, Abseil provides pieces missing from the C++ standard; in others, Abseil provides alternatives to the standard for special needs we've found through usage in the Google code base. We denote those cases clearly within the library code we provide you. Abseil is not meant to be a competitor to the standard library; we've just found that many of these utilities serve a purpose within our code base, and we now want to provide those resources to the C++ community as a whole.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/abseil/abseil-cpp"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-algorithm",
+      "type": "library",
+      "name": "boost-algorithm",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-algorithm@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost algorithm module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/algorithm/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-align",
+      "type": "library",
+      "name": "boost-align",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-align@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost align module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/align/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-any",
+      "type": "library",
+      "name": "boost-any",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-any@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost any module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/any/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-array",
+      "type": "library",
+      "name": "boost-array",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-array@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost array module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/array/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-asio",
+      "type": "library",
+      "name": "boost-asio",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-asio@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        },
+        {
+          "name": "vcpkg:features",
+          "value": "core,deadline-timer,spawn"
+        }
+      ],
+      "description": "Boost asio module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/asio/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-assert",
+      "type": "library",
+      "name": "boost-assert",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-assert@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost assert module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/assert/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-atomic",
+      "type": "library",
+      "name": "boost-atomic",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-atomic@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost atomic module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/atomic/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-bimap",
+      "type": "library",
+      "name": "boost-bimap",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-bimap@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost bimap module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/bimap/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-bind",
+      "type": "library",
+      "name": "boost-bind",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-bind@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost bind module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/bind/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-chrono",
+      "type": "library",
+      "name": "boost-chrono",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-chrono@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost chrono module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/chrono/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-cmake",
+      "type": "library",
+      "name": "boost-cmake",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-cmake@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost cmake module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/boostorg/cmake"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-compat",
+      "type": "library",
+      "name": "boost-compat",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-compat@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost compat module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/compat/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-concept-check",
+      "type": "library",
+      "name": "boost-concept-check",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-concept-check@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost concept_check module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/concept_check/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-config",
+      "type": "library",
+      "name": "boost-config",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-config@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost config module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/config/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-container",
+      "type": "library",
+      "name": "boost-container",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-container@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost container module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/container/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-container-hash",
+      "type": "library",
+      "name": "boost-container-hash",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-container-hash@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost container_hash module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/container_hash/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-context",
+      "type": "library",
+      "name": "boost-context",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-context@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost context module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/context/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-conversion",
+      "type": "library",
+      "name": "boost-conversion",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-conversion@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost conversion module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/conversion/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-core",
+      "type": "library",
+      "name": "boost-core",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-core@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost core module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/core/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-crc",
+      "type": "library",
+      "name": "boost-crc",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-crc@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost crc module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/crc/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-date-time",
+      "type": "library",
+      "name": "boost-date-time",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-date-time@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost date_time module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/date_time/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-describe",
+      "type": "library",
+      "name": "boost-describe",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-describe@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost describe module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/describe/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-detail",
+      "type": "library",
+      "name": "boost-detail",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-detail@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost detail module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/detail/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-dynamic-bitset",
+      "type": "library",
+      "name": "boost-dynamic-bitset",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-dynamic-bitset@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost dynamic_bitset module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/dynamic_bitset/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-endian",
+      "type": "library",
+      "name": "boost-endian",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-endian@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost endian module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/endian/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-exception",
+      "type": "library",
+      "name": "boost-exception",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-exception@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost exception module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/exception/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-foreach",
+      "type": "library",
+      "name": "boost-foreach",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-foreach@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost foreach module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/foreach/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-function",
+      "type": "library",
+      "name": "boost-function",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-function@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost function module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/function/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-function-types",
+      "type": "library",
+      "name": "boost-function-types",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-function-types@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost function_types module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/function_types/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-functional",
+      "type": "library",
+      "name": "boost-functional",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-functional@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost functional module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/functional/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-fusion",
+      "type": "library",
+      "name": "boost-fusion",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-fusion@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost fusion module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/fusion/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-geometry",
+      "type": "library",
+      "name": "boost-geometry",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-geometry@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        }
+      ],
+      "description": "Boost geometry module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/geometry/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-graph",
+      "type": "library",
+      "name": "boost-graph",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-graph@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost graph module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/graph/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-headers",
+      "type": "library",
+      "name": "boost-headers",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-headers@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost headers module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/boostorg/headers"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-integer",
+      "type": "library",
+      "name": "boost-integer",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-integer@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost integer module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/integer/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-intrusive",
+      "type": "library",
+      "name": "boost-intrusive",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-intrusive@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost intrusive module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/intrusive/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-io",
+      "type": "library",
+      "name": "boost-io",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-io@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost io module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/io/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-iterator",
+      "type": "library",
+      "name": "boost-iterator",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-iterator@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost iterator module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/iterator/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-lambda",
+      "type": "library",
+      "name": "boost-lambda",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-lambda@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost lambda module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/lambda/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-lexical-cast",
+      "type": "library",
+      "name": "boost-lexical-cast",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-lexical-cast@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost lexical_cast module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/lexical_cast/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-math",
+      "type": "library",
+      "name": "boost-math",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-math@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost math module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/math/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-move",
+      "type": "library",
+      "name": "boost-move",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-move@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost move module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/move/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-mp11",
+      "type": "library",
+      "name": "boost-mp11",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-mp11@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost mp11 module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/mp11/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-mpl",
+      "type": "library",
+      "name": "boost-mpl",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-mpl@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost mpl module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/mpl/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-multi-index",
+      "type": "library",
+      "name": "boost-multi-index",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-multi-index@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost multi_index module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/multi_index/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-multiprecision",
+      "type": "library",
+      "name": "boost-multiprecision",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-multiprecision@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost multiprecision module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/multiprecision/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-numeric-conversion",
+      "type": "library",
+      "name": "boost-numeric-conversion",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-numeric-conversion@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost numeric_conversion module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/numericconversion/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-optional",
+      "type": "library",
+      "name": "boost-optional",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-optional@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost optional module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/optional/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-parameter",
+      "type": "library",
+      "name": "boost-parameter",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-parameter@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost parameter module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/parameter/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-phoenix",
+      "type": "library",
+      "name": "boost-phoenix",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-phoenix@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost phoenix module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/phoenix/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-polygon",
+      "type": "library",
+      "name": "boost-polygon",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-polygon@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost polygon module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/polygon/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-pool",
+      "type": "library",
+      "name": "boost-pool",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-pool@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost pool module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/pool/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-predef",
+      "type": "library",
+      "name": "boost-predef",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-predef@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost predef module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/predef/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-preprocessor",
+      "type": "library",
+      "name": "boost-preprocessor",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-preprocessor@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost preprocessor module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/preprocessor/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-program-options",
+      "type": "library",
+      "name": "boost-program-options",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-program-options@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost program_options module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/program_options/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-property-map",
+      "type": "library",
+      "name": "boost-property-map",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-property-map@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost property_map module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/property_map/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-property-tree",
+      "type": "library",
+      "name": "boost-property-tree",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-property-tree@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost property_tree module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/property_tree/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-proto",
+      "type": "library",
+      "name": "boost-proto",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-proto@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost proto module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/proto/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-qvm",
+      "type": "library",
+      "name": "boost-qvm",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-qvm@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost qvm module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/qvm/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-random",
+      "type": "library",
+      "name": "boost-random",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-random@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost random module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/random/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-range",
+      "type": "library",
+      "name": "boost-range",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-range@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost range module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/range/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-ratio",
+      "type": "library",
+      "name": "boost-ratio",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-ratio@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost ratio module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/ratio/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-rational",
+      "type": "library",
+      "name": "boost-rational",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-rational@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost rational module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/rational/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-regex",
+      "type": "library",
+      "name": "boost-regex",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-regex@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost regex module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/regex/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-serialization",
+      "type": "library",
+      "name": "boost-serialization",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-serialization@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost serialization module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/serialization/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-smart-ptr",
+      "type": "library",
+      "name": "boost-smart-ptr",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-smart-ptr@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost smart_ptr module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/smart_ptr/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-spirit",
+      "type": "library",
+      "name": "boost-spirit",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-spirit@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost spirit module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/spirit/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-static-assert",
+      "type": "library",
+      "name": "boost-static-assert",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-static-assert@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost static_assert module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/static_assert/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-system",
+      "type": "library",
+      "name": "boost-system",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-system@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        }
+      ],
+      "description": "Boost system module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/system/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-thread",
+      "type": "library",
+      "name": "boost-thread",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-thread@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost thread module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/thread/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-throw-exception",
+      "type": "library",
+      "name": "boost-throw-exception",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-throw-exception@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost throw_exception module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/throw_exception/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-tokenizer",
+      "type": "library",
+      "name": "boost-tokenizer",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-tokenizer@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost tokenizer module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/tokenizer/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-tti",
+      "type": "library",
+      "name": "boost-tti",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-tti@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost tti module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/tti/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-tuple",
+      "type": "library",
+      "name": "boost-tuple",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-tuple@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost tuple module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/tuple/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-type-index",
+      "type": "library",
+      "name": "boost-type-index",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-type-index@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost type_index module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/type_index/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-type-traits",
+      "type": "library",
+      "name": "boost-type-traits",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-type-traits@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost type_traits module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/type_traits/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-typeof",
+      "type": "library",
+      "name": "boost-typeof",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-typeof@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost typeof module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/typeof/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-uninstall",
+      "type": "library",
+      "name": "boost-uninstall",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-uninstall@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Internal vcpkg port used to uninstall Boost",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-unordered",
+      "type": "library",
+      "name": "boost-unordered",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-unordered@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost unordered module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/unordered/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-utility",
+      "type": "library",
+      "name": "boost-utility",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-utility@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost utility module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/utility/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-variant",
+      "type": "library",
+      "name": "boost-variant",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-variant@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost variant module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/variant/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-variant2",
+      "type": "library",
+      "name": "boost-variant2",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-variant2@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost variant2 module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/variant2/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-winapi",
+      "type": "library",
+      "name": "boost-winapi",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-winapi@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost winapi module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/winapi/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:boost-xpressive",
+      "type": "library",
+      "name": "boost-xpressive",
+      "version": "1.91.0",
+      "scope": "required",
+      "purl": "pkg:generic/boost-xpressive@1.91.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Boost xpressive module",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.boost.org/library/latest/xpressive/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:bzip2",
+      "type": "library",
+      "name": "bzip2",
+      "version": "1.0.8",
+      "scope": "required",
+      "purl": "pkg:generic/bzip2@1.0.8",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "6"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        },
+        {
+          "name": "vcpkg:features",
+          "value": "core,tool"
+        }
+      ],
+      "description": "bzip2 is a freely available, patent free, high-quality data compressor. It typically compresses files to within 10% to 15% of the best available techniques (the PPM family of statistical compressors), whilst being around twice as fast at compression and six times faster at decompression.",
+      "licenses": [
+        {
+          "license": {
+            "id": "bzip2-1.0.6"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://sourceware.org/bzip2/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:clipper2",
+      "type": "library",
+      "name": "clipper2",
+      "version": "2.0.1",
+      "scope": "required",
+      "purl": "pkg:generic/clipper2@2.0.1",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        }
+      ],
+      "description": "Polygon Clipping and Offsetting",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "http://www.angusj.com/clipper2"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:cpr",
+      "type": "library",
+      "name": "cpr",
+      "version": "1.14.2",
+      "scope": "required",
+      "purl": "pkg:generic/cpr@1.14.2",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        },
+        {
+          "name": "vcpkg:features",
+          "value": "core,ssl"
+        }
+      ],
+      "description": "C++ Requests is a simple wrapper around libcurl inspired by the excellent Python Requests project.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/libcpr/cpr"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:curl",
+      "type": "library",
+      "name": "curl",
+      "version": "8.21.0",
+      "scope": "required",
+      "purl": "pkg:generic/curl@8.21.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "1"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        },
+        {
+          "name": "vcpkg:features",
+          "value": "core,non-http,ssl,sspi"
+        }
+      ],
+      "description": "A library for transferring data with URLs",
+      "licenses": [
+        {
+          "expression": "curl AND ISC AND BSD-3-Clause"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://curl.se/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:eigen3",
+      "type": "library",
+      "name": "eigen3",
+      "version": "5.0.1",
+      "scope": "required",
+      "purl": "pkg:generic/eigen3@5.0.1",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        }
+      ],
+      "description": "C++ template library for linear algebra: matrices, vectors, numerical solvers, and related algorithms.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "http://eigen.tuxfamily.org"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:flann",
+      "type": "library",
+      "name": "flann",
+      "version": "2022-10-28",
+      "scope": "required",
+      "purl": "pkg:generic/flann@2022-10-28",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        }
+      ],
+      "description": "Fast Library for Approximate Nearest Neighbors",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/mariusmuja/flann"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:flatbuffers",
+      "type": "library",
+      "name": "flatbuffers",
+      "version": "25.12.19",
+      "scope": "required",
+      "purl": "pkg:generic/flatbuffers@25.12.19",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "FlatBuffers is a cross platform serialization library architected for maximum memory efficiency. It allows you to directly access serialized data without parsing/unpacking it first, while still having great forwards/backwards compatibility.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://google.github.io/flatbuffers/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:fmt",
+      "type": "library",
+      "name": "fmt",
+      "version": "12.2.0",
+      "scope": "required",
+      "purl": "pkg:generic/fmt@12.2.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "1"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "{fmt} is an open-source formatting library providing a fast and safe alternative to C stdio and C++ iostreams.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/fmtlib/fmt"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:inja",
+      "type": "library",
+      "name": "inja",
+      "version": "3.5.0",
+      "scope": "required",
+      "purl": "pkg:generic/inja@3.5.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "1"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        }
+      ],
+      "description": "Inja - A Template Engine for Modern C++",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/pantor/inja"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:libigl",
+      "type": "library",
+      "name": "libigl",
+      "version": "2.6.0",
+      "scope": "required",
+      "purl": "pkg:generic/libigl@2.6.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "2"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        }
+      ],
+      "description": "libigl is a simple C++ geometry processing library. We have a wide functionality including construction of sparse discrete differential geometry operators and finite-elements matrices such as the cotangent Laplacian and diagonalized mass matrix, simple facet and edge-based topology data structures, mesh-viewing utilities for OpenGL and GLSL, and many core functions for matrix manipulation which make Eigen feel a lot more like MATLAB.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/libigl/libigl"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:libjpeg-turbo",
+      "type": "library",
+      "name": "libjpeg-turbo",
+      "version": "3.2.0",
+      "scope": "required",
+      "purl": "pkg:generic/libjpeg-turbo@3.2.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "libjpeg-turbo is a JPEG image codec that uses SIMD instructions (MMX, SSE2, NEON, AltiVec) to accelerate baseline JPEG compression and decompression on x86, x86-64, ARM, and PowerPC systems.",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://libjpeg-turbo.org/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:liblzma",
+      "type": "library",
+      "name": "liblzma",
+      "version": "5.8.3",
+      "scope": "required",
+      "purl": "pkg:generic/liblzma@5.8.3",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        },
+        {
+          "name": "cads:license-source",
+          "value": "upstream project (vcpkg manifest declares null) - confirm"
+        }
+      ],
+      "description": "Compression library with an API similar to that of zlib.",
+      "licenses": [
+        {
+          "license": {
+            "id": "0BSD"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://tukaani.org/xz/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:libpng",
+      "type": "library",
+      "name": "libpng",
+      "version": "1.6.58",
+      "scope": "required",
+      "purl": "pkg:generic/libpng@1.6.58",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "libpng is a library implementing an interface for reading and writing PNG (Portable Network Graphics) format files",
+      "licenses": [
+        {
+          "license": {
+            "id": "libpng-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/pnggroup/libpng"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:libwebp",
+      "type": "library",
+      "name": "libwebp",
+      "version": "1.6.0",
+      "scope": "required",
+      "purl": "pkg:generic/libwebp@1.6.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "2"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        },
+        {
+          "name": "vcpkg:features",
+          "value": "core,libwebpmux,nearlossless,simd,unicode"
+        }
+      ],
+      "description": "WebP codec: library to encode and decode images in WebP format",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/webmproject/libwebp"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:libzip",
+      "type": "library",
+      "name": "libzip",
+      "version": "1.11.4",
+      "scope": "required",
+      "purl": "pkg:generic/libzip@1.11.4",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        },
+        {
+          "name": "vcpkg:features",
+          "value": "bzip2,core,default-aes"
+        }
+      ],
+      "description": "A C library for reading, creating, and modifying zip archives.",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/nih-at/libzip"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:libzippp",
+      "type": "library",
+      "name": "libzippp",
+      "version": "7.1-1.10.1",
+      "scope": "required",
+      "purl": "pkg:generic/libzippp@7.1-1.10.1",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        }
+      ],
+      "description": "Simple basic C++ wrapper around the libzip library. It is meant to be a portable and easy-to-use library for ZIP handling",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/ctabin/libzippp"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:lz4",
+      "type": "library",
+      "name": "lz4",
+      "version": "1.10.0",
+      "scope": "required",
+      "purl": "pkg:generic/lz4@1.10.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Lossless compression algorithm, providing compression speed at 400 MB/s per core.",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/lz4/lz4"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:nlohmann-json",
+      "type": "library",
+      "name": "nlohmann-json",
+      "version": "3.12.0",
+      "scope": "required",
+      "purl": "pkg:generic/nlohmann-json@3.12.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "2"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        }
+      ],
+      "description": "JSON for Modern C++",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/nlohmann/json"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:opencv",
+      "type": "library",
+      "name": "opencv",
+      "version": "4.12.0",
+      "scope": "required",
+      "purl": "pkg:generic/opencv@4.12.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        },
+        {
+          "name": "cads:license-source",
+          "value": "upstream project (vcpkg manifest declares null) - confirm"
+        }
+      ],
+      "description": "Open Source Computer Vision Library",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://opencv.org/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:opencv4",
+      "type": "library",
+      "name": "opencv4",
+      "version": "4.12.0",
+      "scope": "required",
+      "purl": "pkg:generic/opencv4@4.12.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "7"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        },
+        {
+          "name": "vcpkg:features",
+          "value": "calib3d,core,directml,dnn,dshow,fs,gapi,highgui,intrinsics,jpeg,msmf,png,quirc,thread,tiff,webp,win32ui"
+        },
+        {
+          "name": "cads:license-source",
+          "value": "upstream project (vcpkg manifest declares null) - confirm"
+        }
+      ],
+      "description": "Open Source Computer Vision Library",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://opencv.org/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:protobuf",
+      "type": "library",
+      "name": "protobuf",
+      "version": "6.33.4",
+      "scope": "required",
+      "purl": "pkg:generic/protobuf@6.33.4",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "2"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Google's language-neutral, platform-neutral, extensible mechanism for serializing structured data.",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/protocolbuffers/protobuf"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:pugixml",
+      "type": "library",
+      "name": "pugixml",
+      "version": "1.16",
+      "scope": "required",
+      "purl": "pkg:generic/pugixml@1.16",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        }
+      ],
+      "description": "Light-weight, simple and fast XML parser for C++ with XPath support",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/zeux/pugixml"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:quirc",
+      "type": "library",
+      "name": "quirc",
+      "version": "1.2",
+      "scope": "required",
+      "purl": "pkg:generic/quirc@1.2",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        },
+        {
+          "name": "cads:license-source",
+          "value": "upstream project (vcpkg manifest declares null) - confirm"
+        }
+      ],
+      "description": "quirc is one of the C library available for scanning QR Codes",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/dlbeer/quirc"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:spdlog",
+      "type": "library",
+      "name": "spdlog",
+      "version": "1.17.0",
+      "scope": "required",
+      "purl": "pkg:generic/spdlog@1.17.0",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "1"
+        },
+        {
+          "name": "cads:role",
+          "value": "direct"
+        },
+        {
+          "name": "vcpkg:features",
+          "value": "core,fmt,tz-offset"
+        }
+      ],
+      "description": "Very fast, header-only/compiled, C++ logging library.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/gabime/spdlog"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:stb",
+      "type": "library",
+      "name": "stb",
+      "version": "2024-07-29",
+      "scope": "required",
+      "purl": "pkg:generic/stb@2024-07-29",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "1"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "public domain header-only libraries",
+      "licenses": [
+        {
+          "expression": "MIT OR CC-PDDC"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/nothings/stb"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:tiff",
+      "type": "library",
+      "name": "tiff",
+      "version": "4.7.2",
+      "scope": "required",
+      "purl": "pkg:generic/tiff@4.7.2",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        },
+        {
+          "name": "vcpkg:features",
+          "value": "core,jpeg,lzma,zip"
+        }
+      ],
+      "description": "A library that supports the manipulation of TIFF image files",
+      "licenses": [
+        {
+          "license": {
+            "id": "libtiff"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://libtiff.gitlab.io/libtiff/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:utf8-range",
+      "type": "library",
+      "name": "utf8-range",
+      "version": "6.33.4",
+      "scope": "required",
+      "purl": "pkg:generic/utf8-range@6.33.4",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "Fast UTF-8 validation with Range algorithm (NEON+SSE4+AVX2)",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/protocolbuffers/protobuf"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:zlib",
+      "type": "library",
+      "name": "zlib",
+      "version": "1.3.2",
+      "scope": "required",
+      "purl": "pkg:generic/zlib@1.3.2",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows-static"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "1"
+        },
+        {
+          "name": "cads:role",
+          "value": "transitive"
+        }
+      ],
+      "description": "A compression library",
+      "licenses": [
+        {
+          "license": {
+            "id": "Zlib"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.zlib.net/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:abseil:host",
+      "type": "library",
+      "name": "abseil",
+      "version": "20260107.1",
+      "scope": "excluded",
+      "purl": "pkg:generic/abseil@20260107.1",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "3"
+        },
+        {
+          "name": "cads:role",
+          "value": "build-tool (host)"
+        }
+      ],
+      "description": "Abseil is an open-source collection of C++ library code designed to augment the C++ standard library. The Abseil library code is collected from Google's own C++ code base, has been extensively tested and used in production, and is the same code we depend on in our daily coding lives. In some cases, Abseil provides pieces missing from the C++ standard; in others, Abseil provides alternatives to the standard for special needs we've found through usage in the Google code base. We denote those cases clearly within the library code we provide you. Abseil is not meant to be a competitor to the standard library; we've just found that many of these utilities serve a purpose within our code base, and we now want to provide those resources to the C++ community as a whole.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/abseil/abseil-cpp"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:flatbuffers:host",
+      "type": "library",
+      "name": "flatbuffers",
+      "version": "25.12.19",
+      "scope": "excluded",
+      "purl": "pkg:generic/flatbuffers@25.12.19",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "build-tool (host)"
+        }
+      ],
+      "description": "FlatBuffers is a cross platform serialization library architected for maximum memory efficiency. It allows you to directly access serialized data without parsing/unpacking it first, while still having great forwards/backwards compatibility.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://google.github.io/flatbuffers/"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:protobuf:host",
+      "type": "library",
+      "name": "protobuf",
+      "version": "6.33.4",
+      "scope": "excluded",
+      "purl": "pkg:generic/protobuf@6.33.4",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "2"
+        },
+        {
+          "name": "cads:role",
+          "value": "build-tool (host)"
+        }
+      ],
+      "description": "Google's language-neutral, platform-neutral, extensible mechanism for serializing structured data.",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/protocolbuffers/protobuf"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:utf8-range:host",
+      "type": "library",
+      "name": "utf8-range",
+      "version": "6.33.4",
+      "scope": "excluded",
+      "purl": "pkg:generic/utf8-range@6.33.4",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "build-tool (host)"
+        }
+      ],
+      "description": "Fast UTF-8 validation with Range algorithm (NEON+SSE4+AVX2)",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/protocolbuffers/protobuf"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:vcpkg-boost:host",
+      "type": "library",
+      "name": "vcpkg-boost",
+      "version": "2025-03-29",
+      "scope": "excluded",
+      "purl": "pkg:generic/vcpkg-boost@2025-03-29",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "build-tool (host)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:vcpkg-cmake-config:host",
+      "type": "library",
+      "name": "vcpkg-cmake-config",
+      "version": "2026-07-21",
+      "scope": "excluded",
+      "purl": "pkg:generic/vcpkg-cmake-config@2026-07-21",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "build-tool (host)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:vcpkg-cmake:host",
+      "type": "library",
+      "name": "vcpkg-cmake",
+      "version": "2024-04-23",
+      "scope": "excluded",
+      "purl": "pkg:generic/vcpkg-cmake@2024-04-23",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "build-tool (host)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "bom-ref": "vcpkg:vcpkg-get-python-packages:host",
+      "type": "library",
+      "name": "vcpkg-get-python-packages",
+      "version": "2025-04-05",
+      "scope": "excluded",
+      "purl": "pkg:generic/vcpkg-get-python-packages@2025-04-05",
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vcpkg"
+        },
+        {
+          "name": "vcpkg:triplet",
+          "value": "x64-windows"
+        },
+        {
+          "name": "vcpkg:port-version",
+          "value": "0"
+        },
+        {
+          "name": "cads:role",
+          "value": "build-tool (host)"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "bom-ref": "sub:openxlsx",
+      "type": "library",
+      "name": "OpenXLSX",
+      "scope": "required",
+      "purl": "pkg:github/troldal/OpenXLSX",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/troldal/OpenXLSX"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "git submodule GeneralUtils/OpenXLSX (om_OpenXLSX, commit 7d589ab)"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vendored:pugixml-1.14",
+      "type": "library",
+      "name": "pugixml (bundled in OpenXLSX)",
+      "version": "1.14",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:generic/pugixml (bundled in OpenXLSX)@1.14",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://pugixml.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vendored in GeneralUtils/OpenXLSX submodule"
+        },
+        {
+          "name": "cads:note",
+          "value": "Separate copy from the vcpkg pugixml 1.16 port; version from PUGIXML_VERSION in the bundled header."
+        }
+      ]
+    },
+    {
+      "bom-ref": "vendored:zippy",
+      "type": "library",
+      "name": "zippy",
+      "version": "",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:generic/zippy",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/troldal/Zippy"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vendored in GeneralUtils/OpenXLSX submodule"
+        },
+        {
+          "name": "cads:note",
+          "value": "Header-only zip wrapper bundled in OpenXLSX."
+        }
+      ]
+    },
+    {
+      "bom-ref": "vendored:miniz-2.0.8",
+      "type": "library",
+      "name": "miniz (embedded in zippy)",
+      "version": "2.0.8",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:generic/miniz (embedded in zippy)@2.0.8",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/richgel999/miniz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vendored in GeneralUtils/OpenXLSX submodule"
+        },
+        {
+          "name": "cads:note",
+          "value": "ns_miniz inside zippy.hpp; version from the embedded header comment."
+        }
+      ]
+    },
+    {
+      "bom-ref": "vendored:nowide",
+      "type": "library",
+      "name": "nowide (bundled in OpenXLSX)",
+      "version": "",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSL-1.0"
+          }
+        }
+      ],
+      "purl": "pkg:generic/nowide (bundled in OpenXLSX)",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/boostorg/nowide"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "vendored in GeneralUtils/OpenXLSX submodule"
+        },
+        {
+          "name": "cads:note",
+          "value": "Boost.Nowide derivative; version not recorded in the tree."
+        }
+      ]
+    },
+    {
+      "bom-ref": "ext:qt@6.10.2",
+      "type": "framework",
+      "name": "Qt",
+      "version": "6.10.2",
+      "description": "Qt 6 (msvc2022_64) — Core, Gui, Widgets, OpenGL, OpenGLWidgets, Network, Svg. External toolchain, located via Qt6_DIR; not fetched by the build.",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-3.0-only"
+          }
+        }
+      ],
+      "purl": "pkg:generic/qt@6.10.2",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.qt.io"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "external-toolchain"
+        },
+        {
+          "name": "cads:note",
+          "value": "Dual-licensed (LGPL-3.0 or commercial Qt); confirm which license the deployed build uses."
+        }
+      ]
+    },
+    {
+      "bom-ref": "ext:vtk@9.5",
+      "type": "library",
+      "name": "VTK",
+      "version": "9.5",
+      "description": "Visualization Toolkit, built with Qt support. External toolchain, located via VTK_DIR; not fetched by the build.",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "purl": "pkg:generic/vtk@9.5",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://vtk.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "external-toolchain"
+        }
+      ]
+    },
+    {
+      "bom-ref": "ext:moduleworks-sdk",
+      "type": "library",
+      "name": "ModuleWorks SDK",
+      "version": "2026.08",
+      "supplier": {
+        "name": "ModuleWorks GmbH",
+        "url": [
+          "https://www.moduleworks.com"
+        ]
+      },
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "name": "ModuleWorks commercial (proprietary)",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:generic/moduleworks-sdk@2026.08",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.moduleworks.com"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "external-toolchain (MODULEWORKS_DIR)"
+        },
+        {
+          "name": "cads:commercial",
+          "value": "true"
+        },
+        {
+          "name": "cads:vulnSource",
+          "value": "vendor-advisory (no public CPE/purl)"
+        },
+        {
+          "name": "cads:subComponents",
+          "value": "mw* libraries, MachSim, Verifier (per maintainer scoping)"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm exact SDK build; repo pins the 2026.08 bin/ layout with mwSupport.lic."
+        }
+      ]
+    },
+    {
+      "bom-ref": "ext:polygonica",
+      "type": "library",
+      "name": "Polygonica",
+      "version": "",
+      "supplier": {
+        "name": "MachineWorks Ltd.",
+        "url": [
+          "https://www.polygonica.com"
+        ]
+      },
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "name": "Polygonica commercial (proprietary)",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:generic/polygonica",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.polygonica.com"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "external-toolchain (POLYGONICA_DIR, MillingBackend)"
+        },
+        {
+          "name": "cads:commercial",
+          "value": "true"
+        },
+        {
+          "name": "cads:vulnSource",
+          "value": "vendor-advisory (no public CPE/purl)"
+        },
+        {
+          "name": "cads:verify",
+          "value": "CONFIRM WITH MAINTAINER: Polygonica is evidenced by CMakePresets (POLYGONICA_DIR) and the build pre-flight (pg.lib), but was NOT in the maintainer's commercial-components list. Fill the version, or remove if not actually shipped."
+        }
+      ]
+    },
+    {
+      "bom-ref": "ext:actipro-wpf",
+      "type": "library",
+      "name": "Actipro WPF Controls",
+      "version": "",
+      "supplier": {
+        "name": "Actipro Software LLC",
+        "url": [
+          "https://www.actiprosoftware.com"
+        ]
+      },
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "name": "Actipro commercial (proprietary)",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:generic/actipro-wpf",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.actiprosoftware.com"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "commercial WPF/.NET UI controls (license inventory only; not OSS)"
+        },
+        {
+          "name": "cads:commercial",
+          "value": "true"
+        },
+        {
+          "name": "cads:vulnSource",
+          "value": "vendor-advisory"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Identify where WPF/Actipro is used (installer UI? a .NET tool? the Updater?) and pin the version."
+        }
+      ]
+    },
+    {
+      "bom-ref": "ext:pypy",
+      "type": "application",
+      "name": "PyPy",
+      "version": "",
+      "supplier": {
+        "name": "The PyPy Team",
+        "url": [
+          "https://www.pypy.org"
+        ]
+      },
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:generic/pypy@3.10",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.pypy.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "ModuleWorks PPFramework (deploy_ppf.exe, PyPy310) - installer binary"
+        },
+        {
+          "name": "cads:pythonCompat",
+          "value": "3.10 (maintainer-confirmed)"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Fill the PyPy runtime version (e.g. 7.3.x) from the deployed interpreter, then set version + cpe."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:pypy:pypy:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "installer:openssl",
+      "type": "library",
+      "name": "openssl",
+      "version": "1.1",
+      "scope": "required",
+      "supplier": {
+        "name": "OpenSSL Software Foundation"
+      },
+      "purl": "pkg:github/openssl/openssl",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/openssl/openssl"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "installer prebuilt binary (not in any repo or vcpkg tree)"
+        },
+        {
+          "name": "cads:eol",
+          "value": "TRUE - OpenSSL 1.1.x reached end-of-life 2023-09-11; no security fixes. HIGH-PRIORITY per maintainer."
+        },
+        {
+          "name": "cads:verify",
+          "value": "Pin the exact shipped version (e.g. 1.1.1w) from libssl-1_1-x64.dll / libcrypto-1_1-x64.dll FileVersion so Grype/NVD match it."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:openssl:openssl:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "installer:tcl",
+      "type": "library",
+      "name": "tcl",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "Tcl Core Team"
+      },
+      "purl": "pkg:generic/tcl",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.tcl-lang.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "installer prebuilt binary"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version; identify what bundles it (likely ModuleWorks Verifier/MachSim)."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:tcl:tcl:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "installer:tk",
+      "type": "library",
+      "name": "tk",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "Tcl Core Team"
+      },
+      "purl": "pkg:generic/tk",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.tcl-lang.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "installer prebuilt binary"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:tcl:tk:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "installer:sqlite",
+      "type": "library",
+      "name": "sqlite",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "SQLite Consortium"
+      },
+      "purl": "pkg:generic/sqlite",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.sqlite.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "installer prebuilt binary"
+        },
+        {
+          "name": "cads:note",
+          "value": "May be a distinct shipped sqlite3.dll from the VTK-vendored copy (vtk-thirdparty:sqlite3); both can ship. Dedupe at review against the actual installer."
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:sqlite:sqlite:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "installer:zlib",
+      "type": "library",
+      "name": "zlib",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "zlib"
+      },
+      "purl": "pkg:github/madler/zlib",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/madler/zlib"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "installer prebuilt binary"
+        },
+        {
+          "name": "cads:note",
+          "value": "May coincide with the vcpkg-transitive zlib and/or VTK-vendored zlib; listed because the maintainer flagged a shipped zlib (e.g. zlib1.dll). Dedupe at review."
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:zlib:zlib:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "installer:embree",
+      "type": "library",
+      "name": "embree",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "Intel Corporation"
+      },
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:github/embree/embree",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/embree/embree"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "installer prebuilt binary (ray tracing; likely ModuleWorks)"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:intel:embree:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "installer:dxc",
+      "type": "library",
+      "name": "DirectX Shader Compiler",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "Microsoft"
+      },
+      "licenses": [
+        {
+          "license": {
+            "id": "NCSA",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:github/microsoft/DirectXShaderCompiler",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/microsoft/DirectXShaderCompiler"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "installer prebuilt binary (dxcompiler.dll; likely Qt RHI / VTK)"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version. No stable NVD CPE - track via vendor."
+        }
+      ]
+    },
+    {
+      "bom-ref": "installer:mesa",
+      "type": "library",
+      "name": "Mesa",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "Mesa3D / freedesktop.org"
+      },
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:generic/mesa",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.mesa3d.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "installer prebuilt binary (opengl32sw.dll, software-OpenGL fallback; ships with Qt)"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:mesa3d:mesa:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:zlib",
+      "type": "library",
+      "name": "zlib",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "zlib"
+      },
+      "purl": "pkg:github/madler/zlib",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/madler/zlib"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm this VTK build bundles zlib and set its version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:zlib:zlib:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:libpng",
+      "type": "library",
+      "name": "libpng",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "PNG Development Group"
+      },
+      "purl": "pkg:github/pnggroup/libpng",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/pnggroup/libpng"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:libpng:libpng:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:libjpeg-turbo",
+      "type": "library",
+      "name": "libjpeg-turbo",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "libjpeg-turbo"
+      },
+      "purl": "pkg:github/libjpeg-turbo/libjpeg-turbo",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/libjpeg-turbo/libjpeg-turbo"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:libjpeg-turbo:libjpeg-turbo:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:libtiff",
+      "type": "library",
+      "name": "libtiff",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "libtiff"
+      },
+      "purl": "pkg:github/libsdl-org/libtiff",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/libsdl-org/libtiff"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:libtiff:libtiff:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:freetype",
+      "type": "library",
+      "name": "freetype",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "The FreeType Project"
+      },
+      "purl": "pkg:github/freetype/freetype",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/freetype/freetype"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:freetype:freetype:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:expat",
+      "type": "library",
+      "name": "expat",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "The Expat Project"
+      },
+      "purl": "pkg:github/libexpat/libexpat",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/libexpat/libexpat"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:libexpat_project:libexpat:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:libxml2",
+      "type": "library",
+      "name": "libxml2",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "GNOME / xmlsoft"
+      },
+      "purl": "pkg:github/GNOME/libxml2",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/GNOME/libxml2"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:xmlsoft:libxml2:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:hdf5",
+      "type": "library",
+      "name": "hdf5",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "The HDF Group"
+      },
+      "purl": "pkg:github/HDFGroup/hdf5",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/HDFGroup/hdf5"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence (large module; often enabled) + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:hdfgroup:hdf5:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:netcdf",
+      "type": "library",
+      "name": "netcdf",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "Unidata"
+      },
+      "purl": "pkg:github/Unidata/netcdf-c",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/Unidata/netcdf-c"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:unidata:netcdf:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:sqlite3",
+      "type": "library",
+      "name": "sqlite",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "SQLite Consortium"
+      },
+      "purl": "pkg:generic/sqlite",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.sqlite.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:sqlite:sqlite:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:libproj",
+      "type": "library",
+      "name": "proj",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "OSGeo"
+      },
+      "purl": "pkg:github/OSGeo/PROJ",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/OSGeo/PROJ"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:osgeo:proj:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:lz4",
+      "type": "library",
+      "name": "lz4",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "lz4"
+      },
+      "purl": "pkg:github/lz4/lz4",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/lz4/lz4"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:lz4_project:lz4:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:liblzma",
+      "type": "library",
+      "name": "liblzma",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "The Tukaani Project"
+      },
+      "purl": "pkg:github/tukaani-project/xz",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/tukaani-project/xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version. (CVE-2024-3094 relevance: pin exact version.)"
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:tukaani:xz:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:theora",
+      "type": "library",
+      "name": "libtheora",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "Xiph.Org Foundation"
+      },
+      "purl": "pkg:generic/theora",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.theora.org"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty (ogg/theora, if video enabled)"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:xiph.org:libtheora:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "bom-ref": "vtk-thirdparty:ogg",
+      "type": "library",
+      "name": "libogg",
+      "version": "",
+      "scope": "required",
+      "supplier": {
+        "name": "Xiph.Org Foundation"
+      },
+      "purl": "pkg:generic/ogg",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.xiph.org/ogg"
+        }
+      ],
+      "properties": [
+        {
+          "name": "cads:source",
+          "value": "VTK vendored ThirdParty (ogg/theora, if video enabled)"
+        },
+        {
+          "name": "cads:verify",
+          "value": "Confirm presence + version."
+        },
+        {
+          "name": "cads:cpeTemplate",
+          "value": "cpe:2.3:a:xiph.org:libogg:{version}:*:*:*:*:*:*:*"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "app:kls-onemill",
+      "dependsOn": [
+        "ext:moduleworks-sdk",
+        "ext:polygonica",
+        "ext:qt@6.10.2",
+        "ext:vtk@9.5",
+        "sub:openxlsx",
+        "vcpkg:boost-asio",
+        "vcpkg:boost-geometry",
+        "vcpkg:boost-system",
+        "vcpkg:clipper2",
+        "vcpkg:cpr",
+        "vcpkg:eigen3",
+        "vcpkg:flann",
+        "vcpkg:inja",
+        "vcpkg:libigl",
+        "vcpkg:libzippp",
+        "vcpkg:nlohmann-json",
+        "vcpkg:opencv",
+        "vcpkg:pugixml",
+        "vcpkg:spdlog"
+      ]
+    },
+    {
+      "ref": "vcpkg:abseil:host",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:abseil",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-algorithm",
+      "dependsOn": [
+        "vcpkg:boost-array",
+        "vcpkg:boost-assert",
+        "vcpkg:boost-bind",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-concept-check",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-exception",
+        "vcpkg:boost-function",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-range",
+        "vcpkg:boost-regex",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-tuple",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-unordered"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-align",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-any",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-index"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-array",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-asio",
+      "dependsOn": [
+        "vcpkg:boost-align",
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-context",
+        "vcpkg:boost-date-time",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-system",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-assert",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-atomic",
+      "dependsOn": [
+        "vcpkg:boost-align",
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-predef",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-winapi"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-bimap",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-concept-check",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container-hash",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-lambda",
+        "vcpkg:boost-mp11",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-multi-index",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-bind",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-chrono",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-move",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-predef",
+        "vcpkg:boost-ratio",
+        "vcpkg:boost-system",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-typeof",
+        "vcpkg:boost-utility",
+        "vcpkg:boost-winapi"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-cmake",
+      "dependsOn": [
+        "vcpkg:boost-uninstall",
+        "vcpkg:vcpkg-boost:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-compat",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-concept-check",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-config",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-container",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-intrusive",
+        "vcpkg:boost-move"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-container-hash",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-describe",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mp11"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-context",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mp11",
+        "vcpkg:boost-pool",
+        "vcpkg:boost-predef",
+        "vcpkg:boost-smart-ptr"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-conversion",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-core",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-crc",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-date-time",
+      "dependsOn": [
+        "vcpkg:boost-algorithm",
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-io",
+        "vcpkg:boost-lexical-cast",
+        "vcpkg:boost-numeric-conversion",
+        "vcpkg:boost-range",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-static-assert",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-tokenizer",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility",
+        "vcpkg:boost-winapi"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-describe",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mp11"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-detail",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-dynamic-bitset",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container-hash",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-endian",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-exception",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-tuple",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-foreach",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-range",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-function",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-bind",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-function-types",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-detail",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-functional",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-function",
+        "vcpkg:boost-function-types",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-typeof",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-fusion",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container-hash",
+        "vcpkg:boost-core",
+        "vcpkg:boost-function-types",
+        "vcpkg:boost-functional",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-tuple",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-typeof",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-geometry",
+      "dependsOn": [
+        "vcpkg:boost-algorithm",
+        "vcpkg:boost-any",
+        "vcpkg:boost-array",
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-concept-check",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container",
+        "vcpkg:boost-core",
+        "vcpkg:boost-crc",
+        "vcpkg:boost-function-types",
+        "vcpkg:boost-fusion",
+        "vcpkg:boost-graph",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-lexical-cast",
+        "vcpkg:boost-math",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-multiprecision",
+        "vcpkg:boost-numeric-conversion",
+        "vcpkg:boost-polygon",
+        "vcpkg:boost-program-options",
+        "vcpkg:boost-qvm",
+        "vcpkg:boost-range",
+        "vcpkg:boost-rational",
+        "vcpkg:boost-serialization",
+        "vcpkg:boost-static-assert",
+        "vcpkg:boost-thread",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-tokenizer",
+        "vcpkg:boost-tuple",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-variant",
+        "vcpkg:boost-variant2"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-graph",
+      "dependsOn": [
+        "vcpkg:boost-algorithm",
+        "vcpkg:boost-any",
+        "vcpkg:boost-array",
+        "vcpkg:boost-assert",
+        "vcpkg:boost-bimap",
+        "vcpkg:boost-bind",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-concept-check",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container-hash",
+        "vcpkg:boost-conversion",
+        "vcpkg:boost-core",
+        "vcpkg:boost-detail",
+        "vcpkg:boost-foreach",
+        "vcpkg:boost-function",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-lexical-cast",
+        "vcpkg:boost-math",
+        "vcpkg:boost-move",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-multi-index",
+        "vcpkg:boost-numeric-conversion",
+        "vcpkg:boost-optional",
+        "vcpkg:boost-parameter",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-property-map",
+        "vcpkg:boost-property-tree",
+        "vcpkg:boost-random",
+        "vcpkg:boost-range",
+        "vcpkg:boost-regex",
+        "vcpkg:boost-serialization",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-spirit",
+        "vcpkg:boost-static-assert",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-tti",
+        "vcpkg:boost-tuple",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-typeof",
+        "vcpkg:boost-unordered",
+        "vcpkg:boost-utility",
+        "vcpkg:boost-xpressive"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-headers",
+      "dependsOn": [
+        "vcpkg:boost-cmake"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-integer",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-intrusive",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-move"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-io",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-iterator",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-concept-check",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-detail",
+        "vcpkg:boost-fusion",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mp11",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-optional",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-lambda",
+      "dependsOn": [
+        "vcpkg:boost-bind",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-detail",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-tuple",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-lexical-cast",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-math",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-concept-check",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-lexical-cast",
+        "vcpkg:boost-predef",
+        "vcpkg:boost-random",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-move",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-mp11",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-mpl",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-predef",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-multi-index",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-bind",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container-hash",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-mp11",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-tuple",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-multiprecision",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-lexical-cast",
+        "vcpkg:boost-math",
+        "vcpkg:boost-predef",
+        "vcpkg:boost-random",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-numeric-conversion",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-conversion",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-optional",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-parameter",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-function",
+        "vcpkg:boost-fusion",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mp11",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-optional",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-phoenix",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-bind",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-function",
+        "vcpkg:boost-fusion",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-predef",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-proto",
+        "vcpkg:boost-range",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-polygon",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-pool",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-winapi"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-predef",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-preprocessor",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-program-options",
+      "dependsOn": [
+        "vcpkg:boost-any",
+        "vcpkg:boost-bind",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-detail",
+        "vcpkg:boost-function",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-lexical-cast",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-static-assert",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-tokenizer",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-property-map",
+      "dependsOn": [
+        "vcpkg:boost-any",
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-concept-check",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-function",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-lexical-cast",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-index",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-property-tree",
+      "dependsOn": [
+        "vcpkg:boost-any",
+        "vcpkg:boost-assert",
+        "vcpkg:boost-bind",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-multi-index",
+        "vcpkg:boost-optional",
+        "vcpkg:boost-range",
+        "vcpkg:boost-serialization",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-proto",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-fusion",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-range",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-typeof",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-qvm",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-random",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-dynamic-bitset",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-io",
+        "vcpkg:boost-system",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-range",
+      "dependsOn": [
+        "vcpkg:boost-array",
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-concept-check",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container-hash",
+        "vcpkg:boost-conversion",
+        "vcpkg:boost-core",
+        "vcpkg:boost-detail",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-optional",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-regex",
+        "vcpkg:boost-tuple",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-ratio",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-rational",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-regex",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-concept-check",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-predef",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-serialization",
+      "dependsOn": [
+        "vcpkg:boost-array",
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-detail",
+        "vcpkg:boost-function",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-io",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-move",
+        "vcpkg:boost-mp11",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-optional",
+        "vcpkg:boost-predef",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-spirit",
+        "vcpkg:boost-static-assert",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility",
+        "vcpkg:boost-variant",
+        "vcpkg:boost-variant2"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-smart-ptr",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-spirit",
+      "dependsOn": [
+        "vcpkg:boost-array",
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-endian",
+        "vcpkg:boost-function",
+        "vcpkg:boost-function-types",
+        "vcpkg:boost-fusion",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-io",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-move",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-optional",
+        "vcpkg:boost-phoenix",
+        "vcpkg:boost-pool",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-proto",
+        "vcpkg:boost-range",
+        "vcpkg:boost-regex",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-static-assert",
+        "vcpkg:boost-thread",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-typeof",
+        "vcpkg:boost-unordered",
+        "vcpkg:boost-utility",
+        "vcpkg:boost-variant"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-static-assert",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-system",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-compat",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mp11",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-variant2",
+        "vcpkg:boost-winapi"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-thread",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-atomic",
+        "vcpkg:boost-bind",
+        "vcpkg:boost-chrono",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-concept-check",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container",
+        "vcpkg:boost-container-hash",
+        "vcpkg:boost-core",
+        "vcpkg:boost-date-time",
+        "vcpkg:boost-exception",
+        "vcpkg:boost-function",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-io",
+        "vcpkg:boost-move",
+        "vcpkg:boost-optional",
+        "vcpkg:boost-predef",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-system",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-tuple",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility",
+        "vcpkg:boost-winapi"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-throw-exception",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-tokenizer",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-tti",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-function-types",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-tuple",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-type-index",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container-hash",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-type-traits",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-typeof",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-uninstall",
+      "dependsOn": []
+    },
+    {
+      "ref": "vcpkg:boost-unordered",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container-hash",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mp11",
+        "vcpkg:boost-predef",
+        "vcpkg:boost-throw-exception"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-utility",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-core",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-io",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-variant",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-container-hash",
+        "vcpkg:boost-core",
+        "vcpkg:boost-detail",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-static-assert",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-index",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-variant2",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-mp11"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-winapi",
+      "dependsOn": [
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-predef"
+      ]
+    },
+    {
+      "ref": "vcpkg:boost-xpressive",
+      "dependsOn": [
+        "vcpkg:boost-assert",
+        "vcpkg:boost-cmake",
+        "vcpkg:boost-config",
+        "vcpkg:boost-conversion",
+        "vcpkg:boost-core",
+        "vcpkg:boost-exception",
+        "vcpkg:boost-fusion",
+        "vcpkg:boost-headers",
+        "vcpkg:boost-integer",
+        "vcpkg:boost-iterator",
+        "vcpkg:boost-lexical-cast",
+        "vcpkg:boost-mpl",
+        "vcpkg:boost-numeric-conversion",
+        "vcpkg:boost-optional",
+        "vcpkg:boost-preprocessor",
+        "vcpkg:boost-proto",
+        "vcpkg:boost-range",
+        "vcpkg:boost-smart-ptr",
+        "vcpkg:boost-spirit",
+        "vcpkg:boost-throw-exception",
+        "vcpkg:boost-type-traits",
+        "vcpkg:boost-typeof",
+        "vcpkg:boost-utility"
+      ]
+    },
+    {
+      "ref": "vcpkg:bzip2",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:clipper2",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:cpr",
+      "dependsOn": [
+        "vcpkg:curl",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:curl",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host",
+        "vcpkg:zlib"
+      ]
+    },
+    {
+      "ref": "vcpkg:eigen3",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:flann",
+      "dependsOn": [
+        "vcpkg:lz4",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:flatbuffers:host",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:flatbuffers",
+      "dependsOn": [
+        "vcpkg:flatbuffers:host",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:fmt",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:inja",
+      "dependsOn": [
+        "vcpkg:nlohmann-json",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:libigl",
+      "dependsOn": [
+        "vcpkg:eigen3",
+        "vcpkg:stb",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:libjpeg-turbo",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:liblzma",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:libpng",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host",
+        "vcpkg:zlib"
+      ]
+    },
+    {
+      "ref": "vcpkg:libwebp",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:libzip",
+      "dependsOn": [
+        "vcpkg:bzip2",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host",
+        "vcpkg:zlib"
+      ]
+    },
+    {
+      "ref": "vcpkg:libzippp",
+      "dependsOn": [
+        "vcpkg:libzip",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host",
+        "vcpkg:zlib"
+      ]
+    },
+    {
+      "ref": "vcpkg:lz4",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:nlohmann-json",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:opencv",
+      "dependsOn": [
+        "vcpkg:opencv4"
+      ]
+    },
+    {
+      "ref": "vcpkg:opencv4",
+      "dependsOn": [
+        "vcpkg:flatbuffers",
+        "vcpkg:flatbuffers:host",
+        "vcpkg:libjpeg-turbo",
+        "vcpkg:libpng",
+        "vcpkg:libwebp",
+        "vcpkg:protobuf",
+        "vcpkg:quirc",
+        "vcpkg:tiff",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host",
+        "vcpkg:vcpkg-get-python-packages:host",
+        "vcpkg:zlib"
+      ]
+    },
+    {
+      "ref": "vcpkg:protobuf:host",
+      "dependsOn": [
+        "vcpkg:abseil:host",
+        "vcpkg:utf8-range:host",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:protobuf",
+      "dependsOn": [
+        "vcpkg:abseil",
+        "vcpkg:protobuf:host",
+        "vcpkg:utf8-range",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:pugixml",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:quirc",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:spdlog",
+      "dependsOn": [
+        "vcpkg:fmt",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:stb",
+      "dependsOn": []
+    },
+    {
+      "ref": "vcpkg:tiff",
+      "dependsOn": [
+        "vcpkg:libjpeg-turbo",
+        "vcpkg:liblzma",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host",
+        "vcpkg:zlib"
+      ]
+    },
+    {
+      "ref": "vcpkg:utf8-range",
+      "dependsOn": [
+        "vcpkg:abseil",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:utf8-range:host",
+      "dependsOn": [
+        "vcpkg:abseil:host",
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:vcpkg-boost:host",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "vcpkg:vcpkg-cmake:host",
+      "dependsOn": []
+    },
+    {
+      "ref": "vcpkg:vcpkg-cmake-config:host",
+      "dependsOn": []
+    },
+    {
+      "ref": "vcpkg:vcpkg-get-python-packages:host",
+      "dependsOn": []
+    },
+    {
+      "ref": "vcpkg:zlib",
+      "dependsOn": [
+        "vcpkg:vcpkg-cmake-config:host",
+        "vcpkg:vcpkg-cmake:host"
+      ]
+    },
+    {
+      "ref": "ext:actipro-wpf",
+      "dependsOn": []
+    },
+    {
+      "ref": "ext:moduleworks-sdk",
+      "dependsOn": [
+        "ext:pypy"
+      ]
+    },
+    {
+      "ref": "ext:polygonica",
+      "dependsOn": []
+    },
+    {
+      "ref": "ext:pypy",
+      "dependsOn": []
+    },
+    {
+      "ref": "ext:qt@6.10.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "ext:vtk@9.5",
+      "dependsOn": [
+        "vtk-thirdparty:zlib",
+        "vtk-thirdparty:libpng",
+        "vtk-thirdparty:libjpeg-turbo",
+        "vtk-thirdparty:libtiff",
+        "vtk-thirdparty:freetype",
+        "vtk-thirdparty:expat",
+        "vtk-thirdparty:libxml2",
+        "vtk-thirdparty:hdf5",
+        "vtk-thirdparty:netcdf",
+        "vtk-thirdparty:sqlite3",
+        "vtk-thirdparty:libproj",
+        "vtk-thirdparty:lz4",
+        "vtk-thirdparty:liblzma",
+        "vtk-thirdparty:theora",
+        "vtk-thirdparty:ogg"
+      ]
+    },
+    {
+      "ref": "installer:dxc",
+      "dependsOn": []
+    },
+    {
+      "ref": "installer:embree",
+      "dependsOn": []
+    },
+    {
+      "ref": "installer:mesa",
+      "dependsOn": []
+    },
+    {
+      "ref": "installer:openssl",
+      "dependsOn": []
+    },
+    {
+      "ref": "installer:sqlite",
+      "dependsOn": []
+    },
+    {
+      "ref": "installer:tcl",
+      "dependsOn": []
+    },
+    {
+      "ref": "installer:tk",
+      "dependsOn": []
+    },
+    {
+      "ref": "installer:zlib",
+      "dependsOn": []
+    },
+    {
+      "ref": "sub:openxlsx",
+      "dependsOn": [
+        "vendored:pugixml-1.14",
+        "vendored:zippy",
+        "vendored:nowide"
+      ]
+    },
+    {
+      "ref": "vendored:miniz-2.0.8",
+      "dependsOn": []
+    },
+    {
+      "ref": "vendored:nowide",
+      "dependsOn": []
+    },
+    {
+      "ref": "vendored:pugixml-1.14",
+      "dependsOn": []
+    },
+    {
+      "ref": "vendored:zippy",
+      "dependsOn": [
+        "vendored:miniz-2.0.8"
+      ]
+    },
+    {
+      "ref": "vtk-thirdparty:expat",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:freetype",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:hdf5",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:libjpeg-turbo",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:liblzma",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:libpng",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:libproj",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:libtiff",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:libxml2",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:lz4",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:netcdf",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:ogg",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:sqlite3",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:theora",
+      "dependsOn": []
+    },
+    {
+      "ref": "vtk-thirdparty:zlib",
+      "dependsOn": []
+    }
+  ]
+}
